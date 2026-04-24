@@ -165,11 +165,22 @@ export function CalculatorPage() {
     saveSessions(updated);
   };
 
+  const PIECE_WEIGHT_KG: Record<string, number> = {
+    cpu_intel: 0.03,
+    cpu_amd: 0.028,
+    phone_smartphone: 0.17,
+    phone_feature: 0.08,
+    laptop_complete: 2.2,
+  };
+
   const totalMass = batchItems.reduce((acc, item) => {
     const material = materials?.find(m => m.id === item.materialId);
     if (!material) return acc;
-    if (material.unit === 'kg') return acc + item.quantity;
-    return acc;
+    if (material.unit === 'piece') {
+      const weightPerPiece = PIECE_WEIGHT_KG[item.materialId] ?? 0.1;
+      return acc + item.quantity * weightPerPiece;
+    }
+    return acc + item.quantity;
   }, 0);
 
   const canGoToProcess = batchItems.some(i => i.materialId && i.quantity > 0) && !batchItems.some(i => i.materialId && i.quantity <= 0);

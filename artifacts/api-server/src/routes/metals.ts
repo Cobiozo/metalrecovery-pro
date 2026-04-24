@@ -139,18 +139,20 @@ async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
   };
 }
 
-router.get("/metals/prices", async (_req, res) => {
+async function getOrFetchPrices(): Promise<MetalPrices> {
   const now = Date.now();
   if (cachedPrices && now - cacheTimestamp < CACHE_TTL_MS) {
-    res.json(cachedPrices);
-    return;
+    return cachedPrices;
   }
-
   const prices = await fetchMetalPricesFromNBP();
   cachedPrices = prices;
   cacheTimestamp = now;
-  res.json(prices);
+  return prices;
+}
+
+router.get("/metals/prices", async (_req, res) => {
+  res.json(await getOrFetchPrices());
 });
 
 export default router;
-export { fetchMetalPricesFromNBP, type MetalPrices };
+export { fetchMetalPricesFromNBP, getOrFetchPrices, type MetalPrices };

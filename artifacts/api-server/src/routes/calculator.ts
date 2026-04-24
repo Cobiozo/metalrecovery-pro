@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { fetchMetalPricesFromNBP } from "./metals.js";
+import { getOrFetchPrices } from "./metals.js";
 
 const router: IRouter = Router();
 
@@ -532,7 +532,7 @@ router.post("/calculator/estimate", async (req, res) => {
     return;
   }
 
-  const metalPrices = await fetchMetalPricesFromNBP();
+  const metalPrices = await getOrFetchPrices();
 
   let totalMassKg = 0;
   const totalMetalsGPerKg = { Au: 0, Ag: 0, Pt: 0, Pd: 0 };

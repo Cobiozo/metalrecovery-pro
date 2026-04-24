@@ -313,8 +313,9 @@ const chemicalProcesses = [
     id: "miller_process",
     name: "Proces Millera (chloracja)",
     nameEn: "Miller Process (Chlorination)",
+    category: "pyrometallurgical",
     description:
-      "Przemysłowa metoda oczyszczania złota przez nadmuch chloru do stopionego metalu. Zanieczyszczenia tworzą chlorki, złoto pozostaje czyste (999+). Szybki i wydajny.",
+      "Przemysłowa metoda oczyszczania złota przez nadmuch chloru do stopionego metalu. Zanieczyszczenia tworzą chlorki, złoto pozostaje czyste (999+). Szybki i wydajny. UWAGA: Proces pirometalurgiczny wymagający pieca indukcyjnego.",
     targetMetals: ["Au"],
     reagents: [
       {
