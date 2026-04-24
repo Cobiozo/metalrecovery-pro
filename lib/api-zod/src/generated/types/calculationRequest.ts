@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BatchItem } from "./batchItem";
+import type { CalculationRequestReagentPriceOverrides } from "./calculationRequestReagentPriceOverrides";
 
 export interface CalculationRequest {
   /** @minItems 1 */
@@ -17,4 +18,6 @@ export interface CalculationRequest {
   temperatureOverride?: number;
   /** Electricity price in PLN per kWh (default 0.80) */
   electricityPricePerKwh?: number;
+  /** Optional map of reagent name to custom price in PLN per liter */
+  reagentPriceOverrides?: CalculationRequestReagentPriceOverrides;
 }

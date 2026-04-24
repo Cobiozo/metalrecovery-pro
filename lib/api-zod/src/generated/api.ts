@@ -163,6 +163,10 @@ export const CalculateRecoveryBody = zod.object({
     .number()
     .optional()
     .describe("Electricity price in PLN per kWh (default 0.80)"),
+  reagentPriceOverrides: zod
+    .record(zod.string(), zod.number())
+    .optional()
+    .describe("Optional map of reagent name to custom price in PLN per liter"),
 });
 
 export const CalculateRecoveryResponse = zod.object({

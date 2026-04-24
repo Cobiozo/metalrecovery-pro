@@ -159,6 +159,11 @@ export interface BatchItem {
   quantity: number;
 }
 
+/**
+ * Optional map of reagent name to custom price in PLN per liter
+ */
+export type CalculationRequestReagentPriceOverrides = { [key: string]: number };
+
 export interface CalculationRequest {
   /** @minItems 1 */
   batch: BatchItem[];
@@ -169,6 +174,8 @@ export interface CalculationRequest {
   temperatureOverride?: number;
   /** Electricity price in PLN per kWh (default 0.80) */
   electricityPricePerKwh?: number;
+  /** Optional map of reagent name to custom price in PLN per liter */
+  reagentPriceOverrides?: CalculationRequestReagentPriceOverrides;
 }
 
 export type RecoveredMetalMetal =

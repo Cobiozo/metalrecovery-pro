@@ -35,6 +35,7 @@ type ProcessParams = {
 };
 
 const SESSIONS_KEY = "metalrecovery_sessions";
+const REAGENT_PRICES_KEY = "metalrecovery_reagent_prices";
 const MAX_SESSIONS = 10;
 
 function loadSessions(): SavedSession[] {
@@ -51,6 +52,20 @@ function saveSessions(sessions: SavedSession[]): void {
   localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions.slice(0, MAX_SESSIONS)));
 }
 
+function loadReagentPrices(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(REAGENT_PRICES_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+function saveReagentPrices(prices: Record<string, number>): void {
+  localStorage.setItem(REAGENT_PRICES_KEY, JSON.stringify(prices));
+}
+
 export function CalculatorPage() {
   const [activeTab, setActiveTab] = useState<string>("wsad");
   const [batchItems, setBatchItems] = useState<BatchItemState[]>([{ id: '1', materialId: '', quantity: 1 }]);
@@ -60,6 +75,7 @@ export function CalculatorPage() {
     temperatureOverride: null,
     electricityPricePerKwh: 0.8,
   });
+  const [reagentPriceOverrides, setReagentPriceOverrides] = useState<Record<string, number>>(loadReagentPrices);
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [savedSessions, setSavedSessions] = useState<SavedSession[]>(loadSessions);
   const [showHistory, setShowHistory] = useState(false);
@@ -113,6 +129,12 @@ export function CalculatorPage() {
     setBatchItems(batchItems.map(item => item.id === id ? { ...item, quantity: value } : item));
   };
 
+  const handleReagentPriceChange = (name: string, value: number) => {
+    const updated = { ...reagentPriceOverrides, [name]: value };
+    setReagentPriceOverrides(updated);
+    saveReagentPrices(updated);
+  };
+
   const handleCalculate = () => {
     if (!selectedProcessId || batchItems.some(i => !i.materialId || i.quantity <= 0)) return;
 
@@ -127,6 +149,9 @@ export function CalculatorPage() {
     }
     if (processParams.temperatureOverride !== null) {
       requestData.temperatureOverride = processParams.temperatureOverride;
+    }
+    if (Object.keys(reagentPriceOverrides).length > 0) {
+      requestData.reagentPriceOverrides = reagentPriceOverrides;
     }
 
     calculateMutation.mutate({ data: requestData });
@@ -236,9 +261,18 @@ export function CalculatorPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8 h-12 bg-muted/50 p-1">
-          <TabsTrigger value="wsad" className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">1. Wsad (Materiały)</TabsTrigger>
-          <TabsTrigger value="proces" disabled={!canGoToProcess} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">2. Parametry Procesu</TabsTrigger>
-          <TabsTrigger value="wyniki" disabled={!result} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">3. Wyniki & Opłacalność</TabsTrigger>
+          <TabsTrigger value="wsad" className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <span className="hidden sm:inline">1. Wsad (Materiały)</span>
+            <span className="sm:hidden">1. Wsad</span>
+          </TabsTrigger>
+          <TabsTrigger value="proces" disabled={!canGoToProcess} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <span className="hidden sm:inline">2. Parametry Procesu</span>
+            <span className="sm:hidden">2. Proces</span>
+          </TabsTrigger>
+          <TabsTrigger value="wyniki" disabled={!result} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <span className="hidden sm:inline">3. Wyniki & Opłacalność</span>
+            <span className="sm:hidden">3. Wyniki</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="wsad" className="space-y-6">
@@ -251,8 +285,8 @@ export function CalculatorPage() {
               {batchItems.map((item) => {
                 const selectedMaterial = materials?.find(m => m.id === item.materialId);
                 return (
-                  <div key={item.id} className="flex gap-4 items-start bg-muted/30 p-4 rounded-lg border border-border">
-                    <div className="flex-1">
+                  <div key={item.id} className="flex flex-col sm:flex-row gap-4 items-start bg-muted/30 p-4 rounded-lg border border-border">
+                    <div className="flex-1 w-full">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Materiał</label>
                       <Select
                         value={item.materialId}
@@ -272,32 +306,34 @@ export function CalculatorPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="w-32">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Ilość</label>
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          min="0.001"
-                          step="0.01"
-                          value={item.quantity}
-                          onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
-                          className="bg-background pr-12 font-mono"
-                        />
-                        <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">
-                          {selectedMaterial?.unit === 'piece' ? 'szt.' : 'kg'}
-                        </span>
+                    <div className="flex gap-3 w-full sm:w-auto">
+                      <div className="flex-1 sm:w-32">
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Ilość</label>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            min="0.001"
+                            step="0.01"
+                            value={item.quantity}
+                            onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
+                            className="bg-background pr-12 font-mono"
+                          />
+                          <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">
+                            {selectedMaterial?.unit === 'piece' ? 'szt.' : 'kg'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="pt-7">
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleRemoveBatchItem(item.id)}
-                        disabled={batchItems.length === 1}
-                        className="shrink-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="pt-7">
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => handleRemoveBatchItem(item.id)}
+                          disabled={batchItems.length === 1}
+                          className="shrink-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -443,6 +479,55 @@ export function CalculatorPage() {
                     <span>2.00 zł/kWh</span>
                   </div>
                 </div>
+
+                {selectedProcess.reagents && selectedProcess.reagents.length > 0 && (
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <Label className="text-sm font-semibold">Ceny odczynników (PLN/litr)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Wartości zapisywane lokalnie i stosowane w kalkulacji kosztów chemii
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {selectedProcess.reagents.map((reagent) => {
+                        const customPrice = reagentPriceOverrides[reagent.name];
+                        const displayPrice = customPrice !== undefined ? customPrice : reagent.pricePerLiter;
+                        return (
+                          <div key={reagent.name} className="flex items-center gap-2 bg-muted/30 p-3 rounded-lg border border-border">
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-medium truncate">{reagent.name}</div>
+                              <div className="text-xs text-muted-foreground font-mono">{reagent.formula} · def: {reagent.pricePerLiter} zł/l</div>
+                            </div>
+                            <div className="relative shrink-0 w-28">
+                              <Input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={displayPrice}
+                                onChange={(e) => {
+                                  const val = parseFloat(e.target.value);
+                                  if (!isNaN(val) && val > 0) handleReagentPriceChange(reagent.name, val);
+                                }}
+                                className="bg-background pr-10 font-mono text-sm h-8"
+                              />
+                              <span className="absolute right-2 top-1.5 text-xs text-muted-foreground">zł/l</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {Object.keys(reagentPriceOverrides).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReagentPriceOverrides({});
+                          saveReagentPrices({});
+                        }}
+                        className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+                      >
+                        Przywróć ceny domyślne
+                      </button>
+                    )}
+                  </div>
+                )}
               </CardContent>
               <CardFooter className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
                 <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do wsadu</Button>
@@ -576,33 +661,35 @@ export function CalculatorPage() {
                     <CardTitle>Odzyskane Metale</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-border hover:bg-transparent">
-                          <TableHead className="w-[80px]">Metal</TableHead>
-                          <TableHead className="text-right">Masa</TableHead>
-                          <TableHead className="text-right">Wydajność</TableHead>
-                          <TableHead className="text-right">Wartość</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {result.recoveredMetals.map((metal) => (
-                          <TableRow key={metal.metal} className="border-border">
-                            <TableCell className="font-bold font-mono text-primary">{metal.metal}</TableCell>
-                            <TableCell className="text-right font-mono">{formatMass(metal.massGrams, 'g')}</TableCell>
-                            <TableCell className="text-right font-mono text-muted-foreground">{formatPercent(metal.yieldPercent)}</TableCell>
-                            <TableCell className="text-right font-mono font-bold text-success">{formatCurrency(metal.totalValuePln)}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-border hover:bg-transparent">
+                            <TableHead className="w-[80px]">Metal</TableHead>
+                            <TableHead className="text-right">Masa</TableHead>
+                            <TableHead className="text-right">Wydajność</TableHead>
+                            <TableHead className="text-right">Wartość</TableHead>
                           </TableRow>
-                        ))}
-                        {result.recoveredMetals.length === 0 && (
-                          <TableRow>
-                            <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
-                              Brak odzyskanych metali z tego procesu
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {result.recoveredMetals.map((metal) => (
+                            <TableRow key={metal.metal} className="border-border">
+                              <TableCell className="font-bold font-mono text-primary">{metal.metal}</TableCell>
+                              <TableCell className="text-right font-mono">{formatMass(metal.massGrams, 'g')}</TableCell>
+                              <TableCell className="text-right font-mono text-muted-foreground">{formatPercent(metal.yieldPercent)}</TableCell>
+                              <TableCell className="text-right font-mono font-bold text-success">{formatCurrency(metal.totalValuePln)}</TableCell>
+                            </TableRow>
+                          ))}
+                          {result.recoveredMetals.length === 0 && (
+                            <TableRow>
+                              <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
+                                Brak odzyskanych metali z tego procesu
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -611,24 +698,28 @@ export function CalculatorPage() {
                     <CardTitle>Zapotrzebowanie Chemiczne</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-border hover:bg-transparent">
-                          <TableHead>Odczynnik</TableHead>
-                          <TableHead className="text-right">Ilość</TableHead>
-                          <TableHead className="text-right">Koszt</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {result.chemistryCosts.map((chem) => (
-                          <TableRow key={chem.reagentName} className="border-border">
-                            <TableCell className="font-medium">{chem.reagentName}</TableCell>
-                            <TableCell className="text-right font-mono">{chem.amountLiters.toFixed(2)} L</TableCell>
-                            <TableCell className="text-right font-mono font-bold text-destructive">-{formatCurrency(chem.totalCostPln)}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-border hover:bg-transparent">
+                            <TableHead>Odczynnik</TableHead>
+                            <TableHead className="text-right">Ilość</TableHead>
+                            <TableHead className="text-right">Cena/l</TableHead>
+                            <TableHead className="text-right">Koszt</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {result.chemistryCosts.map((chem) => (
+                            <TableRow key={chem.reagentName} className="border-border">
+                              <TableCell className="font-medium">{chem.reagentName}</TableCell>
+                              <TableCell className="text-right font-mono">{chem.amountLiters.toFixed(2)} L</TableCell>
+                              <TableCell className="text-right font-mono text-muted-foreground">{chem.pricePerLiter.toFixed(2)} zł</TableCell>
+                              <TableCell className="text-right font-mono font-bold text-destructive">-{formatCurrency(chem.totalCostPln)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </div>

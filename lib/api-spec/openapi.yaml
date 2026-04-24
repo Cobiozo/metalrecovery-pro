@@ -330,6 +330,11 @@ components:
         electricityPricePerKwh:
           type: number
           description: Electricity price in PLN per kWh (default 0.80)
+        reagentPriceOverrides:
+          type: object
+          description: Optional map of reagent name to custom price in PLN per liter
+          additionalProperties:
+            type: number
       required: [batch, processId]
 
     RecoveredMetal:

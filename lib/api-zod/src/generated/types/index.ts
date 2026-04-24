@@ -8,6 +8,7 @@
 
 export * from "./batchItem";
 export * from "./calculationRequest";
+export * from "./calculationRequestReagentPriceOverrides";
 export * from "./calculationResult";
 export * from "./calculationResultProfitabilityRating";
 export * from "./chemicalProcess";

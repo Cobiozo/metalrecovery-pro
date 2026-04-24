@@ -14,6 +14,7 @@ interface CalculationRequest {
   acidConcentrationOverride?: number;
   temperatureOverride?: number;
   electricityPricePerKwh?: number;
+  reagentPriceOverrides?: Record<string, number>;
 }
 
 const electronicMaterialsMap: Record<
@@ -588,13 +589,18 @@ router.post("/calculator/estimate", async (req, res) => {
   const electricityCostPln =
     process.electricityKwhPerKg * totalMassKg * electricityPricePerKwh;
 
+  const reagentPriceOverrides = body.reagentPriceOverrides ?? {};
   const chemistryCosts = process.reagents.map((reagent) => {
     const amountLiters = reagent.amountPerKg * totalMassKg;
-    const totalCost = amountLiters * reagent.pricePerLiter;
+    const effectivePrice =
+      reagentPriceOverrides[reagent.name] !== undefined
+        ? reagentPriceOverrides[reagent.name]
+        : reagent.pricePerLiter;
+    const totalCost = amountLiters * effectivePrice;
     return {
       reagentName: reagent.name,
       amountLiters: Math.round(amountLiters * 100) / 100,
-      pricePerLiter: reagent.pricePerLiter,
+      pricePerLiter: effectivePrice,
       totalCostPln: Math.round(totalCost * 100) / 100,
     };
   });
