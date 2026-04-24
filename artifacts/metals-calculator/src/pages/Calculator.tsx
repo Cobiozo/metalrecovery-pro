@@ -445,7 +445,7 @@ export function CalculatorPage() {
                 ) : processes?.map(process => (
                   <div
                     key={process.id}
-                    className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                    className={`border-2 rounded-xl p-4 cursor-pointer transition-all flex flex-col ${
                       selectedProcessId === process.id
                         ? 'border-primary bg-primary/5'
                         : 'border-border bg-card hover:border-primary/50'
@@ -454,16 +454,28 @@ export function CalculatorPage() {
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold text-lg leading-tight">{process.name}</h3>
-                      {selectedProcessId === process.id && <CheckCircle2 className="text-primary h-5 w-5 shrink-0" />}
+                      {selectedProcessId === process.id && <CheckCircle2 className="text-primary h-5 w-5 shrink-0 ml-2" />}
                     </div>
-                    <div className="flex flex-wrap gap-1 mb-3">
+                    <div className="flex flex-wrap gap-1 mb-2">
                       {process.targetMetals.map(m => (
                         <span key={m} className="text-xs font-mono px-1.5 py-0.5 bg-muted rounded text-muted-foreground">
                           {m}
                         </span>
                       ))}
+                      {process.id === 'aqua_regia' && (
+                        <span className="text-xs px-1.5 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded border border-amber-500/30 font-medium">
+                          ⚠ Pre-trawienie HNO3
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-4">{process.description}</p>
+                    <p className={`text-xs text-muted-foreground mb-3 ${selectedProcessId === process.id ? '' : 'line-clamp-3'}`}>
+                      {process.description}
+                    </p>
+                    {process.id === 'aqua_regia' && selectedProcessId === process.id && (
+                      <div className="mb-3 px-2 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-700 dark:text-amber-300">
+                        <strong>PRZED procesem:</strong> Przetraw wsad w rozcieńczonym HNO3 (25–30%, 40°C, 1–2h/kg) aby usunąć Cu, Zn, Ni i metale nieszlachetne. Pomija ten krok obniży czystość odzysku Au.
+                      </div>
+                    )}
                     <div className="text-xs font-mono mt-auto text-muted-foreground">
                       <div className="flex justify-between border-t border-border pt-2">
                         <span>Czas: {process.timePerKgMin}-{process.timePerKgMax}h/kg</span>

@@ -472,11 +472,11 @@ export const electronicMaterials = [
     weightPerPiece: 0.040,
     metalContentPerKg: {
       Au: { min: 0.12, max: 0.55, typical: 0.30 },
-      Ag: { min: 1.5, max: 5.0, typical: 3.0 },
+      Ag: { min: 2.0, max: 6.0, typical: 3.5 },
       Pt: { min: 0.0, max: 0.008, typical: 0.003 },
-      Pd: { min: 0.02, max: 0.12, typical: 0.06 },
+      Pd: { min: 0.08, max: 0.45, typical: 0.20 },
     },
-    notes: "Kości RAM ze złotymi stykami SDR/DDR/DDR2 (~40g/szt DIMM) — bez aluminium. DDR1/SDR mają wyższe stężenie Au (do 0.55 g/kg), DDR3+ niższe. metalContentPerKg liczone dla całej kości.",
+    notes: "Kości RAM ze złotymi stykami SDR/DDR/DDR2 (~40g/szt DIMM) — bez aluminium. Pd pochodzi z kondensatorów MLCC na kościach IC (~50-150 MLCC/DIMM). DDR1/SDR mają wyższe stężenie Au (do 0.55 g/kg), DDR3+ niższe. metalContentPerKg liczone dla całej kości (Au ze styków + IC bond wires, Pd/Ag z kondensatorów MLCC).",
   },
   {
     id: "ram_simm",

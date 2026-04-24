@@ -499,21 +499,44 @@ router.post("/calculator/estimate", async (req, res) => {
   });
 
   const electricityPricePerKwh = body.electricityPricePerKwh ?? 0.8;
+
+  const concOverride = body.acidConcentrationOverride;
+  const concFactor =
+    concOverride !== undefined && processDefaultConc !== undefined && concOverride > 0
+      ? Math.pow(processDefaultConc / concOverride, 0.7)
+      : 1.0;
+  const electricityConcFactor = Math.max(0.4, Math.min(1.5, concFactor));
   const electricityCostPln =
-    process.electricityKwhPerKg * totalMassKg * electricityPricePerKwh;
+    process.electricityKwhPerKg * totalMassKg * electricityPricePerKwh * electricityConcFactor;
 
   const reagentPriceOverrides = body.reagentPriceOverrides ?? {};
-  const chemistryCosts = process.reagents.map((reagent) => {
-    const amountLiters = reagent.amountPerKg * totalMassKg;
-    const effectivePrice =
-      reagentPriceOverrides[reagent.name] !== undefined
-        ? reagentPriceOverrides[reagent.name]
-        : reagent.pricePerLiter;
+  const chemistryCosts = process.reagents.map((reagent, idx) => {
+    let baseAmountPerKg = reagent.amountPerKg;
+    let basePrice = reagentPriceOverrides[reagent.name] !== undefined
+      ? reagentPriceOverrides[reagent.name]
+      : reagent.pricePerLiter;
+
+    let effectiveAmountPerKg = baseAmountPerKg;
+    let effectivePrice = basePrice;
+
+    if (
+      idx === 0 &&
+      concOverride !== undefined &&
+      processDefaultConc !== undefined &&
+      concOverride > 0 &&
+      reagent.concentration > 0
+    ) {
+      const volFactor = reagent.concentration / concOverride;
+      effectiveAmountPerKg = baseAmountPerKg * volFactor;
+      effectivePrice = basePrice / volFactor;
+    }
+
+    const amountLiters = effectiveAmountPerKg * totalMassKg;
     const totalCost = amountLiters * effectivePrice;
     return {
       reagentName: reagent.name,
       amountLiters: Math.round(amountLiters * 100) / 100,
-      pricePerLiter: effectivePrice,
+      pricePerLiter: Math.round(effectivePrice * 100) / 100,
       totalCostPln: Math.round(totalCost * 100) / 100,
     };
   });
@@ -553,6 +576,11 @@ router.post("/calculator/estimate", async (req, res) => {
   if (body.temperatureOverride !== undefined && processOptimalTemp !== undefined) {
     const tempFactor = 1 + (processOptimalTemp - body.temperatureOverride) * 0.01;
     estimatedTimeHours = Math.max(avgTimePerKg * 0.5, estimatedTimeHours * Math.max(0.5, Math.min(2.0, tempFactor)));
+  }
+
+  if (concOverride !== undefined && processDefaultConc !== undefined && concOverride > 0) {
+    const timeConcFactor = Math.max(0.4, Math.min(1.5, Math.pow(processDefaultConc / concOverride, 0.7)));
+    estimatedTimeHours = Math.max(process.timePerKgMin * 0.4 * totalMassKg, estimatedTimeHours * timeConcFactor);
   }
 
   res.json({
