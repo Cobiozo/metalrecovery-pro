@@ -67,6 +67,13 @@ function saveReagentPrices(prices: Record<string, number>): void {
   localStorage.setItem(REAGENT_PRICES_KEY, JSON.stringify(prices));
 }
 
+const METAL_NAMES: Record<string, string> = {
+  Au: "złoto",
+  Ag: "srebro",
+  Pt: "platyna",
+  Pd: "pallad",
+};
+
 const CATEGORY_LABELS: Record<string, string> = {
   plyty_glowne: "Płyty główne",
   pcb: "Płytki PCB",
@@ -765,7 +772,10 @@ export function CalculatorPage() {
                         <TableBody>
                           {result.recoveredMetals.map((metal) => (
                             <TableRow key={metal.metal} className="border-border">
-                              <TableCell className="font-bold font-mono text-primary">{metal.metal}</TableCell>
+                              <TableCell className="font-bold font-mono text-primary">
+                                {metal.metal}
+                                <span className="ml-1 font-normal text-muted-foreground text-[10px]">({METAL_NAMES[metal.metal] ?? metal.metal})</span>
+                              </TableCell>
                               <TableCell className="text-right font-mono">{formatMass(metal.massGrams, 'g')}</TableCell>
                               <TableCell className="text-right font-mono text-muted-foreground">{formatPercent(metal.yieldPercent)}</TableCell>
                               <TableCell className="text-right font-mono font-bold text-success">{formatCurrency(metal.totalValuePln)}</TableCell>

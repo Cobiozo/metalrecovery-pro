@@ -39,15 +39,20 @@ function getAdjustedPricePerL(reagent: Reagent, overrides: Record<string, number
 
 const CATEGORY_LABELS: Record<string, string> = {
   plyty_glowne: "Płyty główne",
+  pcb: "Płytki PCB",
   procesor: "Procesory",
   pamiec: "Pamięci RAM",
   karta: "Karty graficzne/dźwiękowe",
   dysk: "Dyski i napędy",
   urzadzenie: "Urządzenia kompletne",
+  zasilacz: "Zasilacze i ładowarki",
+  ic: "Układy scalone IC",
+  zlacza: "Złącza",
+  kondensator: "Kondensatory",
   inne: "Inne / Mieszane",
 };
 
-const CATEGORY_ORDER = ["plyty_glowne", "procesor", "pamiec", "karta", "dysk", "urzadzenie", "inne"];
+const CATEGORY_ORDER = ["plyty_glowne", "pcb", "procesor", "pamiec", "karta", "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "kondensator", "inne"];
 
 export function ProcessesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
