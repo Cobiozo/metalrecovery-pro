@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useGetChemicalProcesses, getGetChemicalProcessesQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Beaker, Thermometer, Clock, Zap, AlertTriangle, ChevronRight } from "lucide-react";
+import { Beaker, Thermometer, Clock, Zap, AlertTriangle, ChevronRight, FlaskConical, Weight } from "lucide-react";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,17 @@ const METAL_NAMES: Record<string, string> = {
   Pd: "pallad",
 };
 
+function stripStepPrefix(step: string): string {
+  return step
+    .replace(/^KROK\s+\d+\s*[—–-]\s*/i, "")
+    .replace(/^KROK\s+\d+\s*\([^)]*\)\s*:\s*/i, "")
+    .replace(/^KROK\s+\d+\s*:\s*/i, "")
+    .trim();
+}
+
 export function ProcessesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [batchKg, setBatchKg] = useState<number>(1);
 
   const { data: processes, isLoading } = useGetChemicalProcesses({
     query: { queryKey: getGetChemicalProcessesQueryKey() }
@@ -39,6 +48,10 @@ export function ProcessesPage() {
       </div>
     );
   }
+
+  const totalReagentCost = selectedProcess
+    ? selectedProcess.reagents.reduce((sum, r) => sum + r.amountPerKg * batchKg * r.pricePerLiter, 0)
+    : 0;
 
   return (
     <div className="space-y-4">
@@ -162,28 +175,76 @@ export function ProcessesPage() {
                   <div className="text-xs text-amber-400 leading-snug">{selectedProcess.safetyNotes}</div>
                 </div>
               </div>
+
+              {(selectedProcess as any).outputPurityText && (
+                <div className="flex items-start gap-2 mt-2 bg-emerald-500/5 border border-emerald-500/20 rounded-md p-2.5">
+                  <div className="p-1 rounded-full bg-emerald-500/10 text-emerald-500 shrink-0 mt-0.5">
+                    <FlaskConical className="w-3 h-3" />
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Szacunkowa próba po odzysku</div>
+                    <div className="text-xs text-emerald-400 leading-snug">{(selectedProcess as any).outputPurityText}</div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <CardContent className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
-                  <Beaker className="w-3.5 h-3.5" /> Odczynniki (na 1 kg wsadu)
-                </h4>
-                <div className="space-y-1.5">
-                  {selectedProcess.reagents.map(reagent => (
-                    <div key={reagent.name} className="flex items-center justify-between gap-2 text-sm bg-muted/30 px-3 py-2 rounded">
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium text-xs block leading-tight">{reagent.name}</span>
-                        <span className="text-muted-foreground font-mono text-[10px]">
-                          {reagent.formula} ({reagent.concentration}%)
-                        </span>
-                      </div>
-                      <div className="font-mono text-xs flex items-center gap-2 shrink-0">
-                        <span className="font-medium whitespace-nowrap">{reagent.amountPerKg} L</span>
-                        <span className="text-muted-foreground whitespace-nowrap">{formatCurrency(reagent.pricePerLiter)}/L</span>
-                      </div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                    <Beaker className="w-3.5 h-3.5" /> Odczynniki
+                  </h4>
+                  <div className="flex items-center gap-1.5">
+                    <Weight className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground">Wsad:</span>
+                    <div className="flex items-center border border-border rounded overflow-hidden">
+                      <button
+                        onClick={() => setBatchKg(v => Math.max(0.1, Math.round((v - 0.5) * 10) / 10))}
+                        className="px-1.5 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      >−</button>
+                      <input
+                        type="number"
+                        min={0.1}
+                        step={0.1}
+                        value={batchKg}
+                        onChange={e => {
+                          const v = parseFloat(e.target.value);
+                          if (!isNaN(v) && v > 0) setBatchKg(Math.round(v * 10) / 10);
+                        }}
+                        className="w-12 text-center text-xs font-mono bg-background py-0.5 focus:outline-none"
+                      />
+                      <span className="text-[10px] text-muted-foreground pr-1.5">kg</span>
+                      <button
+                        onClick={() => setBatchKg(v => Math.round((v + 0.5) * 10) / 10)}
+                        className="px-1.5 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border-l border-border transition-colors"
+                      >+</button>
                     </div>
-                  ))}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  {selectedProcess.reagents.map(reagent => {
+                    const totalAmount = reagent.amountPerKg * batchKg;
+                    const totalCost = totalAmount * reagent.pricePerLiter;
+                    return (
+                      <div key={reagent.name} className="flex items-center justify-between gap-2 bg-muted/30 px-3 py-2 rounded">
+                        <div className="flex-1 min-w-0">
+                          <span className="font-medium text-xs block leading-tight">{reagent.name}</span>
+                          <span className="text-muted-foreground font-mono text-[10px]">
+                            {reagent.formula} ({reagent.concentration}%) · {formatCurrency(reagent.pricePerLiter)}/L
+                          </span>
+                        </div>
+                        <div className="font-mono text-xs text-right shrink-0">
+                          <div className="font-medium">{totalAmount.toFixed(2)} L</div>
+                          <div className="text-muted-foreground text-[10px]">{formatCurrency(totalCost)}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-center justify-between px-3 py-1.5 border border-primary/20 rounded bg-primary/5">
+                    <span className="text-xs font-bold text-primary">Razem odczynniki ({batchKg} kg)</span>
+                    <span className="font-mono text-sm font-bold text-primary">{formatCurrency(totalReagentCost)}</span>
+                  </div>
                 </div>
 
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-4 mb-2">Wydajność odzysku</h4>
@@ -208,7 +269,7 @@ export function ProcessesPage() {
                       <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center mt-0.5">
                         {idx + 1}
                       </span>
-                      <span className="text-muted-foreground leading-snug text-xs">{step}</span>
+                      <span className="text-muted-foreground leading-snug text-xs">{stripStepPrefix(step)}</span>
                     </li>
                   ))}
                 </ol>

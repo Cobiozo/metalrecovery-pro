@@ -2,6 +2,24 @@ import { Router, type IRouter } from "express";
 
 const router: IRouter = Router();
 
+const PREP_STEPS_ELECTRONIC = [
+  "Demontaż mechaniczny: usuń śruby, obudowy plastikowe, złącza wtykowe i duże kondensatory elektrolityczne (typ. zmniejsza masę wsadu o 20-40%)",
+  "Separacja materiałów: odseparuj elementy plastikowe i ceramiczne (selekcja wzrokowa), ferromagnetyki magnesem trwałym — nie reagują z kwasami i utrudniają filtrację",
+  "Rozdrobnienie wsadu: pociąć płytki na kawałki < 2 cm nożycami do blachy lub granulatorem — krytyczne dla szybkości i kompletności reakcji kwasowej",
+];
+
+const PREP_STEPS_METAL = [
+  "Weryfikacja wsadu: sprawdź skład stopu (wymagane min. 90% Au) — użyj kamienia probierczego, spektrometru XRF lub analizy chemicznej",
+  "Wytop wstępny: jeśli wsad jest proszkiem lub złomem, przetop w tyglu grafitowym z boraksem i odlej na wstępne ingoty/anody",
+  "Przygotowanie instalacji: sprawdź wyposażenie elektryczne/gazowe, skalibruj mierniki, przygotuj komplet odczynników i naczynie robocze",
+];
+
+const PREP_STEPS_SOLUTION = [
+  "Weryfikacja roztworu: sprawdź zawartość Au/Ag w roztworze wejściowym (np. po ługowaniu cyjankowym lub filtracie HNO3)",
+  "Regulacja pH: doprowadź pH do 10-12 dodając Ca(OH)2 lub NaOH — KRYTYCZNE przy NaCN (poniżej pH 10 powstaje śmiertelny HCN!)",
+  "Przygotowanie granulat Zn: opłucz granulki rozcieńczonym kwasem (usuwa tlenki), przemyj wodą destylowaną, przygotuj pojemnik filtracyjny",
+];
+
 const chemicalProcesses = [
   {
     id: "aqua_regia",
@@ -10,6 +28,7 @@ const chemicalProcesses = [
     description:
       "Klasyczna metoda odzysku złota i platynowców. WAŻNE: Przed wodą królewską wsad należy najpierw przetrawić w rozcieńczonym HNO3 (25%), aby usunąć miedź, nikiel i inne metale nieszlachetne — dopiero oczyszczony osad poddaje się wodzie królewskiej. Mieszanina HCl:HNO3 (3:1 obj.) rozpuszcza Au, Pt, Pd. Srebro wytrąca się jako AgCl już w trakcie trawienia.",
     targetMetals: ["Au", "Pt", "Pd"],
+    outputPurityText: "Au: 95–99% (surowy proszek) → wymaga rafinacji elektrolitycznej do 999; Pt/Pd: 40–60% surowego strątu — wymagana dalsza separacja",
     reagents: [
       {
         name: "Kwas azotowy rozcieńczony — pre-trawienie (HNO3 25%)",
@@ -64,17 +83,18 @@ const chemicalProcesses = [
     safetyNotes:
       "UWAGA: Wydziela trujące opary NOx i HCl. Praca WYŁĄCZNIE pod sprawnym wyciągiem z aktywnym węglem. Wyposażenie: maska z filtrem ABEK P3, rękawice kwasoodporne (nitril/neopren), fartuch kwasoodporny, gogle ochronne. Nigdy nie wlewaj wody do stężonego kwasu!",
     steps: [
-      "KROK 0 — BHP: sprawdź wyciąg, załóż maskę ABEK P3, rękawice i gogle",
-      "KROK 1 (pre-trawienie HNO3): wsad rozdrobniony zalej rozcieńczonym HNO3 25% (2 L/kg), podgrzej do 40°C przez 2-3h — usuwa Cu, Ni, Pb, Fe, Sn",
-      "KROK 2: Odsącz i przemyj osad (Au, Pt, Pd, AgCl, ceramika) wodą destylowaną — filtrat z HNO3 zachowaj do odzysku Ag i Cu",
-      "KROK 3 (woda królewska): przygotuj mieszaninę HCl 35% + HNO3 65% w proporcji 3:1 (obj.) w naczyniu PTFE lub szklano-kwasoodpornym",
-      "KROK 4: Powoli wsypuj osad do wody królewskiej, podgrzewaj do 60-70°C mieszając co 30 min — Au, Pt, Pd przechodzą do roztworu",
-      "KROK 5: Po rozpuszczeniu (4-8h) odsącz ceramikę i AgCl — AgCl odłóż do dalszego odzysku srebra",
-      "KROK 6 (rozkład HNO3): Dodaj mocznik CO(NH2)2 porcjami (ok. 1-2 g na 100 ml) aż ustąpią bąbelki — niszczy nadmiar HNO3, który przeszkadza redukcji",
-      "KROK 7 (wytrącanie Au): Powoli dodawaj SMB (NaHSO3) do zimnego roztworu — złoto wytrąca się jako brązowy proszek",
-      "KROK 8: Odsącz złoty proszek, przemyj 3× wodą destylowaną, przemyj acetonem, wysusz",
-      "KROK 9 (wytop): Umieść proszek w tyglu grafitowym, dodaj szczyptę boraksu jako topnik, przetop palnikiem lub piecem (>1064°C)",
-      "KROK 10: Platynę i pallad wytrąć z filtratu — Pt przez NH4Cl (wytrąca (NH4)2PtCl6), Pd przez DMAG lub cementację Cu",
+      ...PREP_STEPS_ELECTRONIC,
+      "BHP: sprawdź wyciąg, załóż maskę ABEK P3, rękawice kwasoodporne i gogle przed rozpoczęciem",
+      "Pre-trawienie HNO3: rozdrobniony wsad zalej HNO3 25% (2 L/kg), podgrzej do 40°C przez 2-3h — usuwa Cu, Ni, Pb, Fe, Sn",
+      "Odsącz i przemyj osad (Au, Pt, Pd, AgCl, ceramika) wodą destylowaną — filtrat z HNO3 zachowaj do odzysku Ag i Cu",
+      "Woda królewska: przygotuj mieszaninę HCl 35% + HNO3 65% w proporcji 3:1 (obj.) w naczyniu PTFE lub szkle borokrzemowym",
+      "Powoli wsypuj osad do wody królewskiej, podgrzewaj do 60-70°C mieszając co 30 min — Au, Pt, Pd przechodzą do roztworu",
+      "Po rozpuszczeniu (4-8h) odsącz ceramikę i AgCl — AgCl odłóż do dalszego odzysku srebra",
+      "Rozkład HNO3: dodaj mocznik CO(NH2)2 porcjami (1-2 g/100 ml) aż ustąpią bąbelki — niszczy nadmiar HNO3 przeszkadzający redukcji",
+      "Wytrącanie Au: powoli dodawaj SMB (NaHSO3) do zimnego roztworu — złoto wytrąca się jako brązowy proszek",
+      "Odsącz złoty proszek, przemyj 3× wodą destylowaną, przemyj acetonem, wysusz",
+      "Wytop: umieść proszek w tyglu grafitowym, dodaj szczyptę boraksu jako topnik, przetop palnikiem lub piecem (>1064°C)",
+      "Platynę i pallad wytrąć z filtratu — Pt przez NH4Cl (wytrąca (NH4)2PtCl6), Pd przez DMAG lub cementację Cu",
     ],
   },
   {
@@ -84,6 +104,7 @@ const chemicalProcesses = [
     description:
       "Selektywna metoda odzysku srebra i metali pospolitych (Cu, Ni, Pb). Złoto nie reaguje z rozcieńczonym HNO3 i pozostaje w osadzie jako cenny produkt do dalszej obróbki wodą królewską.",
     targetMetals: ["Ag"],
+    outputPurityText: "Ag: 90–95% (po redukcji Zn) — odpowiada próbie 900–950; osad (Au, Pt) do dalszej obróbki wodą królewską",
     reagents: [
       {
         name: "Kwas azotowy rozcieńczony (HNO3 25%)",
@@ -122,19 +143,20 @@ const chemicalProcesses = [
     yieldPercent: { Au: 0, Ag: 85, Pt: 5, Pd: 10 },
     electricityKwhPerKg: 0.2,
     safetyNotes:
-      "Wydziela opary NO2/NO (brunatne/bezbarwne). Praca pod wyciągiem. Rękawice kwasoodporne obowiązkowe. Uwaga przy etapie HCl — wydziela gaz H2 przy kontakcie z cynkiem.",
+      "Wydziela opary NO2/NO (brunatne/bezbarwne). Praca pod wyciągiem. Rękawice kwasoodporne obowiązkowe. Uwaga przy etapie HCl — wydziela gaz H2 przy kontakcie z cynkiem (brak iskier!).",
     steps: [
-      "KROK 0 — BHP: wyciąg, rękawice kwasoodporne, gogle ochronne",
-      "KROK 1: Przygotuj HNO3 25% w naczyniu kwasoodpornym",
-      "KROK 2: Dodaj wsad elektroniczny porcjami — obserwuj intensywność reakcji (opary NO2)",
-      "KROK 3: Mieszaj i podgrzewaj do 40°C przez 2-4h — Cu, Ag, Ni, Pb przechodzą do roztworu",
-      "KROK 4: Odsącz osad (Au, Pt, ceramika) — to cenny wsad do procesu wody królewskiej",
-      "KROK 5 (wytrącanie Ag): Do filtratu dodaj NaCl — wytrąca się AgCl (biały osad)",
-      "KROK 6: Odsącz AgCl, przemyj 3× wodą destylowaną, osusz",
-      "KROK 7 (redukcja AgCl→Ag): Umieść AgCl w naczyniu, dodaj granulki cynku (Zn) i przykryj wodą — Zn wypiera Ag z AgCl",
-      "KROK 8: Poczekaj 30-60 min (reakcja zwalnia) — odsącz szary proszek Ag + resztki Zn",
-      "KROK 9: Dodaj rozcieńczony HCl — dissolwuje Zn, Ag pozostaje; odsącz, przemyj, wysusz proszek Ag",
-      "KROK 10: Przetop proszek Ag w tyglu — gotowe metaliczne srebro",
+      ...PREP_STEPS_ELECTRONIC,
+      "BHP: wyciąg, rękawice kwasoodporne, gogle ochronne",
+      "Przygotuj HNO3 25% w naczyniu kwasoodpornym",
+      "Dodaj wsad elektroniczny porcjami — obserwuj intensywność reakcji (opary NO2)",
+      "Mieszaj i podgrzewaj do 40°C przez 2-4h — Cu, Ag, Ni, Pb przechodzą do roztworu",
+      "Odsącz osad (Au, Pt, ceramika) — cenny wsad do dalszego procesu wody królewskiej",
+      "Wytrącanie Ag: do filtratu dodaj NaCl — wytrąca się AgCl (biały osad)",
+      "Odsącz AgCl, przemyj 3× wodą destylowaną, osusz",
+      "Redukcja AgCl→Ag: umieść AgCl w naczyniu, dodaj granulki Zn i przykryj wodą — Zn wypiera Ag z AgCl",
+      "Poczekaj 30-60 min — odsącz szary proszek Ag + resztki Zn",
+      "Dodaj rozcieńczony HCl — dissolwuje Zn, Ag pozostaje; odsącz, przemyj, wysusz proszek Ag",
+      "Przetop proszek Ag w tyglu — gotowe metaliczne srebro",
     ],
   },
   {
@@ -144,6 +166,7 @@ const chemicalProcesses = [
     description:
       "Agresywna metoda do wsadów bogatych w miedź i srebro. Stężony HNO3 szybko rozpuszcza metale nieszlachetne, Ag i Pd, pozostawiając Au i Pt w osadzie. Wymaga NaCl do wytrącenia AgCl i cynku do redukcji srebra metalicznego.",
     targetMetals: ["Ag", "Pd"],
+    outputPurityText: "Ag: 92–97% (po redukcji Zn) — odpowiada próbie 920–970; Pd: 70–85% surowy (wymaga dalszego oczyszczenia)",
     reagents: [
       {
         name: "Kwas azotowy stężony (HNO3 65%)",
@@ -184,17 +207,18 @@ const chemicalProcesses = [
     safetyNotes:
       "BARDZO NIEBEZPIECZNY. Intensywne opary NOx (brunatny dym). Wymagany sprawny wyciąg z aktywnym węglem. Maska ABEK P3, rękawice kwasoodporne, gogle. Reakcja gwałtowna — dodawaj wsad bardzo powoli i małymi porcjami!",
     steps: [
-      "KROK 0 — BHP: wyciąg aktywny, maska ABEK P3, rękawice kwasoodporne, gogle",
-      "KROK 1: Wlej stężony HNO3 65% do naczynia kwasoodpornego (PTFE lub szkło borokrzemowe)",
-      "KROK 2: Wsad dodawaj BARDZO powoli, porcjami — reakcja jest gwałtowna, brunatne opary NOx",
-      "KROK 3: Utrzymuj temperaturę 30-40°C (reakcja egzotermiczna — chłodź w razie potrzeby)",
-      "KROK 4: Kontynuuj do zaniku intensywnych oparów (1-3h na kg wsadu)",
-      "KROK 5: Odsącz osad (Au, Pt, ceramika) — zachowaj do dalszej obróbki (woda królewska)",
-      "KROK 6 (wytrącanie Ag): Do filtratu dodaj NaCl — wytrąca się AgCl (biały osad)",
-      "KROK 7: Odsącz AgCl, przemyj 3× wodą destylowaną, osusz",
-      "KROK 8 (redukcja AgCl→Ag): Dodaj granulki cynku (Zn) do zawiesiny AgCl z wodą — Zn wypiera Ag",
-      "KROK 9: Po 30-60 min odsącz szary proszek Ag+Zn; dodaj HCl — dissolwuje Zn, Ag pozostaje",
-      "KROK 10: Odsącz i przemyj proszek Ag, przetop w tyglu — gotowe metaliczne srebro",
+      ...PREP_STEPS_ELECTRONIC,
+      "BHP: wyciąg aktywny z węglem, maska ABEK P3, rękawice kwasoodporne, gogle",
+      "Wlej stężony HNO3 65% do naczynia kwasoodpornego (PTFE lub szkło borokrzemowe)",
+      "Wsad dodawaj BARDZO powoli porcjami — reakcja jest gwałtowna, intensywne brunatne opary NOx",
+      "Utrzymuj temperaturę 30-40°C (reakcja egzotermiczna — chłodź w razie potrzeby)",
+      "Kontynuuj do zaniku intensywnych oparów (1-3h na kg wsadu)",
+      "Odsącz osad (Au, Pt, ceramika) — zachowaj do dalszej obróbki wodą królewską",
+      "Wytrącanie Ag: do filtratu dodaj NaCl — wytrąca się AgCl (biały osad)",
+      "Odsącz AgCl, przemyj 3× wodą destylowaną, osusz",
+      "Redukcja AgCl→Ag: dodaj granulki Zn do zawiesiny AgCl z wodą — Zn wypiera Ag",
+      "Po 30-60 min odsącz szary proszek Ag+Zn; dodaj HCl — dissolwuje Zn, Ag pozostaje",
+      "Odsącz i przemyj proszek Ag, przetop w tyglu — gotowe metaliczne srebro",
     ],
   },
   {
@@ -204,6 +228,7 @@ const chemicalProcesses = [
     description:
       "Alternatywna metoda dla wody królewskiej. Kwas solny z nadtlenkiem wodoru tworzy chlor in-situ, który rozpuszcza złoto. Bezpieczniejsza alternatywa — bez oparów NOx. Na koniec złoty proszek przetapiany z boraksem.",
     targetMetals: ["Au", "Pd"],
+    outputPurityText: "Au: 95–98% (surowy proszek po SMB) — odpowiada próbie 950–980; wymaga rafinacji elektrolitycznej do 999; Pd: 50–70% surowy",
     reagents: [
       {
         name: "Kwas solny (HCl)",
@@ -244,15 +269,16 @@ const chemicalProcesses = [
     safetyNotes:
       "Brak oparów NOx, ale wydziela chlor gazowy (żółtozielony). Praca pod wyciągiem. Rękawice kwasoodporne, gogle. H2O2 dodawaj bardzo ostrożnie — reakcja egzotermiczna; nigdy nie dodawaj dużej porcji naraz.",
     steps: [
-      "KROK 0 — BHP: wyciąg, rękawice kwasoodporne, gogle",
-      "KROK 1: Wlej HCl 35% do naczynia kwasoodpornego (PTFE lub szkło)",
-      "KROK 2: Dodaj wsad elektroniczny (rozdrobniony)",
-      "KROK 3: Bardzo powoli, porcjami po 10-20 ml, dodawaj H2O2 30% — pojawi się chlor, reakcja jest egzotermiczna",
-      "KROK 4: Mieszaj regularnie, utrzymuj temp. 40-50°C; dodawaj H2O2, gdy reakcja zwalnia",
-      "KROK 5: Po 12-24h filtruj — ceramika i nierozpuszczony osad zostają na filtrze",
-      "KROK 6 (wytrącanie Au): Ochłodź roztwór; powoli dodawaj SMB (NaHSO3) — brązowy proszek Au wytrąca się",
-      "KROK 7: Odsącz złoto, przemyj 3× wodą destylowaną, przemyj acetonem, wysusz",
-      "KROK 8: Wytop proszek Au w tyglu grafitowym z szczyptą boraksu jako topnikiem (>1064°C)",
+      ...PREP_STEPS_ELECTRONIC,
+      "BHP: wyciąg (chlor!), rękawice kwasoodporne, gogle ochronne",
+      "Wlej HCl 35% do naczynia kwasoodpornego (PTFE lub szkło)",
+      "Dodaj rozdrobniony wsad elektroniczny",
+      "Bardzo powoli, porcjami po 10-20 ml, dodawaj H2O2 30% — pojawi się chlor, reakcja jest egzotermiczna",
+      "Mieszaj regularnie, utrzymuj temp. 40-50°C; dodawaj H2O2, gdy reakcja zwalnia",
+      "Po 12-24h filtruj — ceramika i nierozpuszczony osad zostają na filtrze",
+      "Wytrącanie Au: ochłodź roztwór; powoli dodawaj SMB (NaHSO3) — brązowy proszek Au wytrąca się",
+      "Odsącz złoto, przemyj 3× wodą destylowaną, przemyj acetonem, wysusz",
+      "Wytop proszek Au w tyglu grafitowym ze szczyptą boraksu jako topnikiem (>1064°C)",
     ],
   },
   {
@@ -262,6 +288,7 @@ const chemicalProcesses = [
     description:
       "Stara metoda rafinacyjna stosowana przez jubilerów. Mieszanina azotanu sodu i kwasu siarkowego tworzy kwas azotowy in-situ. Skuteczna do oczyszczania stopów złota. Wymaga NaCl do wytrącenia Ag i SMB do wytrącenia Au z roztworu.",
     targetMetals: ["Au", "Ag"],
+    outputPurityText: "Au: 85–92% surowy (wymaga dalszej rafinacji elektrolitycznej); Ag: 90–95% (surowy AgCl po wytrąceniu NaCl)",
     reagents: [
       {
         name: "Azotan sodu (NaNO3)",
@@ -300,18 +327,19 @@ const chemicalProcesses = [
     yieldPercent: { Au: 85, Ag: 90, Pt: 30, Pd: 40 },
     electricityKwhPerKg: 0.8,
     safetyNotes:
-      "BARDZO WYSOKA TEMPERATURA + opary NOx. H2SO4 98% jest silnie egzotermiczny z wodą — nigdy nie dodawaj wody do stężonego H2SO4! Maska ABEK P3, rękawice kwasoodporne odporne na wysokie temperatury (neopren), fartuch, gogle. Wyciąg obowiązkowy.",
+      "BARDZO WYSOKA TEMPERATURA + opary NOx. H2SO4 98% jest silnie egzotermiczny z wodą — nigdy nie dodawaj wody do stężonego H2SO4! Maska ABEK P3, rękawice kwasoodporne termooodporne (neopren), fartuch, gogle. Wyciąg obowiązkowy.",
     steps: [
-      "KROK 0 — BHP: wyciąg z aktywnym węglem, maska ABEK P3, rękawice termooodporne i kwasoodporne, gogle",
-      "KROK 1: Wlej H2SO4 98% do naczynia żaroodpornego i kwasoodpornego (kwarc lub niobian)",
-      "KROK 2: Stopniowo dodawaj NaNO3 do kwasu — NIE odwrotnie! Mieszaj do rozpuszczenia",
-      "KROK 3: Podgrzewaj do 80-100°C przy ciągłym mieszaniu — tworzy się HNO3 in-situ",
-      "KROK 4: Dodaj rozdrobniony wsad (złom elektroniczny) porcjami",
-      "KROK 5: Utrzymuj temperaturę 80-100°C przez 3-6h — metale przechodzą do roztworu",
-      "KROK 6: Ostudź do temperatury pokojowej; ostrożnie rozcieńcz wodą (SILNIE EGZOTERMICZNE — dodawaj wodę do kwasu, nie odwrotnie!)",
-      "KROK 7 (wytrącanie Ag): Do filtratu dodaj NaCl — biały osad AgCl; odsącz, przemyj, osusz",
-      "KROK 8 (wytrącanie Au): Do filtratu bez AgCl dodaj SMB (NaHSO3) — brązowy proszek Au wytrąca się",
-      "KROK 9: Odsącz złoto, przemyj, wysusz i przetop w tyglu grafitowym",
+      ...PREP_STEPS_ELECTRONIC,
+      "BHP: wyciąg z aktywnym węglem, maska ABEK P3, rękawice termooodporne i kwasoodporne, gogle",
+      "Wlej H2SO4 98% do naczynia żaroodpornego i kwasoodpornego (kwarc lub niobian)",
+      "Stopniowo dodawaj NaNO3 do kwasu — NIE odwrotnie! Mieszaj do rozpuszczenia",
+      "Podgrzewaj do 80-100°C przy ciągłym mieszaniu — tworzy się HNO3 in-situ",
+      "Dodaj rozdrobniony wsad elektroniczny porcjami",
+      "Utrzymuj temperaturę 80-100°C przez 3-6h — metale przechodzą do roztworu",
+      "Ostudź do pokojowej; ostrożnie rozcieńcz wodą (SILNIE EGZOTERMICZNE — dodawaj wodę DO kwasu, nie odwrotnie!)",
+      "Wytrącanie Ag: do filtratu dodaj NaCl — biały osad AgCl; odsącz, przemyj, osusz",
+      "Wytrącanie Au: do filtratu bez AgCl dodaj SMB (NaHSO3) — brązowy proszek Au wytrąca się",
+      "Odsącz złoto, przemyj, wysusz i przetop w tyglu grafitowym",
     ],
   },
   {
@@ -321,6 +349,7 @@ const chemicalProcesses = [
     description:
       "Selektywna metoda rafinacji złota. Złoto z anody przechodzi do katody jako czysty metal 999+. Wymaga wstępnego stopienia wsadu w anodę (z boraksem jako topnikiem). Elektrolit: HNO3 10% + Au(NO3)3.",
     targetMetals: ["Au", "Ag"],
+    outputPurityText: "Au: 999+ (99.9%) — gotowe do sprzedaży jako złoto inwestycyjne; Ag: 95–98% (szlam anodowy wymaga dalszej obróbki)",
     reagents: [
       {
         name: "Kwas azotowy (elektrolit bazowy)",
@@ -354,15 +383,16 @@ const chemicalProcesses = [
     safetyNotes:
       "Elektroliza sama w sobie jest stosunkowo bezpieczna. Jednak elektrolit (HNO3 10%) jest żrący — rękawice nitrylowe i gogle. Etap wytopu anody wymaga palnika (>1064°C) — środki ochrony p.poż.",
     steps: [
-      "KROK 0 — BHP: rękawice nitrylowe, gogle; przy wytocie anody — osłona termiczna",
-      "KROK 1 (wytop anody): Przetop wsad w tyglu grafitowym z boraksem jako topnikiem — uformuj anodę (blok/płytka)",
-      "KROK 2: Przygotuj elektrolit: HNO3 10% + Au(NO3)3 w wannie elektrolitycznej, podgrzej do 25-30°C",
-      "KROK 3: Zamontuj anodę (wsad) i katodę (folia tytanowa lub czyste Au)",
-      "KROK 4: Ustaw napięcie 0.5-1.5V, gęstość prądu 50-200 A/m²",
-      "KROK 5: Elektrolizuj 12-48h — złoto osadza się na katodzie jako czysty metal 999+",
-      "KROK 6: Regularnie zbieraj szlam anodowy (Pt, Pd, Ag, inne metale szlachetne) do dalszej obróbki",
-      "KROK 7: Wyjmij katodę, oczyść z elektrolitu, przemyj wodą destylowaną, przetop",
-      "KROK 8: Wynik — złoto 999+ czystości; szlam anodowy przetworzyć wodą królewską lub Wöhlwillem",
+      ...PREP_STEPS_METAL,
+      "BHP: rękawice nitrylowe, gogle; przy wytociu anody — osłona termiczna i rękawice żaroodporne",
+      "Wytop anody: przetop wsad w tyglu grafitowym z boraksem jako topnikiem — uformuj anodę (blok lub płytka)",
+      "Przygotuj elektrolit: HNO3 10% + Au(NO3)3 w wannie elektrolitycznej, podgrzej do 25-30°C",
+      "Zamontuj anodę (wsad) i katodę (folia tytanowa lub czyste Au)",
+      "Ustaw napięcie 0.5-1.5V, gęstość prądu 50-200 A/m²",
+      "Elektrolizuj 12-48h — złoto osadza się na katodzie jako czysty metal 999+",
+      "Regularnie zbieraj szlam anodowy (Pt, Pd, Ag, inne) do dalszej obróbki",
+      "Wyjmij katodę, oczyść z elektrolitu, przemyj wodą destylowaną, przetop",
+      "Wynik: złoto 999+ czystości; szlam anodowy przetworzyć wodą królewską lub procesem Wöhlwilla",
     ],
   },
   {
@@ -372,6 +402,7 @@ const chemicalProcesses = [
     description:
       "Przemysłowy proces elektrolityczny dla złota najwyższej czystości (999.9). Elektrolit na bazie chlorku złota (AuCl3) w HCl. Standard dla mennic i rafinerii. Wymaga wstępnego wytopu anod z boraksem jako topnikiem.",
     targetMetals: ["Au"],
+    outputPurityText: "Au: 999.9 (99.99%) — najwyższa możliwa czystość komercyjna; standard mennic i rynku inwestycyjnego (złoto lokacyjne)",
     reagents: [
       {
         name: "Kwas solny (elektrolit bazowy HCl 20%)",
@@ -405,15 +436,16 @@ const chemicalProcesses = [
     safetyNotes:
       "Wysoka temperatura elektrolitu (65-70°C). Opary HCl — wyciąg obowiązkowy. Rękawice kwasoodporne, gogle. Etap wytopu anod wymaga palnika (>1064°C) — osłona termiczna. Koszt AuCl3 bardzo wysoki — opłacalny tylko dla wsadów z >90% Au.",
     steps: [
-      "KROK 0 — BHP: wyciąg aktywny (opary HCl), rękawice kwasoodporne, gogle; przy wytocie — osłona termiczna",
-      "KROK 1 (wytop anod): Przetop wsad (wymagany min. 90% Au) w tyglu grafitowym z boraksem jako topnikiem — uformuj anody (płytki ~5-10mm)",
-      "KROK 2: Przygotuj elektrolit: HCl 20% + AuCl3 10% w wannie kwasoodpornej, podgrzej do 65-70°C",
-      "KROK 3: Zamontuj anody i katody (folia tytanowa lub czyste Au)",
-      "KROK 4: Ustaw parametry: U=1.0-1.2V, gęstość prądu 500-1000 A/m², T=65-70°C",
-      "KROK 5: Elektrolizuj 24-72h — złoto 999.9 osadza się na katodach jako kryształy",
-      "KROK 6: Pobierz katody, oczyść z elektrolitu wodą destylowaną, osusz",
-      "KROK 7: Przetop katody w tyglu grafitowym — gotowe złoto 999.9",
-      "KROK 8: Szlam anodowy (Pt, Pd, Ag) przetworzyć oddzielnie (kwas azotowy lub woda królewska)",
+      ...PREP_STEPS_METAL,
+      "BHP: wyciąg aktywny (opary HCl), rękawice kwasoodporne, gogle; przy wytocie anod — osłona termiczna",
+      "Wytop anod: przetop wsad (min. 90% Au) w tyglu grafitowym z boraksem — uformuj anody (płytki ~5-10mm)",
+      "Przygotuj elektrolit: HCl 20% + AuCl3 10% w wannie kwasoodpornej, podgrzej do 65-70°C",
+      "Zamontuj anody i katody (folia tytanowa lub czyste Au)",
+      "Ustaw parametry: U=1.0-1.2V, gęstość prądu 500-1000 A/m², T=65-70°C",
+      "Elektrolizuj 24-72h — złoto 999.9 osadza się na katodach jako kryształy",
+      "Pobierz katody, oczyść z elektrolitu wodą destylowaną, osusz",
+      "Przetop katody w tyglu grafitowym — gotowe złoto 999.9",
+      "Szlam anodowy (Pt, Pd, Ag) przetworzyć oddzielnie (kwas azotowy lub woda królewska)",
     ],
   },
   {
@@ -424,6 +456,7 @@ const chemicalProcesses = [
     description:
       "Przemysłowa metoda oczyszczania złota przez nadmuch chloru do stopionego metalu w piecu indukcyjnym. Zanieczyszczenia (Ag, Cu, Pb, Zn) reagują z Cl2, tworząc chlorki które pływają na powierzchni. Złoto pozostaje czyste (99.0-99.5%). WYMAGA instalacji neutralizacji Cl2 (NaOH).",
     targetMetals: ["Au"],
+    outputPurityText: "Au: 990–995 (99.0–99.5%) — produkt pośredni; wymaga rafinacji Wöhlwilla do 999.9 dla rynku inwestycyjnego",
     reagents: [
       {
         name: "Chlor gazowy (Cl2)",
@@ -457,15 +490,16 @@ const chemicalProcesses = [
     safetyNotes:
       "EKSTREMALNIE NIEBEZPIECZNY — chlor gazowy jest silnie toksyczny (LC50=430 mg/m³). WYMAGANY szczelny system z pełną instalacją scrubberową NaOH. Tylko dla profesjonalnych rafinerii z certyfikowanym wyposażeniem, systemem wentylacji i szkolonym personelem. NIE dla amatorów.",
     steps: [
-      "KROK 0 — BHP: certyfikowany scrubber Cl2 z NaOH, maska z filtrem B2P3 lub aparat powietrzny, kombinezon kwasoodporny, wyciąg przemysłowy — MINIMUM",
-      "KROK 1: Uruchom piec indukcyjny, nagrzej tygiel grafitowy do 1100°C",
-      "KROK 2: Dodaj wsad (stop złota) i boraks jako topnik — poczekaj do pełnego stopienia",
-      "KROK 3: Podłącz instalację Cl2 (rura kwarc/glinka) — sprawdź szczelność systemu scrubberowego",
-      "KROK 4: Wdmuchuj Cl2 powoli do stopionego metalu — obserwuj kolor płomienia (żółty = AgCl, biały = PbCl2/ZnCl2)",
-      "KROK 5: Off-gaz Cl2 przechodzi przez scrubber NaOH — sprawdzaj pochłanianie (papierek lakmusowy)",
-      "KROK 6: Kontynuuj do zaniku barwnych płomieni i klarowania stopionego złota (0.5-2h)",
-      "KROK 7: Zatrzymaj dopływ Cl2, spuść złocisty metal do form — wynik: Au 99.0-99.5%",
-      "KROK 8: Chlorki z powierzchni (szlam) przetworzyć do odzysku Ag — zawierają AgCl",
+      ...PREP_STEPS_METAL,
+      "BHP: certyfikowany scrubber Cl2 z NaOH, maska z filtrem B2P3 lub aparat powietrzny, kombinezon kwasoodporny, wyciąg przemysłowy — MINIMUM",
+      "Uruchom piec indukcyjny, nagrzej tygiel grafitowy do 1100°C",
+      "Dodaj wsad (stop złota) i boraks jako topnik — poczekaj do pełnego stopienia",
+      "Podłącz instalację Cl2 (rura kwarc/glinka) — sprawdź szczelność systemu scrubberowego NaOH",
+      "Wdmuchuj Cl2 powoli do stopionego metalu — obserwuj kolor płomienia (żółty = AgCl, biały = PbCl2/ZnCl2)",
+      "Off-gaz Cl2 przechodzi przez scrubber NaOH — sprawdzaj pochłanianie papierkiem lakmusowym",
+      "Kontynuuj do zaniku barwnych płomieni i klarowania stopionego złota (0.5-2h)",
+      "Zatrzymaj dopływ Cl2, spuść złocisty metal do form — wynik: Au 99.0-99.5%",
+      "Chlorki z powierzchni (szlam) przetworzyć do odzysku Ag — zawierają AgCl",
     ],
   },
   {
@@ -475,6 +509,7 @@ const chemicalProcesses = [
     description:
       "Klasyczna metoda wytrącania złota z roztworu (np. cyjanku lub chlorku) przez dodanie cynku. Cynk wypiera złoto z roztworu — cementacja. Po cementacji cynk rozpuszcza się w HCl, a złoto pozostaje jako proszek.",
     targetMetals: ["Au", "Ag"],
+    outputPurityText: "Au/Ag: 80–90% (surowy stop Au+Ag po wytopu) — wymaga dalszej rafinacji elektrolitycznej lub procesem Millera",
     reagents: [
       {
         name: "Cynk metaliczny (granulki Zn)",
@@ -508,15 +543,14 @@ const chemicalProcesses = [
     safetyNotes:
       "KRYTYCZNE przy NaCN — cyjanki są silnie toksyczne (śmiertelne)! Pracuj ZAWSZE przy pH > 10 (zasadowe). Nigdy nie mieszaj NaCN z kwasem (wydzielanie HCN!). Etap HCl do cynku jest bezpieczny, ale wydziela H2 — iskry niedopuszczalne.",
     steps: [
-      "KROK 0 — BHP: przy NaCN — maska z filtrem B2P3, rękawice nitrylowe, wyciąg; antidotum (Na2S2O3) pod ręką",
-      "KROK 1: Przygotuj roztwór zawierający Au (np. po ługowaniu cyjankowym lub chlorkowym)",
-      "KROK 2 (KRYTYCZNE przy NaCN): Doprowadź pH do 10-12 (dodaj Ca(OH)2 lub NaOH) — nigdy przy niższym pH!",
-      "KROK 3: Dodaj granulki cynku (Zn) do roztworu — Au i Ag osadzają się na cynku (cementacja)",
-      "KROK 4: Mieszaj przez 2-4h — złoto osadza się na cynku jako szary/brązowy osad",
-      "KROK 5: Odsącz osad (Au + Ag + resztki Zn), przemyj wodą",
-      "KROK 6 (usunięcie cynku): Przenieś osad do nowego naczynia, dodaj rozcieńczony HCl 35% — Zn dissolwuje się, wydziela H2 (brak iskier!); Au i Ag pozostają",
-      "KROK 7: Odsącz złoty/srebrny proszek, przemyj 3× wodą destylowaną, wysusz",
-      "KROK 8: Przetop proszek w tyglu grafitowym z boraksem — gotowy stop Au/Ag",
+      ...PREP_STEPS_SOLUTION,
+      "BHP: przy NaCN — maska z filtrem B2P3, rękawice nitrylowe, wyciąg; antidotum (Na2S2O3) i apteczka pod ręką",
+      "Dodaj granulki cynku (Zn) do alkalicznego roztworu Au — Au i Ag osadzają się na cynku (cementacja)",
+      "Mieszaj przez 2-4h — złoto osadza się na cynku jako szary/brązowy osad",
+      "Odsącz osad (Au + Ag + resztki Zn), przemyj wodą",
+      "Usunięcie cynku: przenieś osad do naczynia, dodaj rozcieńczony HCl 35% — Zn dissolwuje się, wydziela H2 (brak iskier!); Au i Ag pozostają",
+      "Odsącz złoty/srebrny proszek, przemyj 3× wodą destylowaną, wysusz",
+      "Przetop proszek w tyglu grafitowym z boraksem — gotowy stop Au/Ag",
     ],
   },
 ];
