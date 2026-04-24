@@ -124,6 +124,18 @@ export default defineConfig({
             },
           },
           {
+            urlPattern: /\/api\/calculator\/estimate/,
+            handler: "NetworkOnly",
+            method: "POST",
+            options: {
+              cacheName: "api-calculator",
+              backgroundSync: {
+                name: "calculator-queue",
+                options: { maxRetentionTime: 24 * 60 },
+              },
+            },
+          },
+          {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\//,
             handler: "StaleWhileRevalidate",
             options: {
