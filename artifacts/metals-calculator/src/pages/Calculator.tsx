@@ -300,7 +300,7 @@ export function CalculatorPage() {
                             <div className="p-2"><Skeleton className="h-4 w-full" /></div>
                           ) : materials?.map(m => (
                             <SelectItem key={m.id} value={m.id}>
-                              {m.name} <span className="text-muted-foreground ml-2">({m.unit})</span>
+                              {m.name} <span className="text-muted-foreground ml-2">({m.unit === 'piece' ? 'szt.' : 'kg'})</span>
                             </SelectItem>
                           ))}
                         </SelectContent>
