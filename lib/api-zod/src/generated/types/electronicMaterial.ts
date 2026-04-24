@@ -16,8 +16,10 @@ export interface ElectronicMaterial {
   /** English name */
   nameEn: string;
   category: ElectronicMaterialCategory;
-  /** Whether metal content is per kg or per piece */
+  /** Default unit for this material (kg or piece). Users may override per batch row. */
   unit: ElectronicMaterialUnit;
+  /** Estimated weight of one piece in kg. Required when unit=piece; optional but helpful for kg-unit materials to enable piece counting. */
+  weightPerPiece?: number;
   metalContentPerKg: MetalContent;
   notes?: string;
 }

@@ -10,13 +10,16 @@ export type ElectronicMaterialCategory =
   (typeof ElectronicMaterialCategory)[keyof typeof ElectronicMaterialCategory];
 
 export const ElectronicMaterialCategory = {
+  plyty_glowne: "plyty_glowne",
   pcb: "pcb",
-  processor: "processor",
-  memory: "memory",
+  procesor: "procesor",
+  pamiec: "pamiec",
+  karta: "karta",
+  dysk: "dysk",
+  urzadzenie: "urzadzenie",
+  zasilacz: "zasilacz",
   ic: "ic",
-  connector: "connector",
-  capacitor: "capacitor",
-  phone: "phone",
-  laptop: "laptop",
-  other: "other",
+  zlacza: "zlacza",
+  kondensator: "kondensator",
+  inne: "inne",
 } as const;

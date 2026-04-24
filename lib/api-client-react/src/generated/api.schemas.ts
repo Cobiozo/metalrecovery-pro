@@ -61,19 +61,22 @@ export type ElectronicMaterialCategory =
   (typeof ElectronicMaterialCategory)[keyof typeof ElectronicMaterialCategory];
 
 export const ElectronicMaterialCategory = {
+  plyty_glowne: "plyty_glowne",
   pcb: "pcb",
-  processor: "processor",
-  memory: "memory",
+  procesor: "procesor",
+  pamiec: "pamiec",
+  karta: "karta",
+  dysk: "dysk",
+  urzadzenie: "urzadzenie",
+  zasilacz: "zasilacz",
   ic: "ic",
-  connector: "connector",
-  capacitor: "capacitor",
-  phone: "phone",
-  laptop: "laptop",
-  other: "other",
+  zlacza: "zlacza",
+  kondensator: "kondensator",
+  inne: "inne",
 } as const;
 
 /**
- * Whether metal content is per kg or per piece
+ * Default unit for this material (kg or piece). Users may override per batch row.
  */
 export type ElectronicMaterialUnit =
   (typeof ElectronicMaterialUnit)[keyof typeof ElectronicMaterialUnit];
@@ -90,8 +93,10 @@ export interface ElectronicMaterial {
   /** English name */
   nameEn: string;
   category: ElectronicMaterialCategory;
-  /** Whether metal content is per kg or per piece */
+  /** Default unit for this material (kg or piece). Users may override per batch row. */
   unit: ElectronicMaterialUnit;
+  /** Estimated weight of one piece in kg. Required when unit=piece; optional but helpful for kg-unit materials to enable piece counting. */
+  weightPerPiece?: number;
   metalContentPerKg: MetalContent;
   notes?: string;
 }

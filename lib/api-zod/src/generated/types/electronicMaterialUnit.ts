@@ -7,7 +7,7 @@
  */
 
 /**
- * Whether metal content is per kg or per piece
+ * Default unit for this material (kg or piece). Users may override per batch row.
  */
 export type ElectronicMaterialUnit =
   (typeof ElectronicMaterialUnit)[keyof typeof ElectronicMaterialUnit];

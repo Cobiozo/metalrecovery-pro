@@ -37,19 +37,30 @@ export const GetElectronicMaterialsResponseItem = zod.object({
   name: zod.string().describe("Polish name of the component type"),
   nameEn: zod.string().describe("English name"),
   category: zod.enum([
+    "plyty_glowne",
     "pcb",
-    "processor",
-    "memory",
+    "procesor",
+    "pamiec",
+    "karta",
+    "dysk",
+    "urzadzenie",
+    "zasilacz",
     "ic",
-    "connector",
-    "capacitor",
-    "phone",
-    "laptop",
-    "other",
+    "zlacza",
+    "kondensator",
+    "inne",
   ]),
   unit: zod
     .enum(["kg", "piece"])
-    .describe("Whether metal content is per kg or per piece"),
+    .describe(
+      "Default unit for this material (kg or piece). Users may override per batch row.",
+    ),
+  weightPerPiece: zod
+    .number()
+    .optional()
+    .describe(
+      "Estimated weight of one piece in kg. Required when unit=piece; optional but helpful for kg-unit materials to enable piece counting.",
+    ),
   metalContentPerKg: zod
     .object({
       Au: zod.object({

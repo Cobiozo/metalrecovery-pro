@@ -16,6 +16,7 @@ type BatchItemState = {
   id: string;
   materialId: string;
   quantity: number;
+  unitOverride?: 'kg' | 'piece';
 };
 
 type SavedSession = {
@@ -135,6 +136,16 @@ export function CalculatorPage() {
     setBatchItems([...batchItems, { id: Math.random().toString(), materialId: '', quantity: 1 }]);
   };
 
+  const handleBatchUnitToggle = (id: string) => {
+    setBatchItems(batchItems.map(item => {
+      if (item.id !== id) return item;
+      const material = materials?.find(m => m.id === item.materialId);
+      const defaultUnit = material?.unit === 'piece' ? 'piece' : 'kg';
+      const current = item.unitOverride ?? defaultUnit;
+      return { ...item, unitOverride: current === 'kg' ? 'piece' : 'kg' };
+    }));
+  };
+
   const handleRemoveBatchItem = (id: string) => {
     if (batchItems.length > 1) {
       setBatchItems(batchItems.filter(item => item.id !== id));
@@ -159,7 +170,19 @@ export function CalculatorPage() {
     if (!selectedProcessId || batchItems.some(i => !i.materialId || i.quantity <= 0)) return;
 
     const requestData: Parameters<typeof calculateMutation.mutate>[0]['data'] = {
-      batch: batchItems.map(item => ({ materialId: item.materialId, quantity: item.quantity })),
+      batch: batchItems.map(item => {
+        const material = materials?.find(m => m.id === item.materialId);
+        const nativeUnit = material?.unit === 'piece' ? 'piece' : 'kg';
+        const effectiveUnit = getEffectiveUnit(item);
+        let quantity = item.quantity;
+        if (effectiveUnit === 'piece' && nativeUnit === 'kg') {
+          quantity = item.quantity * getWeightPerPiece(item);
+        } else if (effectiveUnit === 'kg' && nativeUnit === 'piece') {
+          const wpp = getWeightPerPiece(item);
+          quantity = wpp > 0 ? Math.round(item.quantity / wpp) : item.quantity;
+        }
+        return { materialId: item.materialId, quantity };
+      }),
       processId: selectedProcessId,
       electricityPricePerKwh: processParams.electricityPricePerKwh,
     };
@@ -210,20 +233,23 @@ export function CalculatorPage() {
     saveSessions(updated);
   };
 
-  const PIECE_WEIGHT_KG: Record<string, number> = {
-    cpu_intel: 0.03,
-    cpu_amd: 0.028,
-    phone_smartphone: 0.17,
-    phone_feature: 0.08,
-    laptop_complete: 2.2,
+  const getEffectiveUnit = (item: BatchItemState): 'kg' | 'piece' => {
+    if (item.unitOverride) return item.unitOverride;
+    const material = materials?.find(m => m.id === item.materialId);
+    return material?.unit === 'piece' ? 'piece' : 'kg';
+  };
+
+  const getWeightPerPiece = (item: BatchItemState): number => {
+    const material = materials?.find(m => m.id === item.materialId);
+    return (material as any)?.weightPerPiece ?? 0.1;
   };
 
   const totalMass = batchItems.reduce((acc, item) => {
     const material = materials?.find(m => m.id === item.materialId);
     if (!material) return acc;
-    if (material.unit === 'piece') {
-      const weightPerPiece = PIECE_WEIGHT_KG[item.materialId] ?? 0.1;
-      return acc + item.quantity * weightPerPiece;
+    const effectiveUnit = getEffectiveUnit(item);
+    if (effectiveUnit === 'piece') {
+      return acc + item.quantity * getWeightPerPiece(item);
     }
     return acc + item.quantity;
   }, 0);
@@ -340,24 +366,38 @@ export function CalculatorPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="flex gap-3 w-full sm:w-auto">
+                    <div className="flex gap-2 w-full sm:w-auto items-end">
                       <div className="flex-1 sm:w-32">
                         <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Ilość</label>
-                        <div className="relative">
-                          <Input
-                            type="number"
-                            min="0.001"
-                            step="0.01"
-                            value={item.quantity}
-                            onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
-                            className="bg-background pr-12 font-mono"
-                          />
-                          <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">
-                            {selectedMaterial?.unit === 'piece' ? 'szt.' : 'kg'}
-                          </span>
+                        <div className="flex gap-1">
+                          <div className="relative flex-1">
+                            <Input
+                              type="number"
+                              min="0.001"
+                              step={getEffectiveUnit(item) === 'piece' ? "1" : "0.01"}
+                              value={item.quantity}
+                              onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
+                              className="bg-background font-mono"
+                            />
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleBatchUnitToggle(item.id)}
+                            disabled={!item.materialId}
+                            className="shrink-0 w-12 text-xs font-bold px-1"
+                            title="Kliknij aby przełączyć między kg i szt."
+                          >
+                            {getEffectiveUnit(item) === 'piece' ? 'szt.' : 'kg'}
+                          </Button>
                         </div>
+                        {item.materialId && getEffectiveUnit(item) === 'piece' && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            ≈ {(item.quantity * getWeightPerPiece(item)).toFixed(2)} kg
+                          </p>
+                        )}
                       </div>
-                      <div className="pt-7">
+                      <div className="pb-0.5">
                         <Button
                           variant="destructive"
                           size="icon"

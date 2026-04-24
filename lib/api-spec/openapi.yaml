@@ -197,11 +197,14 @@ components:
           description: English name
         category:
           type: string
-          enum: [pcb, processor, memory, ic, connector, capacitor, phone, laptop, other]
+          enum: [plyty_glowne, pcb, procesor, pamiec, karta, dysk, urzadzenie, zasilacz, ic, zlacza, kondensator, inne]
         unit:
           type: string
           enum: [kg, piece]
-          description: Whether metal content is per kg or per piece
+          description: Default unit for this material (kg or piece). Users may override per batch row.
+        weightPerPiece:
+          type: number
+          description: Estimated weight of one piece in kg. Required when unit=piece; optional but helpful for kg-unit materials to enable piece counting.
         metalContentPerKg:
           $ref: "#/components/schemas/MetalContent"
         notes:
