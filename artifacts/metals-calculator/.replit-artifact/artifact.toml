@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Kalkulator Metali Szlachetnych"
+version = "1.0.0"
+id = "artifacts/metals-calculator"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21512
+
+[services.development]
+run = "pnpm --filter @workspace/metals-calculator run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/metals-calculator", "run", "build" ]
+publicDir = "artifacts/metals-calculator/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21512"
+BASE_PATH = "/"

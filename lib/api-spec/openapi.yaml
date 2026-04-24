@@ -3,13 +3,21 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API specification for Precious Metals Recovery Calculator
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: metals
+    description: Precious metal price operations
+  - name: materials
+    description: Electronic materials and their metal content
+  - name: chemicals
+    description: Chemical processes for metal extraction
+  - name: calculator
+    description: Metal recovery calculation operations
 paths:
   /healthz:
     get:
@@ -24,6 +32,73 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /metals/prices:
+    get:
+      operationId: getMetalPrices
+      tags: [metals]
+      summary: Get current precious metal prices in PLN
+      description: Returns current Au, Ag, Pt, Pd prices from external API with 1hr cache
+      responses:
+        "200":
+          description: Current metal prices
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MetalPrices"
+
+  /materials/electronics:
+    get:
+      operationId: getElectronicMaterials
+      tags: [materials]
+      summary: Get list of electronic component types with precious metal content
+      description: Returns a comprehensive list of electronic types with min/max metal content per kg or unit
+      responses:
+        "200":
+          description: List of electronic materials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ElectronicMaterial"
+
+  /chemicals/processes:
+    get:
+      operationId: getChemicalProcesses
+      tags: [chemicals]
+      summary: Get all wet chemistry extraction processes
+      description: Returns all known wet chemistry processes with parameters, reagents, and expected yields
+      responses:
+        "200":
+          description: List of chemical processes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChemicalProcess"
+
+  /calculator/estimate:
+    post:
+      operationId: calculateRecovery
+      tags: [calculator]
+      summary: Calculate precious metal recovery estimate
+      description: Given input batch, chemical process, and parameters, estimate recovered metals, costs, and profitability
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CalculationRequest"
+      responses:
+        "200":
+          description: Calculation result with profitability analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalculationResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +109,311 @@ components:
       required:
         - status
 
+    MetalPrices:
+      type: object
+      properties:
+        Au:
+          type: number
+          description: Gold price in PLN per gram
+        Ag:
+          type: number
+          description: Silver price in PLN per gram
+        Pt:
+          type: number
+          description: Platinum price in PLN per gram
+        Pd:
+          type: number
+          description: Palladium price in PLN per gram
+        updatedAt:
+          type: string
+          format: date-time
+        source:
+          type: string
+          description: Data source name
+      required:
+        - Au
+        - Ag
+        - Pt
+        - Pd
+        - updatedAt
+        - source
+
+    MetalContent:
+      type: object
+      description: Metal content in grams per kg of material
+      properties:
+        Au:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            typical:
+              type: number
+          required: [min, max, typical]
+        Ag:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            typical:
+              type: number
+          required: [min, max, typical]
+        Pt:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            typical:
+              type: number
+          required: [min, max, typical]
+        Pd:
+          type: object
+          properties:
+            min:
+              type: number
+            max:
+              type: number
+            typical:
+              type: number
+          required: [min, max, typical]
+      required: [Au, Ag, Pt, Pd]
+
+    ElectronicMaterial:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          description: Polish name of the component type
+        nameEn:
+          type: string
+          description: English name
+        category:
+          type: string
+          enum: [pcb, processor, memory, ic, connector, capacitor, phone, laptop, other]
+        unit:
+          type: string
+          enum: [kg, piece]
+          description: Whether metal content is per kg or per piece
+        metalContentPerKg:
+          $ref: "#/components/schemas/MetalContent"
+        notes:
+          type: string
+      required: [id, name, nameEn, category, unit, metalContentPerKg]
+
+    Reagent:
+      type: object
+      properties:
+        name:
+          type: string
+        formula:
+          type: string
+        concentration:
+          type: number
+          description: Concentration in percent
+        amountPerKg:
+          type: number
+          description: Amount in liters per kg of input material
+        pricePerLiter:
+          type: number
+          description: Price in PLN per liter
+      required: [name, formula, concentration, amountPerKg, pricePerLiter]
+
+    ChemicalProcess:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          description: Polish name of the process
+        nameEn:
+          type: string
+        description:
+          type: string
+        targetMetals:
+          type: array
+          items:
+            type: string
+            enum: [Au, Ag, Pt, Pd]
+        reagents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reagent"
+        temperatureMin:
+          type: number
+          description: Minimum process temperature in Celsius
+        temperatureMax:
+          type: number
+          description: Maximum process temperature in Celsius
+        temperatureOptimal:
+          type: number
+          description: Optimal process temperature in Celsius
+        timePerKgMin:
+          type: number
+          description: Minimum processing time in hours per kg
+        timePerKgMax:
+          type: number
+          description: Maximum processing time in hours per kg
+        yieldPercent:
+          type: object
+          description: Expected yield percentage per metal
+          properties:
+            Au:
+              type: number
+            Ag:
+              type: number
+            Pt:
+              type: number
+            Pd:
+              type: number
+          required: [Au, Ag, Pt, Pd]
+        electricityKwhPerKg:
+          type: number
+          description: Electricity consumption in kWh per kg (for electrolysis)
+        safetyNotes:
+          type: string
+        steps:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - nameEn
+        - description
+        - targetMetals
+        - reagents
+        - temperatureMin
+        - temperatureMax
+        - temperatureOptimal
+        - timePerKgMin
+        - timePerKgMax
+        - yieldPercent
+        - electricityKwhPerKg
+        - safetyNotes
+        - steps
+
+    BatchItem:
+      type: object
+      properties:
+        materialId:
+          type: string
+        quantity:
+          type: number
+          description: Amount in kg or pieces (depending on unit)
+      required: [materialId, quantity]
+
+    CalculationRequest:
+      type: object
+      properties:
+        batch:
+          type: array
+          items:
+            $ref: "#/components/schemas/BatchItem"
+          minItems: 1
+        processId:
+          type: string
+        acidConcentrationOverride:
+          type: number
+          description: Optional acid concentration override in percent
+        temperatureOverride:
+          type: number
+          description: Optional temperature override in Celsius
+        electricityPricePerKwh:
+          type: number
+          description: Electricity price in PLN per kWh (default 0.80)
+      required: [batch, processId]
+
+    RecoveredMetal:
+      type: object
+      properties:
+        metal:
+          type: string
+          enum: [Au, Ag, Pt, Pd]
+        massGrams:
+          type: number
+          description: Estimated recovered mass in grams
+        pricePerGram:
+          type: number
+          description: Current price in PLN per gram
+        totalValuePln:
+          type: number
+          description: Total value in PLN
+        yieldPercent:
+          type: number
+          description: Applied yield percentage
+      required: [metal, massGrams, pricePerGram, totalValuePln, yieldPercent]
+
+    ChemistryCost:
+      type: object
+      properties:
+        reagentName:
+          type: string
+        amountLiters:
+          type: number
+        pricePerLiter:
+          type: number
+        totalCostPln:
+          type: number
+      required: [reagentName, amountLiters, pricePerLiter, totalCostPln]
+
+    CalculationResult:
+      type: object
+      properties:
+        totalInputMassKg:
+          type: number
+        processId:
+          type: string
+        processName:
+          type: string
+        estimatedTimeHours:
+          type: number
+        recoveredMetals:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecoveredMetal"
+        chemistryCosts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChemistryCost"
+        electricityCostPln:
+          type: number
+        totalChemistryCostPln:
+          type: number
+        totalRevenuePln:
+          type: number
+        totalCostPln:
+          type: number
+        netProfitPln:
+          type: number
+        profitabilityRating:
+          type: string
+          enum: [very_profitable, profitable, marginal, not_profitable]
+        profitabilityNote:
+          type: string
+          description: Polish language explanation
+        metalPricesSnapshot:
+          $ref: "#/components/schemas/MetalPrices"
+      required:
+        - totalInputMassKg
+        - processId
+        - processName
+        - estimatedTimeHours
+        - recoveredMetals
+        - chemistryCosts
+        - electricityCostPln
+        - totalChemistryCostPln
+        - totalRevenuePln
+        - totalCostPln
+        - netProfitPln
+        - profitabilityRating
+        - profitabilityNote
+        - metalPricesSnapshot
