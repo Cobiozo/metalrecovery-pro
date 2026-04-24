@@ -666,7 +666,12 @@ export function CalculatorPage() {
                       {result.profitabilityRating === 'not_profitable' ? <AlertTriangle className="h-6 w-6 shrink-0 mt-0.5" /> : <TrendingUp className="h-6 w-6 shrink-0 mt-0.5" />}
                       <div>
                         <h4 className="font-bold uppercase tracking-wider mb-1">
-                          {result.profitabilityRating.replace(/_/g, ' ')}
+                          {{
+                            very_profitable: 'Bardzo opłacalne',
+                            profitable: 'Opłacalne',
+                            marginal: 'Marginalna opłacalność',
+                            not_profitable: 'Nieopłacalne',
+                          }[result.profitabilityRating] ?? result.profitabilityRating}
                         </h4>
                         <p className="text-sm opacity-90">{result.profitabilityNote}</p>
                       </div>
