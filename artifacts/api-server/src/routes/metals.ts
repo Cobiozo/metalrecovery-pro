@@ -36,7 +36,7 @@ async function fetchNBPGoldPerGram(): Promise<number | null> {
     if (!Array.isArray(data) || data.length === 0) return null;
     const latestEntry = data[data.length - 1];
     if (!latestEntry) return null;
-    return latestEntry.cena / 31.1035;
+    return latestEntry.cena;
   } catch {
     return null;
   }
@@ -108,20 +108,20 @@ async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
     nbpGold ??
     openMetals.Au ??
     frankfurterMetals.Au ??
-    380.0;
+    550.0;
 
   const agPerGram: number =
     openMetals.Ag ??
     frankfurterMetals.Ag ??
-    (auPerGram / 82.0);
+    (auPerGram / 90.0);
 
   const ptPerGram: number =
     openMetals.Pt ??
-    (auPerGram * 0.9);
+    (auPerGram * 0.22);
 
   const pdPerGram: number =
     openMetals.Pd ??
-    (auPerGram * 1.35);
+    (auPerGram * 0.22);
 
   const sources: string[] = [];
   if (nbpGold !== null) sources.push("NBP (złoto)");
