@@ -80,8 +80,8 @@ const chemicalProcesses = [
     temperatureMin: 50,
     temperatureMax: 90,
     temperatureOptimal: 70,
-    timePerKgMin: 6,
-    timePerKgMax: 18,
+    timePerKgMin: 4,
+    timePerKgMax: 10,
     yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
     electricityKwhPerKg: 0.6,
     safetyNotes:
@@ -274,7 +274,7 @@ const chemicalProcesses = [
     temperatureMax: 60,
     temperatureOptimal: 45,
     timePerKgMin: 6,
-    timePerKgMax: 24,
+    timePerKgMax: 16,
     yieldPercent: { Au: 90, Ag: 15, Pt: 60, Pd: 75 },
     electricityKwhPerKg: 0.3,
     safetyNotes:
@@ -391,7 +391,7 @@ const chemicalProcesses = [
     temperatureMax: 50,
     temperatureOptimal: 30,
     timePerKgMin: 8,
-    timePerKgMax: 48,
+    timePerKgMax: 24,
     yieldPercent: { Au: 99, Ag: 95, Pt: 60, Pd: 50 },
     electricityKwhPerKg: 2.5,
     safetyNotes:
@@ -445,7 +445,7 @@ const chemicalProcesses = [
     temperatureMax: 75,
     temperatureOptimal: 70,
     timePerKgMin: 24,
-    timePerKgMax: 72,
+    timePerKgMax: 48,
     yieldPercent: { Au: 99.5, Ag: 0, Pt: 30, Pd: 20 },
     electricityKwhPerKg: 3.0,
     safetyNotes:
@@ -554,8 +554,8 @@ const chemicalProcesses = [
     temperatureMin: 20,
     temperatureMax: 60,
     temperatureOptimal: 40,
-    timePerKgMin: 2,
-    timePerKgMax: 8,
+    timePerKgMin: 3,
+    timePerKgMax: 6,
     yieldPercent: { Au: 80, Ag: 75, Pt: 20, Pd: 30 },
     electricityKwhPerKg: 0.1,
     safetyNotes:

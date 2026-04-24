@@ -471,12 +471,12 @@ export const electronicMaterials = [
     unit: "kg",
     weightPerPiece: 0.040,
     metalContentPerKg: {
-      Au: { min: 0.10, max: 0.40, typical: 0.22 },
+      Au: { min: 0.12, max: 0.55, typical: 0.30 },
       Ag: { min: 1.5, max: 5.0, typical: 3.0 },
       Pt: { min: 0.0, max: 0.008, typical: 0.003 },
       Pd: { min: 0.02, max: 0.12, typical: 0.06 },
     },
-    notes: "Kości RAM ze złotymi stykami SDR/DDR/DDR2 (~40g/szt DIMM) — bez aluminium. metalContentPerKg liczone dla całej kości.",
+    notes: "Kości RAM ze złotymi stykami SDR/DDR/DDR2 (~40g/szt DIMM) — bez aluminium. DDR1/SDR mają wyższe stężenie Au (do 0.55 g/kg), DDR3+ niższe. metalContentPerKg liczone dla całej kości.",
   },
   {
     id: "ram_simm",
@@ -537,10 +537,10 @@ export const electronicMaterials = [
     metalContentPerKg: {
       Au: { min: 0.005, max: 0.04, typical: 0.018 },
       Ag: { min: 0.05, max: 0.3, typical: 0.15 },
-      Pt: { min: 0.05, max: 0.30, typical: 0.15 },
+      Pt: { min: 0.002, max: 0.012, typical: 0.006 },
       Pd: { min: 0.005, max: 0.04, typical: 0.018 },
     },
-    notes: "Całe dyski twarde HDD (~450g/szt). metalContentPerKg uwzględnia całą obudowę, magnesy, głowice i PCB razem.",
+    notes: "Całe dyski twarde HDD (~450g/szt). Platyna obecna w śladowych ilościach w warstwach magnetycznych talerzy (CoPtCr) — ok. 1-3 mg/dysk. metalContentPerKg uwzględnia całą obudowę, magnesy, głowice i PCB razem.",
   },
   {
     id: "naped_fdd_cdrom",
@@ -567,10 +567,10 @@ export const electronicMaterials = [
     metalContentPerKg: {
       Au: { min: 0.0, max: 0.05, typical: 0.02 },
       Ag: { min: 0.0, max: 0.1, typical: 0.04 },
-      Pt: { min: 0.5, max: 2.0, typical: 1.2 },
+      Pt: { min: 0.20, max: 0.80, typical: 0.45 },
       Pd: { min: 0.0, max: 0.05, typical: 0.02 },
     },
-    notes: "Głowice magnetyczne dysków twardych (~3g/zestaw) — bardzo bogate w platynę (warstwy magnetyczne Pt-Co).",
+    notes: "Głowice magnetyczne dysków twardych (~3g/zestaw) — bogate w platynę z warstw magnetycznych Pt-Co stopu cienkowarstwowego. Zawartość Pt zależna od rocznika i producenta.",
   },
 
   // ─── URZĄDZENIA KOMPLETNE ─────────────────────────────────────────────────

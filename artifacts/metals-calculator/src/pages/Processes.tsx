@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useGetChemicalProcesses, getGetChemicalProcessesQueryKey } from "@workspace/api-client-react";
+import { useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useGetElectronicMaterials, getGetElectronicMaterialsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Beaker, Thermometer, Clock, Zap, AlertTriangle, ChevronRight, FlaskConical, Weight } from "lucide-react";
+import { Beaker, Thermometer, Clock, Zap, AlertTriangle, ChevronRight, FlaskConical, Weight, Info, Microscope } from "lucide-react";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -37,18 +37,39 @@ function getAdjustedPricePerL(reagent: Reagent, overrides: Record<string, number
   return reagent.pricePerLiter * (effConc / reagent.concentration);
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  plyty_glowne: "Płyty główne",
+  procesor: "Procesory",
+  pamiec: "Pamięci RAM",
+  karta: "Karty graficzne/dźwiękowe",
+  dysk: "Dyski i napędy",
+  urzadzenie: "Urządzenia kompletne",
+  inne: "Inne / Mieszane",
+};
+
+const CATEGORY_ORDER = ["plyty_glowne", "procesor", "pamiec", "karta", "dysk", "urzadzenie", "inne"];
+
 export function ProcessesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [batchKg, setBatchKg] = useState<number>(1);
   const [concentrationOverrides, setConcentrationOverrides] = useState<Record<string, number>>({});
+  const [selectedMaterialId, setSelectedMaterialId] = useState<string>('');
 
   const { data: processes, isLoading } = useGetChemicalProcesses({
     query: { queryKey: getGetChemicalProcessesQueryKey() }
   });
 
+  const { data: materials } = useGetElectronicMaterials({
+    query: { queryKey: getGetElectronicMaterialsQueryKey() }
+  });
+
   const selectedProcess = selectedId
     ? processes?.find(p => p.id === selectedId) ?? processes?.[0]
     : processes?.[0];
+
+  const selectedMaterial = selectedMaterialId
+    ? materials?.find(m => m.id === selectedMaterialId) ?? null
+    : null;
 
   const totalReagentCost = selectedProcess
     ? selectedProcess.reagents.reduce((sum, r) => {
@@ -57,6 +78,15 @@ export function ProcessesPage() {
         return sum + amt * price;
       }, 0)
     : 0;
+
+  const estimatedRecovery = selectedMaterial && selectedProcess
+    ? {
+        Au: selectedMaterial.metalContentPerKg.Au.typical * batchKg * selectedProcess.yieldPercent.Au / 100,
+        Ag: selectedMaterial.metalContentPerKg.Ag.typical * batchKg * selectedProcess.yieldPercent.Ag / 100,
+        Pt: selectedMaterial.metalContentPerKg.Pt.typical * batchKg * selectedProcess.yieldPercent.Pt / 100,
+        Pd: selectedMaterial.metalContentPerKg.Pd.typical * batchKg * selectedProcess.yieldPercent.Pd / 100,
+      }
+    : null;
 
   if (isLoading) {
     return (
@@ -78,6 +108,12 @@ export function ProcessesPage() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold font-sans tracking-tight">Baza Procesów Chemicznych</h1>
         <p className="text-muted-foreground text-sm mt-1">Specyfikacje techniczne procesów odzysku</p>
+        <div className="flex gap-2 items-start bg-amber-500/5 border border-amber-500/20 rounded-md p-3 mt-3">
+          <Info className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <strong className="text-amber-400">Wartości szacunkowe.</strong> Ilości odczynników, czasy procesów i wydajność odzysku są podane orientacyjnie — zależą od konkretnego materiału, stężeń kwasów, temperatury oraz warunków laboratoryjnych. Dane mają charakter wyłącznie informacyjny i edukacyjny.
+          </p>
+        </div>
       </div>
 
       <div className="flex gap-1 lg:hidden overflow-x-auto pb-1 -mx-1 px-1 snap-x">
@@ -211,13 +247,13 @@ export function ProcessesPage() {
 
             <CardContent className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-5">
               <div>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                     <Beaker className="w-3.5 h-3.5" /> Odczynniki
                   </h4>
                   <div className="flex items-center gap-1.5">
                     <Weight className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground">Wsad:</span>
+                    <span className="text-[10px] text-muted-foreground">Waga materiału:</span>
                     <div className="flex items-center border border-border rounded overflow-hidden">
                       <button
                         onClick={() => setBatchKg(v => Math.max(0.1, Math.round((v - 0.5) * 10) / 10))}
@@ -241,6 +277,30 @@ export function ProcessesPage() {
                       >+</button>
                     </div>
                   </div>
+                </div>
+                <div className="mb-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Microscope className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Materiał wsadu (opcjonalnie)</span>
+                  </div>
+                  <select
+                    value={selectedMaterialId}
+                    onChange={e => setSelectedMaterialId(e.target.value)}
+                    className="w-full text-xs bg-background border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
+                  >
+                    <option value="">— wybierz materiał aby zobaczyć szacunkowy odzysk —</option>
+                    {CATEGORY_ORDER.map(cat => {
+                      const mats = materials?.filter(m => m.category === cat) ?? [];
+                      if (!mats.length) return null;
+                      return (
+                        <optgroup key={cat} label={CATEGORY_LABELS[cat] ?? cat}>
+                          {mats.map(m => (
+                            <option key={m.id} value={m.id}>{m.name}</option>
+                          ))}
+                        </optgroup>
+                      );
+                    })}
+                  </select>
                 </div>
                 <div className="space-y-1.5">
                   {selectedProcess.reagents.map(reagent => {
@@ -322,6 +382,35 @@ export function ProcessesPage() {
                     </div>
                   ))}
                 </div>
+
+                {estimatedRecovery && selectedMaterial && (
+                  <div className="mt-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <Microscope className="w-3 h-3" />
+                      Szac. odzysk: {selectedMaterial.name} × {batchKg} kg
+                    </h4>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(["Au", "Ag", "Pt", "Pd"] as const).map(metal => {
+                        const grams = estimatedRecovery[metal];
+                        const inputGrams = selectedMaterial.metalContentPerKg[metal].typical * batchKg;
+                        const yield_ = selectedProcess.yieldPercent[metal];
+                        if (inputGrams < 0.0001) return null;
+                        return (
+                          <div key={metal} className="px-2 py-1.5 rounded-md bg-primary/5 border border-primary/10">
+                            <div className="flex items-baseline gap-1 justify-between">
+                              <span className="font-bold font-mono text-xs text-primary">{metal}</span>
+                              <span className="font-mono text-xs font-medium">{grams >= 0.001 ? grams.toFixed(3) : '<0.001'} g</span>
+                            </div>
+                            <div className="text-[9px] text-muted-foreground mt-0.5">
+                              z {inputGrams.toFixed(3)} g × {yield_}%
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[9px] text-muted-foreground mt-1.5 italic">*Szacunek dla wartości typowych — rzeczywisty odzysk może się różnić</p>
+                  </div>
+                )}
               </div>
 
               <div>

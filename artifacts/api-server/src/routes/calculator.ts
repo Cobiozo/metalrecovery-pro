@@ -91,8 +91,8 @@ const chemicalProcessesMap: Record<
         pricePerLiter: 10.0,
       },
     ],
-    timePerKgMin: 6,
-    timePerKgMax: 18,
+    timePerKgMin: 4,
+    timePerKgMax: 10,
     temperatureOptimal: 70,
     yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
     electricityKwhPerKg: 0.6,
@@ -194,7 +194,7 @@ const chemicalProcessesMap: Record<
       },
     ],
     timePerKgMin: 6,
-    timePerKgMax: 24,
+    timePerKgMax: 16,
     temperatureOptimal: 45,
     yieldPercent: { Au: 90, Ag: 15, Pt: 60, Pd: 75 },
     electricityKwhPerKg: 0.3,
@@ -256,7 +256,7 @@ const chemicalProcessesMap: Record<
       },
     ],
     timePerKgMin: 8,
-    timePerKgMax: 48,
+    timePerKgMax: 24,
     temperatureOptimal: 30,
     yieldPercent: { Au: 99, Ag: 95, Pt: 60, Pd: 50 },
     electricityKwhPerKg: 2.5,
@@ -284,7 +284,7 @@ const chemicalProcessesMap: Record<
       },
     ],
     timePerKgMin: 24,
-    timePerKgMax: 72,
+    timePerKgMax: 48,
     temperatureOptimal: 70,
     yieldPercent: { Au: 99.5, Ag: 0, Pt: 30, Pd: 20 },
     electricityKwhPerKg: 3.0,
@@ -339,8 +339,8 @@ const chemicalProcessesMap: Record<
         pricePerLiter: 18.0,
       },
     ],
-    timePerKgMin: 2,
-    timePerKgMax: 8,
+    timePerKgMin: 3,
+    timePerKgMax: 6,
     temperatureOptimal: 25,
     yieldPercent: { Au: 80, Ag: 75, Pt: 20, Pd: 30 },
     electricityKwhPerKg: 0.1,
@@ -544,7 +544,7 @@ router.post("/calculator/estimate", async (req, res) => {
     profitabilityNote = `Marginalna opłacalność. Marża tylko ${Math.round(profitMargin * 100)}%. Rozważ inny proces lub wsad.`;
   } else {
     profitabilityRating = "not_profitable";
-    profitabilityNote = `Nieopłacalne. Koszty chemii (${totalCostPln.toFixed(2)} PLN) przekraczają wartość odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwiększ wsad lub zmień proces.`;
+    profitabilityNote = `Nieopłacalne. Koszty chemii (${totalCostPln.toFixed(2)} PLN) przekraczają wartość odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwiększ materiał wsadu lub zmień proces.`;
   }
 
   const avgTimePerKg = (process.timePerKgMin + process.timePerKgMax) / 2;

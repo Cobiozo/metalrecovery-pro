@@ -10,14 +10,17 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 Full-stack precious metals recovery calculator for e-waste professionals. Frontend at `/`, API at `/api`.
 
 **Features:**
-- Batch input: 61 types of electronic scrap organized in 12 categories (inspired by elektropaka.pl): płyty główne (8 types), płytki PCB (9), procesory (12), pamięci RAM (3), karty graficzne (2), dyski i napędy (3), urządzenia kompletne (12), zasilacze i ładowarki (4), układy scalone IC (2), złącza (2), kondensatory (2), inne (2)
-- 9 wet chemistry processes: aqua regia, HNO3 dilute/concentrated, HCl+H2O2, nitrate boat, electrolysis, Wohlwill, Miller, zinc cementation
-- Process simulation: reagent amounts, temperatures, times, costs per kg of batch
-- Live metal prices (Au, Ag, Pt, Pd) from NBP API with 24h cache (once-daily update), no manual refresh, fallback values
+- Batch input: 61 types of electronic scrap in 7 categories; material selector also available in Processes page for yield estimation
+- 9 wet chemistry processes: aqua regia (includes pre-trawienie HNO3 step), HNO3 dilute/concentrated, HCl+H2O2, nitrate boat, electrolysis, Wohlwill, Miller, zinc cementation
+- Process simulation: reagent amounts with **adjustable concentration selectors** (auto-recalculates volume/price), temperatures, times, costs per kg
+- Live metal prices (Au, Ag, Pt, Pd) from NBP API with 24h cache, fallback values
 - Profitability analysis: revenue vs chemistry costs, net profit, rating
-- Polish-language UI with dark professional theme
-- **Mobile-responsive**: bottom navigation bar on mobile, stacked batch rows, short tab labels, overflow-x-auto on tables
+- Polish-language UI with dark professional theme; all tabs use "Materiał wsadu" terminology
+- **Legal disclaimer** in sidebar and Processes page header (informational/educational only)
+- **Material selector in Processes page**: pick material, see estimated grams recovered per metal (metalContent × processYield × batchKg)
+- **Mobile-responsive**: bottom navigation bar on mobile, stacked batch rows, short tab labels
 - **Editable reagent prices**: in calculator step 2 each reagent has an editable zł/L price field; changes apply to calculation and persist in localStorage
+- **Calibrated data** (Au/Ag/Pt/Pd content corrected for RAM, HDD, HDD heads vs real lab data)
 
 **API additions:**
 - `POST /api/calculator/estimate` now accepts `reagentPriceOverrides: Record<string, number>` — map of reagent name to custom price in PLN/L

@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Beaker, Calculator, Coins, Activity } from "lucide-react";
+import { Beaker, Calculator, Coins, Activity, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
 
   const navItems = [
-    { href: "/", label: "Kalkulator", labelFull: "Kalkulator Wsadu", icon: Calculator },
+    { href: "/", label: "Kalkulator", labelFull: "Kalkulator Metali", icon: Calculator },
     { href: "/kursy", label: "Kursy", labelFull: "Kursy Metali", icon: Coins },
     { href: "/procesy", label: "Procesy", labelFull: "Procesy Chemiczne", icon: Beaker },
   ];
@@ -46,9 +46,15 @@ export function Layout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-4 border-t border-border mt-auto">
+        <div className="p-4 border-t border-border mt-auto space-y-3">
           <div className="text-xs text-muted-foreground font-mono text-center">
             SYSTEM STATUS: ONLINE
+          </div>
+          <div className="flex gap-2 items-start bg-muted/50 border border-border rounded-md p-3">
+            <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Wszystkie informacje mają charakter <strong>wyłącznie informacyjny i edukacyjny</strong>. Nie stanowią porady technicznej ani zachęty do przeprowadzania procesów chemicznych.
+            </p>
           </div>
         </div>
       </aside>

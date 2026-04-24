@@ -308,8 +308,8 @@ export function CalculatorPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8 h-12 bg-muted/50 p-1">
           <TabsTrigger value="wsad" className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <span className="hidden sm:inline">1. Wsad (Materiały)</span>
-            <span className="sm:hidden">1. Wsad</span>
+            <span className="hidden sm:inline">1. Materiał wsadu</span>
+            <span className="sm:hidden">1. Materiał</span>
           </TabsTrigger>
           <TabsTrigger value="proces" disabled={!canGoToProcess} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <span className="hidden sm:inline">2. Parametry Procesu</span>
@@ -324,7 +324,7 @@ export function CalculatorPage() {
         <TabsContent value="wsad" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Definicja Wsadu</CardTitle>
+              <CardTitle>Definicja materiału wsadu</CardTitle>
               <CardDescription>Wybierz materiały elektroniczne i określ ich ilość (kg lub sztuki)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -604,7 +604,7 @@ export function CalculatorPage() {
                 )}
               </CardContent>
               <CardFooter className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
-                <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do wsadu</Button>
+                <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do materiału</Button>
                 <Button
                   onClick={handleCalculate}
                   disabled={!selectedProcessId || calculateMutation.isPending}
@@ -618,7 +618,7 @@ export function CalculatorPage() {
 
           {!selectedProcess && (
             <CardFooter className="bg-muted/30 border border-border rounded-lg flex justify-between items-center py-4 px-6">
-              <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do wsadu</Button>
+              <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do materiału</Button>
               <Button
                 onClick={handleCalculate}
                 disabled={!selectedProcessId || calculateMutation.isPending}
@@ -685,7 +685,7 @@ export function CalculatorPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm text-muted-foreground">Masa całkowita wsadu</span>
+                      <span className="text-sm text-muted-foreground">Masa całkowita materiału wsadu</span>
                       <span className="font-mono font-bold">{formatMass(result.totalInputMassKg, 'kg')}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-border pb-2">
@@ -727,7 +727,7 @@ export function CalculatorPage() {
                         </div>
                       )}
                       <Button variant="outline" className="w-full" onClick={() => { setResult(null); setBatchItems([{ id: '1', materialId: '', quantity: 1 }]); setSelectedProcessId(''); setActiveTab("wsad"); }}>
-                        Nowa Kalkulacja
+                        Nowa kalkulacja
                       </Button>
                     </div>
                   </CardContent>
