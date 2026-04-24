@@ -1,8 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
 
 export function usePWA() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [canInstall, setCanInstall] = useState(false);
+  const deferredPrompt = useRef<BeforeInstallPromptEvent | null>(null);
+  const swUpdateInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -15,13 +18,43 @@ export function usePWA() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      deferredPrompt.current = e as BeforeInstallPromptEvent;
+      setCanInstall(true);
+    };
+
+    const handleAppInstalled = () => {
+      deferredPrompt.current = null;
+      setCanInstall(false);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
+
+  const installApp = async () => {
+    if (!deferredPrompt.current) return;
+    const prompt = deferredPrompt.current;
+    deferredPrompt.current = null;
+    setCanInstall(false);
+    prompt.prompt();
+    await prompt.userChoice;
+  };
+
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
     onRegistered(r) {
       if (r) {
-        setInterval(
+        swUpdateInterval.current = setInterval(
           () => {
             r.update();
           },
@@ -34,5 +67,18 @@ export function usePWA() {
     },
   });
 
-  return { isOffline, needRefresh, updateServiceWorker };
+  useEffect(() => {
+    return () => {
+      if (swUpdateInterval.current !== null) {
+        clearInterval(swUpdateInterval.current);
+      }
+    };
+  }, []);
+
+  return { isOffline, needRefresh, updateServiceWorker, canInstall, installApp };
+}
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
