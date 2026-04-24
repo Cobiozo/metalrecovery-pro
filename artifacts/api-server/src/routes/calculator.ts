@@ -241,19 +241,19 @@ const chemicalProcessesMap: Record<
     name: "Woda Królewska (HCl + HNO3)",
     reagents: [
       {
-        name: "Kwas solny (HCl 35%)",
+        name: "Kwas solny (HCl)",
         concentration: 35,
         amountPerKg: 3.0,
         pricePerLiter: 8.5,
       },
       {
-        name: "Kwas azotowy (HNO3 65%)",
+        name: "Kwas azotowy (HNO3)",
         concentration: 65,
         amountPerKg: 1.0,
         pricePerLiter: 12.0,
       },
       {
-        name: "SMB (NaHSO3 reduktor)",
+        name: "Wodorosiarczyn sodu (reduktor SMB)",
         concentration: 40,
         amountPerKg: 0.3,
         pricePerLiter: 6.0,
@@ -266,16 +266,16 @@ const chemicalProcessesMap: Record<
     electricityKwhPerKg: 0.5,
   },
   hno3_dilute: {
-    name: "Kwas azotowy rozcieńczony (HNO3 25%)",
+    name: "Kwas azotowy rozcieńczony (HNO3 25-30%)",
     reagents: [
       {
-        name: "Kwas azotowy (HNO3 25%)",
+        name: "Kwas azotowy rozcieńczony (HNO3 25%)",
         concentration: 25,
         amountPerKg: 2.5,
         pricePerLiter: 12.0,
       },
       {
-        name: "Chlorek sodu (NaCl)",
+        name: "Chlorek sodu (do wytrącania AgCl)",
         concentration: 100,
         amountPerKg: 0.1,
         pricePerLiter: 1.5,
@@ -307,19 +307,19 @@ const chemicalProcessesMap: Record<
     name: "HCl + H2O2 (etching kwasowy)",
     reagents: [
       {
-        name: "Kwas solny (HCl 35%)",
+        name: "Kwas solny (HCl)",
         concentration: 35,
         amountPerKg: 3.0,
         pricePerLiter: 8.5,
       },
       {
-        name: "Nadtlenek wodoru (H2O2 30%)",
+        name: "Nadtlenek wodoru (H2O2)",
         concentration: 30,
         amountPerKg: 1.5,
         pricePerLiter: 5.0,
       },
       {
-        name: "SMB (NaHSO3 reduktor)",
+        name: "Wodorosiarczyn sodu (reduktor SMB)",
         concentration: 40,
         amountPerKg: 0.3,
         pricePerLiter: 6.0,
@@ -341,7 +341,7 @@ const chemicalProcessesMap: Record<
         pricePerLiter: 15.0,
       },
       {
-        name: "Kwas siarkowy (H2SO4 98%)",
+        name: "Kwas siarkowy (H2SO4)",
         concentration: 98,
         amountPerKg: 1.5,
         pricePerLiter: 7.0,
@@ -357,13 +357,13 @@ const chemicalProcessesMap: Record<
     name: "Elektroliza (rafinacja elektrolityczna)",
     reagents: [
       {
-        name: "Kwas azotowy (elektrolit HNO3 10%)",
+        name: "Kwas azotowy (elektrolit bazowy)",
         concentration: 10,
         amountPerKg: 2.0,
         pricePerLiter: 12.0,
       },
       {
-        name: "Azotan złota (AuNO3 uzupełniacz)",
+        name: "Azotan złota (AuNO3, uzupełniacz)",
         concentration: 5,
         amountPerKg: 0.1,
         pricePerLiter: 800.0,
@@ -376,16 +376,16 @@ const chemicalProcessesMap: Record<
     electricityKwhPerKg: 2.5,
   },
   wohlwill_process: {
-    name: "Proces Wöhlwilla (rafinacja 999.9)",
+    name: "Proces Wöhlwilla (rafinacja złota 999.9)",
     reagents: [
       {
-        name: "Kwas solny (HCl 20%)",
+        name: "Kwas solny (elektrolit)",
         concentration: 20,
         amountPerKg: 3.0,
         pricePerLiter: 8.5,
       },
       {
-        name: "Chlorek złota (AuCl3)",
+        name: "Chlorek złota (AuCl3, elektrolit)",
         concentration: 10,
         amountPerKg: 0.2,
         pricePerLiter: 1200.0,
@@ -420,16 +420,16 @@ const chemicalProcessesMap: Record<
     electricityKwhPerKg: 5.0,
   },
   cementation_zinc: {
-    name: "Cementacja cynkiem",
+    name: "Cementacja cynkiem (wytrącanie Au)",
     reagents: [
       {
-        name: "Cynk metaliczny (granulki Zn)",
+        name: "Cynk metaliczny (granulki)",
         concentration: 99,
         amountPerKg: 0.4,
         pricePerLiter: 18.0,
       },
       {
-        name: "Cyjanek sodu (NaCN opcjonalny)",
+        name: "Ług cyjanku sodu (NaCN, opcjonalny)",
         concentration: 5,
         amountPerKg: 1.0,
         pricePerLiter: 20.0,

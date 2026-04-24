@@ -16,6 +16,11 @@ Full-stack precious metals recovery calculator for e-waste professionals. Fronte
 - Live metal prices (Au, Ag, Pt, Pd) from NBP API with 1hr cache, fallback values
 - Profitability analysis: revenue vs chemistry costs, net profit, rating
 - Polish-language UI with dark professional theme
+- **Mobile-responsive**: bottom navigation bar on mobile, stacked batch rows, short tab labels, overflow-x-auto on tables
+- **Editable reagent prices**: in calculator step 2 each reagent has an editable zł/L price field; changes apply to calculation and persist in localStorage
+
+**API additions:**
+- `POST /api/calculator/estimate` now accepts `reagentPriceOverrides: Record<string, number>` — map of reagent name to custom price in PLN/L
 
 **Key API routes (in `artifacts/api-server`):**
 - `GET /api/metals/prices` — live Au/Ag/Pt/Pd prices in PLN/g from NBP
