@@ -10,7 +10,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 Full-stack precious metals recovery calculator for e-waste professionals. Frontend at `/`, API at `/api`.
 
 **Features:**
-- Batch input: 21 types of electronic scrap (PCBs, CPUs, RAM, ICs, connectors, capacitors, phones, laptops, UFO/mixed)
+- Batch input: 61 types of electronic scrap organized in 12 categories (inspired by elektropaka.pl): płyty główne (8 types), płytki PCB (9), procesory (12), pamięci RAM (3), karty graficzne (2), dyski i napędy (3), urządzenia kompletne (12), zasilacze i ładowarki (4), układy scalone IC (2), złącza (2), kondensatory (2), inne (2)
 - 9 wet chemistry processes: aqua regia, HNO3 dilute/concentrated, HCl+H2O2, nitrate boat, electrolysis, Wohlwill, Miller, zinc cementation
 - Process simulation: reagent amounts, temperatures, times, costs per kg of batch
 - Live metal prices (Au, Ag, Pt, Pd) from NBP API with 1hr cache, fallback values

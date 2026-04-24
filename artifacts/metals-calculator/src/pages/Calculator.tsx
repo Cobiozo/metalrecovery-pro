@@ -3,7 +3,7 @@ import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChe
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X } from "lucide-react";
 import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
@@ -65,6 +65,26 @@ function loadReagentPrices(): Record<string, number> {
 function saveReagentPrices(prices: Record<string, number>): void {
   localStorage.setItem(REAGENT_PRICES_KEY, JSON.stringify(prices));
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  plyty_glowne: "Płyty główne",
+  pcb: "Płytki PCB",
+  procesor: "Procesory",
+  pamiec: "Pamięci RAM",
+  karta: "Karty graficzne / dźwiękowe",
+  dysk: "Dyski i napędy",
+  urzadzenie: "Urządzenia kompletne",
+  zasilacz: "Zasilacze i ładowarki",
+  ic: "Układy scalone IC",
+  zlacza: "Złącza",
+  kondensator: "Kondensatory",
+  inne: "Inne",
+};
+
+const CATEGORY_ORDER = [
+  "plyty_glowne", "pcb", "procesor", "pamiec", "karta",
+  "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "kondensator", "inne",
+];
 
 export function CalculatorPage() {
   const [activeTab, setActiveTab] = useState<string>("wsad");
@@ -298,11 +318,25 @@ export function CalculatorPage() {
                         <SelectContent>
                           {materialsLoading ? (
                             <div className="p-2"><Skeleton className="h-4 w-full" /></div>
-                          ) : materials?.map(m => (
-                            <SelectItem key={m.id} value={m.id}>
-                              {m.name} <span className="text-muted-foreground ml-2">({m.unit === 'piece' ? 'szt.' : 'kg'})</span>
-                            </SelectItem>
-                          ))}
+                          ) : (() => {
+                            const grouped: Record<string, typeof materials> = {};
+                            materials?.forEach(m => {
+                              if (!grouped[m.category]) grouped[m.category] = [];
+                              grouped[m.category]!.push(m);
+                            });
+                            return CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
+                              <SelectGroup key={cat}>
+                                <SelectLabel className="text-xs font-bold uppercase tracking-wider text-amber-500 px-2 pt-2">
+                                  {CATEGORY_LABELS[cat] ?? cat}
+                                </SelectLabel>
+                                {grouped[cat]!.map(m => (
+                                  <SelectItem key={m.id} value={m.id}>
+                                    {m.name} <span className="text-muted-foreground ml-1">({m.unit === 'piece' ? 'szt.' : 'kg'})</span>
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            ));
+                          })()}
                         </SelectContent>
                       </Select>
                     </div>
