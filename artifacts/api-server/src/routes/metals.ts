@@ -20,7 +20,7 @@ interface PerMetalPrices {
 
 let cachedPrices: MetalPrices | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL_MS = 60 * 60 * 1000;
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 async function fetchNBPGoldPerGram(): Promise<number | null> {
   const today = new Date().toISOString().split("T")[0];

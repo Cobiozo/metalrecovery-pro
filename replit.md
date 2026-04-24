@@ -13,7 +13,7 @@ Full-stack precious metals recovery calculator for e-waste professionals. Fronte
 - Batch input: 61 types of electronic scrap organized in 12 categories (inspired by elektropaka.pl): płyty główne (8 types), płytki PCB (9), procesory (12), pamięci RAM (3), karty graficzne (2), dyski i napędy (3), urządzenia kompletne (12), zasilacze i ładowarki (4), układy scalone IC (2), złącza (2), kondensatory (2), inne (2)
 - 9 wet chemistry processes: aqua regia, HNO3 dilute/concentrated, HCl+H2O2, nitrate boat, electrolysis, Wohlwill, Miller, zinc cementation
 - Process simulation: reagent amounts, temperatures, times, costs per kg of batch
-- Live metal prices (Au, Ag, Pt, Pd) from NBP API with 1hr cache, fallback values
+- Live metal prices (Au, Ag, Pt, Pd) from NBP API with 24h cache (once-daily update), no manual refresh, fallback values
 - Profitability analysis: revenue vs chemistry costs, net profit, rating
 - Polish-language UI with dark professional theme
 - **Mobile-responsive**: bottom navigation bar on mobile, stacked batch rows, short tab labels, overflow-x-auto on tables

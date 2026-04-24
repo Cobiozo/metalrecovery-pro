@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 
 const router: IRouter = Router();
 
-const electronicMaterials = [
+export const electronicMaterials = [
   // ─── PŁYTY GŁÓWNE (DESKTOP) ───────────────────────────────────────────────
   {
     id: "mb_stare",

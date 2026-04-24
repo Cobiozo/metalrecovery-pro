@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { getOrFetchPrices } from "./metals.js";
+import { electronicMaterials } from "./materials.js";
 
 const router: IRouter = Router();
 
@@ -17,208 +18,21 @@ interface CalculationRequest {
   reagentPriceOverrides?: Record<string, number>;
 }
 
-const electronicMaterialsMap: Record<
-  string,
-  {
-    unit: string;
-    metalContentPerKg: {
-      Au: { typical: number };
-      Ag: { typical: number };
-      Pt: { typical: number };
-      Pd: { typical: number };
-    };
-  }
-> = {
-  pcb_standard: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.08 },
-      Ag: { typical: 1.2 },
-      Pt: { typical: 0.005 },
-      Pd: { typical: 0.02 },
+const electronicMaterialsMap = Object.fromEntries(
+  electronicMaterials.map((m) => [
+    m.id,
+    {
+      unit: m.unit,
+      weightPerPiece: (m as { weightPerPiece?: number }).weightPerPiece,
+      metalContentPerKg: {
+        Au: { typical: m.metalContentPerKg.Au.typical },
+        Ag: { typical: m.metalContentPerKg.Ag.typical },
+        Pt: { typical: m.metalContentPerKg.Pt.typical },
+        Pd: { typical: m.metalContentPerKg.Pd.typical },
+      },
     },
-  },
-  pcb_server: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.25 },
-      Ag: { typical: 2.5 },
-      Pt: { typical: 0.01 },
-      Pd: { typical: 0.05 },
-    },
-  },
-  pcb_telecom: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.3 },
-      Ag: { typical: 3.0 },
-      Pt: { typical: 0.015 },
-      Pd: { typical: 0.08 },
-    },
-  },
-  pcb_smd: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.5 },
-      Ag: { typical: 4.0 },
-      Pt: { typical: 0.02 },
-      Pd: { typical: 0.15 },
-    },
-  },
-  cpu_intel: {
-    unit: "piece",
-    metalContentPerKg: {
-      Au: { typical: 0.3 },
-      Ag: { typical: 1.0 },
-      Pt: { typical: 0.005 },
-      Pd: { typical: 0.01 },
-    },
-  },
-  cpu_amd: {
-    unit: "piece",
-    metalContentPerKg: {
-      Au: { typical: 0.25 },
-      Ag: { typical: 0.9 },
-      Pt: { typical: 0.005 },
-      Pd: { typical: 0.01 },
-    },
-  },
-  cpu_ceramic: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 2.5 },
-      Ag: { typical: 5.0 },
-      Pt: { typical: 0.05 },
-      Pd: { typical: 0.15 },
-    },
-  },
-  ram_dimm: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.12 },
-      Ag: { typical: 1.8 },
-      Pt: { typical: 0.005 },
-      Pd: { typical: 0.04 },
-    },
-  },
-  ram_simm: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.6 },
-      Ag: { typical: 3.5 },
-      Pt: { typical: 0.01 },
-      Pd: { typical: 0.08 },
-    },
-  },
-  ic_general: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.4 },
-      Ag: { typical: 2.5 },
-      Pt: { typical: 0.01 },
-      Pd: { typical: 0.05 },
-    },
-  },
-  ic_fpga: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.8 },
-      Ag: { typical: 4.5 },
-      Pt: { typical: 0.015 },
-      Pd: { typical: 0.1 },
-    },
-  },
-  connectors_gold: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 2.5 },
-      Ag: { typical: 1.5 },
-      Pt: { typical: 0.005 },
-      Pd: { typical: 0.02 },
-    },
-  },
-  connectors_mixed: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.7 },
-      Ag: { typical: 1.0 },
-      Pt: { typical: 0.002 },
-      Pd: { typical: 0.01 },
-    },
-  },
-  capacitors_tantalum: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.01 },
-      Ag: { typical: 1.5 },
-      Pt: { typical: 0.002 },
-      Pd: { typical: 0.5 },
-    },
-  },
-  capacitors_ceramic_mlcc: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.005 },
-      Ag: { typical: 2.5 },
-      Pt: { typical: 0.005 },
-      Pd: { typical: 1.0 },
-    },
-  },
-  phone_smartphone: {
-    unit: "piece",
-    metalContentPerKg: {
-      Au: { typical: 0.04 },
-      Ag: { typical: 0.25 },
-      Pt: { typical: 0.002 },
-      Pd: { typical: 0.012 },
-    },
-  },
-  phone_feature: {
-    unit: "piece",
-    metalContentPerKg: {
-      Au: { typical: 0.02 },
-      Ag: { typical: 0.12 },
-      Pt: { typical: 0.001 },
-      Pd: { typical: 0.006 },
-    },
-  },
-  laptop_complete: {
-    unit: "piece",
-    metalContentPerKg: {
-      Au: { typical: 0.12 },
-      Ag: { typical: 1.2 },
-      Pt: { typical: 0.005 },
-      Pd: { typical: 0.035 },
-    },
-  },
-  ufo_mix: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.07 },
-      Ag: { typical: 0.8 },
-      Pt: { typical: 0.003 },
-      Pd: { typical: 0.02 },
-    },
-  },
-  hard_drive_head: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.02 },
-      Ag: { typical: 0.04 },
-      Pt: { typical: 1.2 },
-      Pd: { typical: 0.02 },
-    },
-  },
-  catalytic_converter: {
-    unit: "kg",
-    metalContentPerKg: {
-      Au: { typical: 0.002 },
-      Ag: { typical: 0.01 },
-      Pt: { typical: 2.5 },
-      Pd: { typical: 5.0 },
-    },
-  },
-};
+  ]),
+);
 
 const chemicalProcessesMap: Record<
   string,
@@ -241,29 +55,47 @@ const chemicalProcessesMap: Record<
     name: "Woda Królewska (HCl + HNO3)",
     reagents: [
       {
+        name: "Kwas azotowy rozcieńczony — pre-trawienie (HNO3 25%)",
+        concentration: 25,
+        amountPerKg: 2.0,
+        pricePerLiter: 22.0,
+      },
+      {
         name: "Kwas solny (HCl)",
         concentration: 35,
         amountPerKg: 3.0,
         pricePerLiter: 18.0,
       },
       {
-        name: "Kwas azotowy (HNO3)",
+        name: "Kwas azotowy stężony (HNO3 65%)",
         concentration: 65,
         amountPerKg: 1.0,
         pricePerLiter: 28.0,
       },
       {
-        name: "Wodorosiarczyn sodu (reduktor SMB)",
+        name: "Mocznik (rozkład nadmiaru HNO3)",
+        concentration: 99,
+        amountPerKg: 0.15,
+        pricePerLiter: 4.0,
+      },
+      {
+        name: "Wodorosiarczyn sodu — reduktor SMB (wytrącanie Au)",
         concentration: 40,
         amountPerKg: 0.3,
         pricePerLiter: 12.0,
       },
+      {
+        name: "Boraks (topnik do wytopu)",
+        concentration: 99,
+        amountPerKg: 0.05,
+        pricePerLiter: 10.0,
+      },
     ],
-    timePerKgMin: 4,
-    timePerKgMax: 12,
+    timePerKgMin: 6,
+    timePerKgMax: 18,
     temperatureOptimal: 70,
     yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
-    electricityKwhPerKg: 0.5,
+    electricityKwhPerKg: 0.6,
   },
   hno3_dilute: {
     name: "Kwas azotowy rozcieńczony (HNO3 25-30%)",
@@ -443,13 +275,6 @@ const chemicalProcessesMap: Record<
   },
 };
 
-const PIECE_WEIGHT_KG: Record<string, number> = {
-  cpu_intel: 0.03,
-  cpu_amd: 0.028,
-  phone_smartphone: 0.17,
-  phone_feature: 0.08,
-  laptop_complete: 2.2,
-};
 
 function computeParameterYieldMultiplier(
   processId: string,
@@ -559,7 +384,7 @@ router.post("/calculator/estimate", async (req, res) => {
 
     let massKg: number;
     if (material.unit === "piece") {
-      const weightPerPiece = PIECE_WEIGHT_KG[item.materialId] ?? 0.1;
+      const weightPerPiece = material.weightPerPiece ?? 0.1;
       massKg = item.quantity * weightPerPiece;
     } else {
       massKg = item.quantity;
