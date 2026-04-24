@@ -1,0 +1,16 @@
+{
+  "name": "metalrecovery-pro",
+  "version": "1.0.0",
+  "description": "Kalkulator Odzysku Metali Szlachetnych z Odpadów Elektronicznych",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "compression": "^1.7.5",
+    "express": "^4.21.2"
+  }
+}
