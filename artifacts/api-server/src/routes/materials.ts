@@ -190,19 +190,34 @@ export const electronicMaterials = [
 
   // ─── PŁYTY Z URZĄDZEŃ ─────────────────────────────────────────────────────
   {
-    id: "pcb_hdd",
-    name: "Płyty z dysków twardych HDD",
-    nameEn: "HDD PCBs",
+    id: "pcb_hdd_stare",
+    name: "Płyty z dysków twardych HDD (stare, do ~2005)",
+    nameEn: "Old HDD PCBs (pre-2005)",
     category: "pcb",
     unit: "kg",
-    weightPerPiece: 0.045,
+    weightPerPiece: 0.050,
     metalContentPerKg: {
-      Au: { min: 0.30, max: 0.90, typical: 0.55 },
-      Ag: { min: 0.8, max: 3.0, typical: 1.8 },
+      Au: { min: 0.35, max: 0.85, typical: 0.55 },
+      Ag: { min: 1.0, max: 3.5, typical: 2.0 },
       Pt: { min: 0.0, max: 0.02, typical: 0.008 },
-      Pd: { min: 0.02, max: 0.15, typical: 0.08 },
+      Pd: { min: 0.03, max: 0.18, typical: 0.09 },
     },
-    notes: "Płytki elektroniki z dysków twardych (ok. 40-50g/szt) — gęste ścieżki, bogate w złoto.",
+    notes: "Płytki PCB z dysków sprzed 2005 r. — grubsze złocenia ścieżek, DIP IC, gęste złącza. Dane: ok. 0.35–0.85 g Au/kg wg danych recyklerów.",
+  },
+  {
+    id: "pcb_hdd_nowe",
+    name: "Płyty z dysków twardych HDD (nowe, po 2005)",
+    nameEn: "Modern HDD PCBs (post-2005)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.040,
+    metalContentPerKg: {
+      Au: { min: 0.08, max: 0.32, typical: 0.18 },
+      Ag: { min: 0.5, max: 2.0, typical: 1.1 },
+      Pt: { min: 0.0, max: 0.01, typical: 0.004 },
+      Pd: { min: 0.01, max: 0.08, typical: 0.04 },
+    },
+    notes: "Płytki PCB z dysków po 2005 r. — SMD, cieńsze złocenia, mniej Pd w kondensatorach. Dane: ok. 0.08–0.32 g Au/kg wg pomiarów recyklerów.",
   },
   {
     id: "pcb_cdrom",

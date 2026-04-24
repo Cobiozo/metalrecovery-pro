@@ -667,16 +667,73 @@ export function CalculatorPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="wyniki" className="space-y-6">
+        <TabsContent value="wyniki" className="space-y-4">
           {result && (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* ── Baner opłacalności (zawsze na górze) ─────────────────── */}
+              <div className={`rounded-xl border-2 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 ${
+                result.profitabilityRating === 'very_profitable' ? 'bg-success/10 border-success/40 text-success' :
+                result.profitabilityRating === 'profitable'      ? 'bg-primary/10 border-primary/40 text-primary' :
+                result.profitabilityRating === 'marginal'        ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-400' :
+                'bg-destructive/10 border-destructive/40 text-destructive'
+              }`}>
+                <div className="flex items-center gap-3 flex-1">
+                  {result.profitabilityRating === 'not_profitable'
+                    ? <AlertTriangle className="h-7 w-7 shrink-0" />
+                    : <TrendingUp className="h-7 w-7 shrink-0" />}
+                  <div>
+                    <div className="font-bold text-lg uppercase tracking-wider leading-tight">
+                      {{
+                        very_profitable: 'Bardzo opłacalne',
+                        profitable: 'Opłacalne',
+                        marginal: 'Marginalna opłacalność',
+                        not_profitable: 'Nieopłacalne',
+                      }[result.profitabilityRating] ?? result.profitabilityRating}
+                    </div>
+                    <div className="text-sm opacity-80 mt-0.5">{result.profitabilityNote}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-6 shrink-0 pl-1 sm:pl-4 border-t sm:border-t-0 sm:border-l border-current/20 pt-3 sm:pt-0 sm:pl-6">
+                  <div className="text-center">
+                    <div className="text-xs opacity-60 uppercase mb-0.5">Przychód</div>
+                    <div className="font-mono font-bold text-base">{formatCurrency(result.totalRevenuePln)}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs opacity-60 uppercase mb-0.5">Koszty</div>
+                    <div className="font-mono font-bold text-base">-{formatCurrency(result.totalChemistryCostPln + result.electricityCostPln)}</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs opacity-60 uppercase mb-0.5 font-bold">Zysk netto</div>
+                    <div className="font-mono font-bold text-xl">{formatCurrency(result.netProfitPln)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Podsumowanie wsadu ────────────────────────────────────── */}
+              <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+                <span className="text-muted-foreground font-medium">Wsad:</span>
+                {batchItems.filter(i => i.materialId).map((item, idx) => {
+                  const mat = materials?.find(m => m.id === item.materialId);
+                  const unitLabel = (item.unitOverride ?? mat?.unit ?? 'kg') === 'piece' ? 'szt.' : 'kg';
+                  return (
+                    <span key={idx} className="font-semibold text-foreground">
+                      {mat?.name ?? item.materialId}
+                      <span className="font-mono text-primary ml-1">× {item.quantity} {unitLabel}</span>
+                      {idx < batchItems.filter(i => i.materialId).length - 1 && <span className="text-muted-foreground ml-2">+</span>}
+                    </span>
+                  );
+                })}
+                <span className="text-muted-foreground ml-auto">Proces: <span className="text-foreground font-medium">{result.processName}</span></span>
+              </div>
+
+              {/* ── Finanse + Parametry ───────────────────────────────────── */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Card className="border-border bg-card col-span-1 lg:col-span-2">
                   <CardHeader className="pb-2 border-b border-border mb-4">
                     <CardTitle>Podsumowanie Finansowe</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="bg-muted/30 p-3 rounded-lg border border-border">
                         <div className="text-xs text-muted-foreground uppercase mb-1">Przychód</div>
                         <div className="font-mono font-bold text-success text-lg">{formatCurrency(result.totalRevenuePln)}</div>
@@ -694,26 +751,6 @@ export function CalculatorPage() {
                         <div className="font-mono font-bold text-primary text-xl">{formatCurrency(result.netProfitPln)}</div>
                       </div>
                     </div>
-
-                    <div className={`p-4 rounded-lg flex items-start gap-4 border ${
-                      result.profitabilityRating === 'very_profitable' ? 'bg-success/10 border-success/30 text-success' :
-                      result.profitabilityRating === 'profitable' ? 'bg-primary/10 border-primary/30 text-primary' :
-                      result.profitabilityRating === 'marginal' ? 'bg-warning/10 border-warning/30 text-warning' :
-                      'bg-destructive/10 border-destructive/30 text-destructive'
-                    }`}>
-                      {result.profitabilityRating === 'not_profitable' ? <AlertTriangle className="h-6 w-6 shrink-0 mt-0.5" /> : <TrendingUp className="h-6 w-6 shrink-0 mt-0.5" />}
-                      <div>
-                        <h4 className="font-bold uppercase tracking-wider mb-1">
-                          {{
-                            very_profitable: 'Bardzo opłacalne',
-                            profitable: 'Opłacalne',
-                            marginal: 'Marginalna opłacalność',
-                            not_profitable: 'Nieopłacalne',
-                          }[result.profitabilityRating] ?? result.profitabilityRating}
-                        </h4>
-                        <p className="text-sm opacity-90">{result.profitabilityNote}</p>
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
 
@@ -723,16 +760,12 @@ export function CalculatorPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm text-muted-foreground">Masa całkowita materiału wsadu</span>
+                      <span className="text-sm text-muted-foreground">Masa całkowita</span>
                       <span className="font-mono font-bold">{formatMass(result.totalInputMassKg, 'kg')}</span>
                     </div>
                     <div className="flex justify-between items-center border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Szacowany czas</span>
                       <span className="font-mono font-bold">{result.estimatedTimeHours} godz.</span>
-                    </div>
-                    <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm text-muted-foreground">Proces</span>
-                      <span className="font-bold text-right pl-4 truncate">{result.processName}</span>
                     </div>
                     {processParams.temperatureOverride !== null && (
                       <div className="flex justify-between items-center border-b border-border pb-2">

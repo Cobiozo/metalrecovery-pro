@@ -41619,19 +41619,34 @@ var electronicMaterials = [
   },
   // ─── PŁYTY Z URZĄDZEŃ ─────────────────────────────────────────────────────
   {
-    id: "pcb_hdd",
-    name: "P\u0142yty z dysk\xF3w twardych HDD",
-    nameEn: "HDD PCBs",
+    id: "pcb_hdd_stare",
+    name: "P\u0142yty z dysk\xF3w twardych HDD (stare, do ~2005)",
+    nameEn: "Old HDD PCBs (pre-2005)",
     category: "pcb",
     unit: "kg",
-    weightPerPiece: 0.045,
+    weightPerPiece: 0.05,
     metalContentPerKg: {
-      Au: { min: 0.3, max: 0.9, typical: 0.55 },
-      Ag: { min: 0.8, max: 3, typical: 1.8 },
+      Au: { min: 0.35, max: 0.85, typical: 0.55 },
+      Ag: { min: 1, max: 3.5, typical: 2 },
       Pt: { min: 0, max: 0.02, typical: 8e-3 },
-      Pd: { min: 0.02, max: 0.15, typical: 0.08 }
+      Pd: { min: 0.03, max: 0.18, typical: 0.09 }
     },
-    notes: "P\u0142ytki elektroniki z dysk\xF3w twardych (ok. 40-50g/szt) \u2014 g\u0119ste \u015Bcie\u017Cki, bogate w z\u0142oto."
+    notes: "P\u0142ytki PCB z dysk\xF3w sprzed 2005 r. \u2014 grubsze z\u0142ocenia \u015Bcie\u017Cek, DIP IC, g\u0119ste z\u0142\u0105cza. Dane: ok. 0.35\u20130.85 g Au/kg wg danych recykler\xF3w."
+  },
+  {
+    id: "pcb_hdd_nowe",
+    name: "P\u0142yty z dysk\xF3w twardych HDD (nowe, po 2005)",
+    nameEn: "Modern HDD PCBs (post-2005)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.04,
+    metalContentPerKg: {
+      Au: { min: 0.08, max: 0.32, typical: 0.18 },
+      Ag: { min: 0.5, max: 2, typical: 1.1 },
+      Pt: { min: 0, max: 0.01, typical: 4e-3 },
+      Pd: { min: 0.01, max: 0.08, typical: 0.04 }
+    },
+    notes: "P\u0142ytki PCB z dysk\xF3w po 2005 r. \u2014 SMD, cie\u0144sze z\u0142ocenia, mniej Pd w kondensatorach. Dane: ok. 0.08\u20130.32 g Au/kg wg pomiar\xF3w recykler\xF3w."
   },
   {
     id: "pcb_cdrom",
