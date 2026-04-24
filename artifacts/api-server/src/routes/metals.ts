@@ -11,60 +11,135 @@ interface MetalPrices {
   source: string;
 }
 
+interface PerMetalPrices {
+  Au: number | null;
+  Ag: number | null;
+  Pt: number | null;
+  Pd: number | null;
+}
+
 let cachedPrices: MetalPrices | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
-async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
+async function fetchNBPGoldPerGram(): Promise<number | null> {
   const today = new Date().toISOString().split("T")[0];
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
     .toISOString()
     .split("T")[0];
-
-  async function fetchNBPGold(): Promise<number | null> {
-    try {
-      const res = await fetch(
-        `https://api.nbp.pl/api/cenyzlota/${thirtyDaysAgo}/${today}/?format=json`,
-      );
-      if (!res.ok) return null;
-      const data = (await res.json()) as Array<{ data: string; cena: number }>;
-      if (!Array.isArray(data) || data.length === 0) return null;
-      const latestEntry = data[data.length - 1];
-      if (!latestEntry) return null;
-      return latestEntry.cena / 31.1035;
-    } catch {
-      return null;
-    }
+  try {
+    const res = await fetch(
+      `https://api.nbp.pl/api/cenyzlota/${thirtyDaysAgo}/${today}/?format=json`,
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as Array<{ data: string; cena: number }>;
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const latestEntry = data[data.length - 1];
+    if (!latestEntry) return null;
+    return latestEntry.cena / 31.1035;
+  } catch {
+    return null;
   }
+}
 
-  const goldPerGram = await fetchNBPGold();
-
-  if (goldPerGram !== null) {
-    const goldToSilverRatio = 80;
-    const goldToPlatinumRatio = 1.1;
-    const goldToPalladiumRatio = 0.7;
-
-    return {
-      Au: Math.round(goldPerGram * 100) / 100,
-      Ag: Math.round((goldPerGram / goldToSilverRatio) * 100) / 100,
-      Pt: Math.round((goldPerGram / goldToPlatinumRatio) * 100) / 100,
-      Pd: Math.round((goldPerGram / goldToPalladiumRatio) * 100) / 100,
-      updatedAt: new Date().toISOString(),
-      source: "NBP (Narodowy Bank Polski)",
-    };
+async function fetchNBPExchangeRate(currencyCode: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `https://api.nbp.pl/api/exchangerates/rates/a/${currencyCode}/last/?format=json`,
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { rates: Array<{ mid: number }> };
+    if (!data.rates || data.rates.length === 0) return null;
+    return data.rates[0]?.mid ?? null;
+  } catch {
+    return null;
   }
+}
+
+async function fetchFromOpenMetals(usdToPln: number): Promise<PerMetalPrices> {
+  const result: PerMetalPrices = { Au: null, Ag: null, Pt: null, Pd: null };
+  try {
+    const symbols = "XAU,XAG,XPT,XPD";
+    const res = await fetch(
+      `https://open.er-api.com/v6/latest/USD`,
+    );
+    if (!res.ok) return result;
+    const data = (await res.json()) as { rates?: Record<string, number> };
+    if (!data.rates) return result;
+    const rates = data.rates;
+    if (rates["XAU"]) result.Au = usdToPln / rates["XAU"] / 31.1035;
+    if (rates["XAG"]) result.Ag = usdToPln / rates["XAG"] / 31.1035;
+    if (rates["XPT"]) result.Pt = usdToPln / rates["XPT"] / 31.1035;
+    if (rates["XPD"]) result.Pd = usdToPln / rates["XPD"] / 31.1035;
+    void symbols;
+  } catch {
+  }
+  return result;
+}
+
+async function fetchFromFrankfurterAPI(usdToPln: number): Promise<PerMetalPrices> {
+  const result: PerMetalPrices = { Au: null, Ag: null, Pt: null, Pd: null };
+  try {
+    const res = await fetch(
+      `https://api.frankfurter.dev/v1/latest?base=USD&symbols=XAU,XAG`,
+    );
+    if (!res.ok) return result;
+    const data = (await res.json()) as { rates?: Record<string, number> };
+    if (!data.rates) return result;
+    const rates = data.rates;
+    if (rates["XAU"]) result.Au = usdToPln / rates["XAU"] / 31.1035;
+    if (rates["XAG"]) result.Ag = usdToPln / rates["XAG"] / 31.1035;
+  } catch {
+  }
+  return result;
+}
+
+async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
+  const usdToPlnRate = await fetchNBPExchangeRate("usd");
+  const usdToPln = usdToPlnRate ?? 4.0;
+
+  const [nbpGold, openMetals, frankfurterMetals] = await Promise.all([
+    fetchNBPGoldPerGram(),
+    fetchFromOpenMetals(usdToPln),
+    fetchFromFrankfurterAPI(usdToPln),
+  ]);
+
+  const auPerGram: number =
+    nbpGold ??
+    openMetals.Au ??
+    frankfurterMetals.Au ??
+    380.0;
+
+  const agPerGram: number =
+    openMetals.Ag ??
+    frankfurterMetals.Ag ??
+    (auPerGram / 82.0);
+
+  const ptPerGram: number =
+    openMetals.Pt ??
+    (auPerGram * 0.9);
+
+  const pdPerGram: number =
+    openMetals.Pd ??
+    (auPerGram * 1.35);
+
+  const sources: string[] = [];
+  if (nbpGold !== null) sources.push("NBP (złoto)");
+  if (openMetals.Ag !== null) sources.push("open.er-api.com (Ag/Pt/Pd)");
+  else if (frankfurterMetals.Ag !== null) sources.push("frankfurter.dev (Ag)");
+  if (sources.length === 0) sources.push("Wartości szacunkowe (brak połączenia z API)");
 
   return {
-    Au: 380.0,
-    Ag: 4.75,
-    Pt: 345.0,
-    Pd: 540.0,
+    Au: Math.round(auPerGram * 100) / 100,
+    Ag: Math.round(agPerGram * 100) / 100,
+    Pt: Math.round(ptPerGram * 100) / 100,
+    Pd: Math.round(pdPerGram * 100) / 100,
     updatedAt: new Date().toISOString(),
-    source: "Wartości przybliżone (brak połączenia z API)",
+    source: sources.join(" + "),
   };
 }
 
-router.get("/metals/prices", async (req, res) => {
+router.get("/metals/prices", async (_req, res) => {
   const now = Date.now();
   if (cachedPrices && now - cacheTimestamp < CACHE_TTL_MS) {
     res.json(cachedPrices);

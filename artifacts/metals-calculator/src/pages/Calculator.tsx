@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useCalculateRecovery, CalculationResult } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle } from "lucide-react";
+import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X } from "lucide-react";
 import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
 
 type BatchItemState = {
   id: string;
@@ -17,11 +18,53 @@ type BatchItemState = {
   quantity: number;
 };
 
+type SavedSession = {
+  id: string;
+  name: string;
+  savedAt: string;
+  batchItems: BatchItemState[];
+  selectedProcessId: string;
+  processParams: ProcessParams;
+  result: CalculationResult;
+};
+
+type ProcessParams = {
+  acidConcentrationOverride: number | null;
+  temperatureOverride: number | null;
+  electricityPricePerKwh: number;
+};
+
+const SESSIONS_KEY = "metalrecovery_sessions";
+const MAX_SESSIONS = 10;
+
+function loadSessions(): SavedSession[] {
+  try {
+    const raw = localStorage.getItem(SESSIONS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as SavedSession[];
+  } catch {
+    return [];
+  }
+}
+
+function saveSessions(sessions: SavedSession[]): void {
+  localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions.slice(0, MAX_SESSIONS)));
+}
+
 export function CalculatorPage() {
   const [activeTab, setActiveTab] = useState<string>("wsad");
   const [batchItems, setBatchItems] = useState<BatchItemState[]>([{ id: '1', materialId: '', quantity: 1 }]);
   const [selectedProcessId, setSelectedProcessId] = useState<string>("");
+  const [processParams, setProcessParams] = useState<ProcessParams>({
+    acidConcentrationOverride: null,
+    temperatureOverride: null,
+    electricityPricePerKwh: 0.8,
+  });
   const [result, setResult] = useState<CalculationResult | null>(null);
+  const [savedSessions, setSavedSessions] = useState<SavedSession[]>(loadSessions);
+  const [showHistory, setShowHistory] = useState(false);
+  const [sessionName, setSessionName] = useState("");
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
 
   const { data: materials, isLoading: materialsLoading } = useGetElectronicMaterials({
     query: { queryKey: getGetElectronicMaterialsQueryKey() }
@@ -30,6 +73,18 @@ export function CalculatorPage() {
   const { data: processes, isLoading: processesLoading } = useGetChemicalProcesses({
     query: { queryKey: getGetChemicalProcessesQueryKey() }
   });
+
+  const selectedProcess = processes?.find(p => p.id === selectedProcessId);
+
+  useEffect(() => {
+    if (selectedProcess) {
+      setProcessParams(prev => ({
+        ...prev,
+        temperatureOverride: selectedProcess.temperatureOptimal ?? null,
+        acidConcentrationOverride: selectedProcess.reagents?.[0]?.concentration ?? null,
+      }));
+    }
+  }, [selectedProcessId]);
 
   const calculateMutation = useCalculateRecovery({
     mutation: {
@@ -50,39 +105,128 @@ export function CalculatorPage() {
     }
   };
 
-  const handleBatchItemChange = (id: string, field: keyof BatchItemState, value: any) => {
-    setBatchItems(batchItems.map(item => item.id === id ? { ...item, [field]: value } : item));
+  const handleBatchMaterialChange = (id: string, value: string) => {
+    setBatchItems(batchItems.map(item => item.id === id ? { ...item, materialId: value } : item));
+  };
+
+  const handleBatchQuantityChange = (id: string, value: number) => {
+    setBatchItems(batchItems.map(item => item.id === id ? { ...item, quantity: value } : item));
   };
 
   const handleCalculate = () => {
     if (!selectedProcessId || batchItems.some(i => !i.materialId || i.quantity <= 0)) return;
-    
-    calculateMutation.mutate({
-      data: {
-        batch: batchItems.map(item => ({ materialId: item.materialId, quantity: item.quantity })),
-        processId: selectedProcessId
-      }
-    });
+
+    const requestData: Parameters<typeof calculateMutation.mutate>[0]['data'] = {
+      batch: batchItems.map(item => ({ materialId: item.materialId, quantity: item.quantity })),
+      processId: selectedProcessId,
+      electricityPricePerKwh: processParams.electricityPricePerKwh,
+    };
+
+    if (processParams.acidConcentrationOverride !== null) {
+      requestData.acidConcentrationOverride = processParams.acidConcentrationOverride;
+    }
+    if (processParams.temperatureOverride !== null) {
+      requestData.temperatureOverride = processParams.temperatureOverride;
+    }
+
+    calculateMutation.mutate({ data: requestData });
+  };
+
+  const handleSaveSession = () => {
+    if (!result || !sessionName.trim()) return;
+    const newSession: SavedSession = {
+      id: Date.now().toString(),
+      name: sessionName.trim(),
+      savedAt: new Date().toISOString(),
+      batchItems,
+      selectedProcessId,
+      processParams,
+      result,
+    };
+    const updated = [newSession, ...savedSessions];
+    setSavedSessions(updated);
+    saveSessions(updated);
+    setShowSaveDialog(false);
+    setSessionName("");
+  };
+
+  const handleLoadSession = (session: SavedSession) => {
+    setBatchItems(session.batchItems);
+    setSelectedProcessId(session.selectedProcessId);
+    setProcessParams(session.processParams);
+    setResult(session.result);
+    setShowHistory(false);
+    setActiveTab("wyniki");
+  };
+
+  const handleDeleteSession = (id: string) => {
+    const updated = savedSessions.filter(s => s.id !== id);
+    setSavedSessions(updated);
+    saveSessions(updated);
   };
 
   const totalMass = batchItems.reduce((acc, item) => {
     const material = materials?.find(m => m.id === item.materialId);
     if (!material) return acc;
     if (material.unit === 'kg') return acc + item.quantity;
-    return acc; // For pieces, we'd need average mass, but API handles it. Just local rough estimate
+    return acc;
   }, 0);
+
+  const canGoToProcess = batchItems.some(i => i.materialId && i.quantity > 0) && !batchItems.some(i => i.materialId && i.quantity <= 0);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold font-sans tracking-tight">Kalkulator Odzysku Metali</h1>
-        <p className="text-muted-foreground text-sm mt-1">Precyzyjne szacowanie opłacalności procesów hydrometalurgicznych</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold font-sans tracking-tight">Kalkulator Odzysku Metali</h1>
+          <p className="text-muted-foreground text-sm mt-1">Precyzyjne szacowanie opłacalności procesów hydrometalurgicznych</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => setShowHistory(!showHistory)} className="shrink-0">
+          <History className="h-4 w-4 mr-2" />
+          Historia ({savedSessions.length})
+        </Button>
       </div>
+
+      {showHistory && (
+        <Card className="border-primary/30 bg-card">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Zapisane sesje</CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setShowHistory(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {savedSessions.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">Brak zapisanych sesji. Wykonaj kalkulację i zapisz ją.</p>
+            ) : (
+              <div className="space-y-2">
+                {savedSessions.map(session => (
+                  <div key={session.id} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border hover:border-primary/40 transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{session.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(session.savedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {' · '}Zysk: <span className={session.result.netProfitPln >= 0 ? 'text-success' : 'text-destructive'}>{formatCurrency(session.result.netProfitPln)}</span>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => handleLoadSession(session)}>Wczytaj</Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteSession(session.id)} className="text-muted-foreground hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8 h-12 bg-muted/50 p-1">
           <TabsTrigger value="wsad" className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">1. Wsad (Materiały)</TabsTrigger>
-          <TabsTrigger value="proces" disabled={batchItems.some(i => !i.materialId)} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">2. Parametry Procesu</TabsTrigger>
+          <TabsTrigger value="proces" disabled={!canGoToProcess} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">2. Parametry Procesu</TabsTrigger>
           <TabsTrigger value="wyniki" disabled={!result} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">3. Wyniki & Opłacalność</TabsTrigger>
         </TabsList>
 
@@ -93,15 +237,15 @@ export function CalculatorPage() {
               <CardDescription>Wybierz materiały elektroniczne i określ ich ilość (kg lub sztuki)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {batchItems.map((item, index) => {
+              {batchItems.map((item) => {
                 const selectedMaterial = materials?.find(m => m.id === item.materialId);
                 return (
                   <div key={item.id} className="flex gap-4 items-start bg-muted/30 p-4 rounded-lg border border-border">
                     <div className="flex-1">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Materiał</label>
-                      <Select 
-                        value={item.materialId} 
-                        onValueChange={(val) => handleBatchItemChange(item.id, 'materialId', val)}
+                      <Select
+                        value={item.materialId}
+                        onValueChange={(val) => handleBatchMaterialChange(item.id, val)}
                       >
                         <SelectTrigger className="bg-background">
                           <SelectValue placeholder="Wybierz materiał..." />
@@ -120,12 +264,12 @@ export function CalculatorPage() {
                     <div className="w-32">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Ilość</label>
                       <div className="relative">
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          step="0.01" 
-                          value={item.quantity} 
-                          onChange={(e) => handleBatchItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
+                        <Input
+                          type="number"
+                          min="0.001"
+                          step="0.01"
+                          value={item.quantity}
+                          onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
                           className="bg-background pr-12 font-mono"
                         />
                         <span className="absolute right-3 top-2.5 text-xs text-muted-foreground">
@@ -134,9 +278,9 @@ export function CalculatorPage() {
                       </div>
                     </div>
                     <div className="pt-7">
-                      <Button 
-                        variant="destructive" 
-                        size="icon" 
+                      <Button
+                        variant="destructive"
+                        size="icon"
                         onClick={() => handleRemoveBatchItem(item.id)}
                         disabled={batchItems.length === 1}
                         className="shrink-0"
@@ -147,7 +291,7 @@ export function CalculatorPage() {
                   </div>
                 );
               })}
-              
+
               <Button variant="outline" onClick={handleAddBatchItem} className="w-full border-dashed border-2 hover:bg-muted/50">
                 <Plus className="mr-2 h-4 w-4" /> Dodaj kolejny materiał
               </Button>
@@ -157,9 +301,9 @@ export function CalculatorPage() {
                 <span className="text-muted-foreground">Szacowana masa całkowita:</span>
                 <span className="font-mono font-bold ml-2 text-lg">{formatMass(totalMass, 'kg')}</span>
               </div>
-              <Button 
-                onClick={() => setActiveTab("proces")} 
-                disabled={batchItems.some(i => !i.materialId || i.quantity <= 0)}
+              <Button
+                onClick={() => setActiveTab("proces")}
+                disabled={!canGoToProcess}
               >
                 Dalej: Wybierz proces <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -178,11 +322,11 @@ export function CalculatorPage() {
                 {processesLoading ? (
                   [1, 2, 3].map(i => <Skeleton key={i} className="h-40 w-full rounded-xl" />)
                 ) : processes?.map(process => (
-                  <div 
+                  <div
                     key={process.id}
                     className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                      selectedProcessId === process.id 
-                        ? 'border-primary bg-primary/5' 
+                      selectedProcessId === process.id
+                        ? 'border-primary bg-primary/5'
                         : 'border-border bg-card hover:border-primary/50'
                     }`}
                     onClick={() => setSelectedProcessId(process.id)}
@@ -209,17 +353,110 @@ export function CalculatorPage() {
                 ))}
               </div>
             </CardContent>
-            <CardFooter className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
+          </Card>
+
+          {selectedProcess && (
+            <Card className="border-border">
+              <CardHeader>
+                <CardTitle>Parametry Procesu</CardTitle>
+                <CardDescription>
+                  Dostosuj warunki reakcji — odchylenia od optymalnych wartości obniżą wydajność odzysku
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label>Temperatura reakcji</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-primary">
+                        {processParams.temperatureOverride ?? selectedProcess.temperatureOptimal}°C
+                      </span>
+                      <span className="text-xs text-muted-foreground">(opt: {selectedProcess.temperatureOptimal}°C)</span>
+                    </div>
+                  </div>
+                  <Slider
+                    min={Math.max(0, (selectedProcess.temperatureOptimal ?? 70) - 50)}
+                    max={(selectedProcess.temperatureOptimal ?? 70) + 50}
+                    step={5}
+                    value={[processParams.temperatureOverride ?? selectedProcess.temperatureOptimal ?? 70]}
+                    onValueChange={([val]) => setProcessParams(p => ({ ...p, temperatureOverride: val ?? null }))}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Za niska → wolna reakcja</span>
+                    <span>Za wysoka → rozkład reagentów</span>
+                  </div>
+                </div>
+
+                {selectedProcess.reagents?.[0] && (
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label>Stężenie głównego reagentu ({selectedProcess.reagents[0].formula ?? selectedProcess.reagents[0].name})</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-primary">
+                          {processParams.acidConcentrationOverride ?? selectedProcess.reagents[0].concentration}%
+                        </span>
+                        <span className="text-xs text-muted-foreground">(opt: {selectedProcess.reagents[0].concentration}%)</span>
+                      </div>
+                    </div>
+                    <Slider
+                      min={Math.max(1, (selectedProcess.reagents[0].concentration ?? 35) - 20)}
+                      max={Math.min(100, (selectedProcess.reagents[0].concentration ?? 35) + 30)}
+                      step={1}
+                      value={[processParams.acidConcentrationOverride ?? selectedProcess.reagents[0].concentration ?? 35]}
+                      onValueChange={([val]) => setProcessParams(p => ({ ...p, acidConcentrationOverride: val ?? null }))}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Zbyt niskie → niekompletna reakcja</span>
+                      <span>Zbyt wysokie → nadmiar korozji</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label>Cena energii elektrycznej</Label>
+                    <span className="font-mono font-bold text-primary">{processParams.electricityPricePerKwh.toFixed(2)} zł/kWh</span>
+                  </div>
+                  <Slider
+                    min={0.3}
+                    max={2.0}
+                    step={0.05}
+                    value={[processParams.electricityPricePerKwh]}
+                    onValueChange={([val]) => setProcessParams(p => ({ ...p, electricityPricePerKwh: val ?? 0.8 }))}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>0.30 zł/kWh</span>
+                    <span>2.00 zł/kWh</span>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
+                <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do wsadu</Button>
+                <Button
+                  onClick={handleCalculate}
+                  disabled={!selectedProcessId || calculateMutation.isPending}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {calculateMutation.isPending ? 'Kalkulowanie...' : 'Uruchom Kalkulację'} <TrendingUp className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
+          )}
+
+          {!selectedProcess && (
+            <CardFooter className="bg-muted/30 border border-border rounded-lg flex justify-between items-center py-4 px-6">
               <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do wsadu</Button>
-              <Button 
-                onClick={handleCalculate} 
+              <Button
+                onClick={handleCalculate}
                 disabled={!selectedProcessId || calculateMutation.isPending}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {calculateMutation.isPending ? 'Kalkulowanie...' : 'Uruchom Kalkulację'} <TrendingUp className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
-          </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="wyniki" className="space-y-6">
@@ -249,7 +486,7 @@ export function CalculatorPage() {
                         <div className="font-mono font-bold text-primary text-xl">{formatCurrency(result.netProfitPln)}</div>
                       </div>
                     </div>
-                    
+
                     <div className={`p-4 rounded-lg flex items-start gap-4 border ${
                       result.profitabilityRating === 'very_profitable' ? 'bg-success/10 border-success/30 text-success' :
                       result.profitabilityRating === 'profitable' ? 'bg-primary/10 border-primary/30 text-primary' :
@@ -259,7 +496,7 @@ export function CalculatorPage() {
                       {result.profitabilityRating === 'not_profitable' ? <AlertTriangle className="h-6 w-6 shrink-0 mt-0.5" /> : <TrendingUp className="h-6 w-6 shrink-0 mt-0.5" />}
                       <div>
                         <h4 className="font-bold uppercase tracking-wider mb-1">
-                          {result.profitabilityRating.replace('_', ' ')}
+                          {result.profitabilityRating.replace(/_/g, ' ')}
                         </h4>
                         <p className="text-sm opacity-90">{result.profitabilityNote}</p>
                       </div>
@@ -284,8 +521,37 @@ export function CalculatorPage() {
                       <span className="text-sm text-muted-foreground">Proces</span>
                       <span className="font-bold text-right pl-4 truncate">{result.processName}</span>
                     </div>
-                    <div className="pt-2">
-                      <Button variant="outline" className="w-full" onClick={() => setActiveTab("wsad")}>
+                    {processParams.temperatureOverride !== null && (
+                      <div className="flex justify-between items-center border-b border-border pb-2">
+                        <span className="text-sm text-muted-foreground">Temperatura</span>
+                        <span className="font-mono font-bold">{processParams.temperatureOverride}°C</span>
+                      </div>
+                    )}
+                    <div className="pt-2 space-y-2">
+                      {!showSaveDialog ? (
+                        <Button variant="outline" className="w-full" onClick={() => setShowSaveDialog(true)}>
+                          <Save className="h-4 w-4 mr-2" />Zapisz sesję
+                        </Button>
+                      ) : (
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="Nazwa sesji..."
+                            value={sessionName}
+                            onChange={(e) => setSessionName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveSession()}
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" className="flex-1" onClick={handleSaveSession} disabled={!sessionName.trim()}>
+                              Zapisz
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => { setShowSaveDialog(false); setSessionName(""); }}>
+                              Anuluj
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                      <Button variant="outline" className="w-full" onClick={() => { setResult(null); setBatchItems([{ id: '1', materialId: '', quantity: 1 }]); setSelectedProcessId(''); setActiveTab("wsad"); }}>
                         Nowa Kalkulacja
                       </Button>
                     </div>

@@ -231,6 +231,7 @@ const chemicalProcessesMap: Record<
     }>;
     timePerKgMin: number;
     timePerKgMax: number;
+    temperatureOptimal: number;
     yieldPercent: { Au: number; Ag: number; Pt: number; Pd: number };
     electricityKwhPerKg: number;
   }
@@ -259,6 +260,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 4,
     timePerKgMax: 12,
+    temperatureOptimal: 70,
     yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
     electricityKwhPerKg: 0.5,
   },
@@ -280,6 +282,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 2,
     timePerKgMax: 6,
+    temperatureOptimal: 40,
     yieldPercent: { Au: 0, Ag: 85, Pt: 5, Pd: 10 },
     electricityKwhPerKg: 0.2,
   },
@@ -295,6 +298,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 1,
     timePerKgMax: 4,
+    temperatureOptimal: 55,
     yieldPercent: { Au: 0, Ag: 90, Pt: 0, Pd: 70 },
     electricityKwhPerKg: 0.15,
   },
@@ -322,6 +326,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 6,
     timePerKgMax: 24,
+    temperatureOptimal: 40,
     yieldPercent: { Au: 90, Ag: 15, Pt: 60, Pd: 75 },
     electricityKwhPerKg: 0.3,
   },
@@ -343,6 +348,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 3,
     timePerKgMax: 8,
+    temperatureOptimal: 80,
     yieldPercent: { Au: 85, Ag: 90, Pt: 30, Pd: 40 },
     electricityKwhPerKg: 0.8,
   },
@@ -364,6 +370,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 8,
     timePerKgMax: 48,
+    temperatureOptimal: 65,
     yieldPercent: { Au: 99, Ag: 95, Pt: 60, Pd: 50 },
     electricityKwhPerKg: 2.5,
   },
@@ -385,6 +392,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 24,
     timePerKgMax: 72,
+    temperatureOptimal: 60,
     yieldPercent: { Au: 99.5, Ag: 0, Pt: 30, Pd: 20 },
     electricityKwhPerKg: 3.0,
   },
@@ -406,6 +414,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 0.5,
     timePerKgMax: 2,
+    temperatureOptimal: 1050,
     yieldPercent: { Au: 98, Ag: 0, Pt: 20, Pd: 10 },
     electricityKwhPerKg: 5.0,
   },
@@ -427,6 +436,7 @@ const chemicalProcessesMap: Record<
     ],
     timePerKgMin: 2,
     timePerKgMax: 8,
+    temperatureOptimal: 25,
     yieldPercent: { Au: 80, Ag: 75, Pt: 20, Pd: 30 },
     electricityKwhPerKg: 0.1,
   },
@@ -439,6 +449,48 @@ const PIECE_WEIGHT_KG: Record<string, number> = {
   phone_feature: 0.08,
   laptop_complete: 2.2,
 };
+
+function computeParameterYieldMultiplier(
+  processId: string,
+  baseYield: number,
+  acidConcentrationOverride?: number,
+  temperatureOverride?: number,
+  processOptimalTemp?: number,
+  processDefaultConc?: number,
+): number {
+  let multiplier = 1.0;
+
+  if (acidConcentrationOverride !== undefined && processDefaultConc !== undefined) {
+    const ratio = acidConcentrationOverride / processDefaultConc;
+    if (ratio < 0.5) {
+      multiplier *= 0.7;
+    } else if (ratio < 0.8) {
+      multiplier *= 0.85 + (ratio - 0.5) * 0.5;
+    } else if (ratio <= 1.2) {
+      multiplier *= 1.0;
+    } else if (ratio <= 1.5) {
+      multiplier *= 0.98;
+    } else {
+      multiplier *= 0.95;
+    }
+  }
+
+  if (temperatureOverride !== undefined && processOptimalTemp !== undefined) {
+    const diff = Math.abs(temperatureOverride - processOptimalTemp);
+    if (diff === 0) {
+      multiplier *= 1.0;
+    } else if (diff <= 10) {
+      multiplier *= 1.0 - diff * 0.002;
+    } else if (diff <= 25) {
+      multiplier *= 0.98 - (diff - 10) * 0.008;
+    } else {
+      multiplier *= Math.max(0.60, 0.86 - (diff - 25) * 0.01);
+    }
+  }
+
+  const adjusted = baseYield * multiplier;
+  return Math.min(99.5, Math.max(0, adjusted));
+}
 
 router.post("/calculator/estimate", async (req, res) => {
   const body = req.body as CalculationRequest;
@@ -459,14 +511,34 @@ router.post("/calculator/estimate", async (req, res) => {
     return;
   }
 
+  const unknownMaterials = body.batch
+    .filter((item) => !electronicMaterialsMap[item.materialId])
+    .map((item) => item.materialId);
+
+  if (unknownMaterials.length > 0) {
+    res.status(400).json({
+      error: `Unknown material IDs: ${unknownMaterials.join(", ")}`,
+    });
+    return;
+  }
+
+  const invalidQuantities = body.batch.filter(
+    (item) => typeof item.quantity !== "number" || item.quantity <= 0,
+  );
+  if (invalidQuantities.length > 0) {
+    res.status(400).json({
+      error: "All batch quantities must be positive numbers",
+    });
+    return;
+  }
+
   const metalPrices = await fetchMetalPricesFromNBP();
 
   let totalMassKg = 0;
   const totalMetalsGPerKg = { Au: 0, Ag: 0, Pt: 0, Pd: 0 };
 
   for (const item of body.batch) {
-    const material = electronicMaterialsMap[item.materialId];
-    if (!material) continue;
+    const material = electronicMaterialsMap[item.materialId]!;
 
     let massKg: number;
     if (material.unit === "piece") {
@@ -484,11 +556,23 @@ router.post("/calculator/estimate", async (req, res) => {
     totalMetalsGPerKg.Pd += material.metalContentPerKg.Pd.typical * massKg;
   }
 
+  const processDefaultConc = process.reagents[0]?.concentration;
+  const processOptimalTemp = process.temperatureOptimal;
+
   const metals = ["Au", "Ag", "Pt", "Pd"] as const;
   const recoveredMetals = metals.map((metal) => {
     const totalGrams = totalMetalsGPerKg[metal];
-    const yieldPct = process.yieldPercent[metal] / 100;
-    const recovered = totalGrams * yieldPct;
+    const baseYield = process.yieldPercent[metal];
+    const adjustedYield = computeParameterYieldMultiplier(
+      body.processId,
+      baseYield,
+      body.acidConcentrationOverride,
+      body.temperatureOverride,
+      processOptimalTemp,
+      processDefaultConc,
+    );
+    const yieldFraction = adjustedYield / 100;
+    const recovered = totalGrams * yieldFraction;
     const price = metalPrices[metal];
     const value = recovered * price;
     return {
@@ -496,7 +580,7 @@ router.post("/calculator/estimate", async (req, res) => {
       massGrams: Math.round(recovered * 1000) / 1000,
       pricePerGram: price,
       totalValuePln: Math.round(value * 100) / 100,
-      yieldPercent: process.yieldPercent[metal],
+      yieldPercent: Math.round(adjustedYield * 10) / 10,
     };
   });
 
@@ -544,14 +628,19 @@ router.post("/calculator/estimate", async (req, res) => {
     profitabilityNote = `Nieopłacalne. Koszty chemii (${totalCostPln.toFixed(2)} PLN) przekraczają wartość odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwiększ wsad lub zmień proces.`;
   }
 
-  const avgTime =
-    (process.timePerKgMin + process.timePerKgMax) / 2;
+  const avgTimePerKg = (process.timePerKgMin + process.timePerKgMax) / 2;
+  let estimatedTimeHours = avgTimePerKg * totalMassKg;
+
+  if (body.temperatureOverride !== undefined && processOptimalTemp !== undefined) {
+    const tempFactor = 1 + (processOptimalTemp - body.temperatureOverride) * 0.01;
+    estimatedTimeHours = Math.max(avgTimePerKg * 0.5, estimatedTimeHours * Math.max(0.5, Math.min(2.0, tempFactor)));
+  }
 
   res.json({
     totalInputMassKg: Math.round(totalMassKg * 1000) / 1000,
     processId: body.processId,
     processName: process.name,
-    estimatedTimeHours: Math.round(avgTime * totalMassKg * 10) / 10,
+    estimatedTimeHours: Math.round(estimatedTimeHours * 10) / 10,
     recoveredMetals,
     chemistryCosts,
     electricityCostPln: Math.round(electricityCostPln * 100) / 100,
