@@ -523,6 +523,22 @@ router.post("/calculator/estimate", async (req, res) => {
     return;
   }
 
+  if (body.reagentPriceOverrides) {
+    const invalidPrices = Object.entries(body.reagentPriceOverrides).filter(
+      ([, v]) =>
+        typeof v !== "number" ||
+        !isFinite(v) ||
+        v <= 0 ||
+        v > 100_000,
+    );
+    if (invalidPrices.length > 0) {
+      res.status(400).json({
+        error: `Invalid reagentPriceOverrides: prices must be finite numbers between 0 and 100000 PLN/L`,
+      });
+      return;
+    }
+  }
+
   const invalidQuantities = body.batch.filter(
     (item) => typeof item.quantity !== "number" || item.quantity <= 0,
   );
