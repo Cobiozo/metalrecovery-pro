@@ -27620,11 +27620,18 @@ var router2 = (0, import_express2.Router)();
 var cachedPrices = null;
 var cacheTimestamp = 0;
 var CACHE_TTL_MS = 24 * 60 * 60 * 1e3;
+var FETCH_TIMEOUT_MS = 8e3;
+var pendingFetch = null;
+function fetchWithTimeout(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+}
 async function fetchNBPGoldPerGram() {
   const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1e3).toISOString().split("T")[0];
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.nbp.pl/api/cenyzlota/${thirtyDaysAgo}/${today}/?format=json`
     );
     if (!res.ok) return null;
@@ -27639,7 +27646,7 @@ async function fetchNBPGoldPerGram() {
 }
 async function fetchNBPExchangeRate(currencyCode) {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.nbp.pl/api/exchangerates/rates/a/${currencyCode}/last/?format=json`
     );
     if (!res.ok) return null;
@@ -27653,10 +27660,7 @@ async function fetchNBPExchangeRate(currencyCode) {
 async function fetchFromOpenMetals(usdToPln) {
   const result = { Au: null, Ag: null, Pt: null, Pd: null };
   try {
-    const symbols = "XAU,XAG,XPT,XPD";
-    const res = await fetch(
-      `https://open.er-api.com/v6/latest/USD`
-    );
+    const res = await fetchWithTimeout(`https://open.er-api.com/v6/latest/USD`);
     if (!res.ok) return result;
     const data = await res.json();
     if (!data.rates) return result;
@@ -27665,7 +27669,6 @@ async function fetchFromOpenMetals(usdToPln) {
     if (rates["XAG"]) result.Ag = usdToPln / rates["XAG"] / 31.1035;
     if (rates["XPT"]) result.Pt = usdToPln / rates["XPT"] / 31.1035;
     if (rates["XPD"]) result.Pd = usdToPln / rates["XPD"] / 31.1035;
-    void symbols;
   } catch {
   }
   return result;
@@ -27673,7 +27676,7 @@ async function fetchFromOpenMetals(usdToPln) {
 async function fetchFromFrankfurterAPI(usdToPln) {
   const result = { Au: null, Ag: null, Pt: null, Pd: null };
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.frankfurter.dev/v1/latest?base=USD&symbols=XAU,XAG`
     );
     if (!res.ok) return result;
@@ -27717,10 +27720,20 @@ async function getOrFetchPrices() {
   if (cachedPrices && now - cacheTimestamp < CACHE_TTL_MS) {
     return cachedPrices;
   }
-  const prices = await fetchMetalPricesFromNBP();
-  cachedPrices = prices;
-  cacheTimestamp = now;
-  return prices;
+  if (pendingFetch) {
+    return pendingFetch;
+  }
+  pendingFetch = fetchMetalPricesFromNBP().then((prices) => {
+    cachedPrices = prices;
+    cacheTimestamp = Date.now();
+    pendingFetch = null;
+    return prices;
+  }).catch((err) => {
+    pendingFetch = null;
+    if (cachedPrices) return cachedPrices;
+    throw err;
+  });
+  return pendingFetch;
 }
 router2.get("/metals/prices", async (_req, res) => {
   res.json(await getOrFetchPrices());
@@ -29570,6 +29583,22 @@ router5.post("/calculator/estimate", async (req, res) => {
   const body = req.body;
   if (!body.batch || !Array.isArray(body.batch) || body.batch.length === 0 || !body.processId) {
     res.status(400).json({ error: "Invalid request: batch and processId required" });
+    return;
+  }
+  if (body.batch.length > 50) {
+    res.status(400).json({ error: "Batch too large: maximum 50 items allowed" });
+    return;
+  }
+  if (body.acidConcentrationOverride !== void 0 && (typeof body.acidConcentrationOverride !== "number" || !isFinite(body.acidConcentrationOverride) || body.acidConcentrationOverride <= 0 || body.acidConcentrationOverride > 100)) {
+    res.status(400).json({ error: "acidConcentrationOverride must be a number between 0 and 100" });
+    return;
+  }
+  if (body.temperatureOverride !== void 0 && (typeof body.temperatureOverride !== "number" || !isFinite(body.temperatureOverride) || body.temperatureOverride < -20 || body.temperatureOverride > 1500)) {
+    res.status(400).json({ error: "temperatureOverride must be a number between -20 and 1500 \xB0C" });
+    return;
+  }
+  if (body.electricityPricePerKwh !== void 0 && (typeof body.electricityPricePerKwh !== "number" || !isFinite(body.electricityPricePerKwh) || body.electricityPricePerKwh < 0 || body.electricityPricePerKwh > 1e4)) {
+    res.status(400).json({ error: "electricityPricePerKwh must be a number between 0 and 10000" });
     return;
   }
   const process2 = chemicalProcessesMap[body.processId];

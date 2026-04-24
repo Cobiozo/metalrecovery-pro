@@ -39,7 +39,7 @@ package.json       → zależności produkcyjne
 ## Endpointy API
 | Endpoint | Metoda | Opis |
 |---|---|---|
-| `/api/health` | GET | Status serwera |
+| `/api/healthz` | GET | Status serwera |
 | `/api/metals/prices` | GET | Aktualne ceny metali (NBP) |
 | `/api/materials/electronics` | GET | Lista 61 materiałów (Au/Ag/Pt/Pd) |
 | `/api/chemicals/processes` | GET | Lista 9 procesów hydrometalurgicznych |

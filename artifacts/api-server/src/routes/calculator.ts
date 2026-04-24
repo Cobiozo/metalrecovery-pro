@@ -403,6 +403,44 @@ router.post("/calculator/estimate", async (req, res) => {
     return;
   }
 
+  if (body.batch.length > 50) {
+    res.status(400).json({ error: "Batch too large: maximum 50 items allowed" });
+    return;
+  }
+
+  if (
+    body.acidConcentrationOverride !== undefined &&
+    (typeof body.acidConcentrationOverride !== "number" ||
+      !isFinite(body.acidConcentrationOverride) ||
+      body.acidConcentrationOverride <= 0 ||
+      body.acidConcentrationOverride > 100)
+  ) {
+    res.status(400).json({ error: "acidConcentrationOverride must be a number between 0 and 100" });
+    return;
+  }
+
+  if (
+    body.temperatureOverride !== undefined &&
+    (typeof body.temperatureOverride !== "number" ||
+      !isFinite(body.temperatureOverride) ||
+      body.temperatureOverride < -20 ||
+      body.temperatureOverride > 1500)
+  ) {
+    res.status(400).json({ error: "temperatureOverride must be a number between -20 and 1500 °C" });
+    return;
+  }
+
+  if (
+    body.electricityPricePerKwh !== undefined &&
+    (typeof body.electricityPricePerKwh !== "number" ||
+      !isFinite(body.electricityPricePerKwh) ||
+      body.electricityPricePerKwh < 0 ||
+      body.electricityPricePerKwh > 10000)
+  ) {
+    res.status(400).json({ error: "electricityPricePerKwh must be a number between 0 and 10000" });
+    return;
+  }
+
   const process = chemicalProcessesMap[body.processId];
   if (!process) {
     res.status(400).json({ error: `Unknown processId: ${body.processId}` });

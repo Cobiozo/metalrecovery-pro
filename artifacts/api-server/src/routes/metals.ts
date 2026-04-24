@@ -21,6 +21,15 @@ interface PerMetalPrices {
 let cachedPrices: MetalPrices | null = null;
 let cacheTimestamp = 0;
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const FETCH_TIMEOUT_MS = 8000;
+
+let pendingFetch: Promise<MetalPrices> | null = null;
+
+function fetchWithTimeout(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
+}
 
 async function fetchNBPGoldPerGram(): Promise<number | null> {
   const today = new Date().toISOString().split("T")[0];
@@ -28,7 +37,7 @@ async function fetchNBPGoldPerGram(): Promise<number | null> {
     .toISOString()
     .split("T")[0];
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.nbp.pl/api/cenyzlota/${thirtyDaysAgo}/${today}/?format=json`,
     );
     if (!res.ok) return null;
@@ -44,7 +53,7 @@ async function fetchNBPGoldPerGram(): Promise<number | null> {
 
 async function fetchNBPExchangeRate(currencyCode: string): Promise<number | null> {
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.nbp.pl/api/exchangerates/rates/a/${currencyCode}/last/?format=json`,
     );
     if (!res.ok) return null;
@@ -59,10 +68,7 @@ async function fetchNBPExchangeRate(currencyCode: string): Promise<number | null
 async function fetchFromOpenMetals(usdToPln: number): Promise<PerMetalPrices> {
   const result: PerMetalPrices = { Au: null, Ag: null, Pt: null, Pd: null };
   try {
-    const symbols = "XAU,XAG,XPT,XPD";
-    const res = await fetch(
-      `https://open.er-api.com/v6/latest/USD`,
-    );
+    const res = await fetchWithTimeout(`https://open.er-api.com/v6/latest/USD`);
     if (!res.ok) return result;
     const data = (await res.json()) as { rates?: Record<string, number> };
     if (!data.rates) return result;
@@ -71,7 +77,6 @@ async function fetchFromOpenMetals(usdToPln: number): Promise<PerMetalPrices> {
     if (rates["XAG"]) result.Ag = usdToPln / rates["XAG"] / 31.1035;
     if (rates["XPT"]) result.Pt = usdToPln / rates["XPT"] / 31.1035;
     if (rates["XPD"]) result.Pd = usdToPln / rates["XPD"] / 31.1035;
-    void symbols;
   } catch {
   }
   return result;
@@ -80,7 +85,7 @@ async function fetchFromOpenMetals(usdToPln: number): Promise<PerMetalPrices> {
 async function fetchFromFrankfurterAPI(usdToPln: number): Promise<PerMetalPrices> {
   const result: PerMetalPrices = { Au: null, Ag: null, Pt: null, Pd: null };
   try {
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.frankfurter.dev/v1/latest?base=USD&symbols=XAU,XAG`,
     );
     if (!res.ok) return result;
@@ -144,10 +149,22 @@ async function getOrFetchPrices(): Promise<MetalPrices> {
   if (cachedPrices && now - cacheTimestamp < CACHE_TTL_MS) {
     return cachedPrices;
   }
-  const prices = await fetchMetalPricesFromNBP();
-  cachedPrices = prices;
-  cacheTimestamp = now;
-  return prices;
+  if (pendingFetch) {
+    return pendingFetch;
+  }
+  pendingFetch = fetchMetalPricesFromNBP()
+    .then((prices) => {
+      cachedPrices = prices;
+      cacheTimestamp = Date.now();
+      pendingFetch = null;
+      return prices;
+    })
+    .catch((err) => {
+      pendingFetch = null;
+      if (cachedPrices) return cachedPrices;
+      throw err;
+    });
+  return pendingFetch;
 }
 
 router.get("/metals/prices", async (_req, res) => {
