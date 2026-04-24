@@ -635,21 +635,6 @@ export const electronicMaterials = [
     notes: "Stare telefony komórkowe z klawiaturą z bateriami (~110g/szt).",
   },
   {
-    id: "phone_smartphone",
-    name: "Smartfon (szt.)",
-    nameEn: "Smartphone (per piece)",
-    category: "urzadzenie",
-    unit: "piece",
-    weightPerPiece: 0.17,
-    metalContentPerKg: {
-      Au: { min: 0.02, max: 0.06, typical: 0.04 },
-      Ag: { min: 0.1, max: 0.4, typical: 0.25 },
-      Pt: { min: 0.0, max: 0.005, typical: 0.002 },
-      Pd: { min: 0.005, max: 0.02, typical: 0.012 },
-    },
-    notes: "Smartfon — wycena na sztuki (~170g/szt). metalContentPerKg obliczone dla całego smartfona.",
-  },
-  {
     id: "phone_feature",
     name: "Telefon komórkowy klasyczny (szt.)",
     nameEn: "Feature phone per piece",

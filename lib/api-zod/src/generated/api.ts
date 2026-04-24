@@ -106,6 +106,10 @@ export const GetChemicalProcessesResponseItem = zod.object({
       name: zod.string(),
       formula: zod.string(),
       concentration: zod.number().describe("Concentration in percent"),
+      availableConcentrations: zod
+        .array(zod.number())
+        .optional()
+        .describe("Available concentration options in percent (for UI selector)"),
       amountPerKg: zod
         .number()
         .describe("Amount in liters per kg of input material"),

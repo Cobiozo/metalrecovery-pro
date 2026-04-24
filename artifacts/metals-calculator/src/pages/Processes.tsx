@@ -6,6 +6,7 @@ import { Beaker, Thermometer, Clock, Zap, AlertTriangle, ChevronRight, FlaskConi
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import type { Reagent } from "@workspace/api-client-react";
 
 const METAL_NAMES: Record<string, string> = {
   Au: "złoto",
@@ -22,9 +23,24 @@ function stripStepPrefix(step: string): string {
     .trim();
 }
 
+function getEffectiveConc(reagent: Reagent, overrides: Record<string, number>): number {
+  return overrides[reagent.name] ?? reagent.concentration;
+}
+
+function getAdjustedAmount(reagent: Reagent, batchKg: number, overrides: Record<string, number>): number {
+  const effConc = getEffectiveConc(reagent, overrides);
+  return reagent.amountPerKg * (reagent.concentration / effConc) * batchKg;
+}
+
+function getAdjustedPricePerL(reagent: Reagent, overrides: Record<string, number>): number {
+  const effConc = getEffectiveConc(reagent, overrides);
+  return reagent.pricePerLiter * (effConc / reagent.concentration);
+}
+
 export function ProcessesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [batchKg, setBatchKg] = useState<number>(1);
+  const [concentrationOverrides, setConcentrationOverrides] = useState<Record<string, number>>({});
 
   const { data: processes, isLoading } = useGetChemicalProcesses({
     query: { queryKey: getGetChemicalProcessesQueryKey() }
@@ -33,6 +49,14 @@ export function ProcessesPage() {
   const selectedProcess = selectedId
     ? processes?.find(p => p.id === selectedId) ?? processes?.[0]
     : processes?.[0];
+
+  const totalReagentCost = selectedProcess
+    ? selectedProcess.reagents.reduce((sum, r) => {
+        const amt = getAdjustedAmount(r, batchKg, concentrationOverrides);
+        const price = getAdjustedPricePerL(r, concentrationOverrides);
+        return sum + amt * price;
+      }, 0)
+    : 0;
 
   if (isLoading) {
     return (
@@ -48,10 +72,6 @@ export function ProcessesPage() {
       </div>
     );
   }
-
-  const totalReagentCost = selectedProcess
-    ? selectedProcess.reagents.reduce((sum, r) => sum + r.amountPerKg * batchKg * r.pricePerLiter, 0)
-    : 0;
 
   return (
     <div className="space-y-4">
@@ -224,20 +244,55 @@ export function ProcessesPage() {
                 </div>
                 <div className="space-y-1.5">
                   {selectedProcess.reagents.map(reagent => {
-                    const totalAmount = reagent.amountPerKg * batchKg;
-                    const totalCost = totalAmount * reagent.pricePerLiter;
+                    const effConc = getEffectiveConc(reagent, concentrationOverrides);
+                    const totalAmount = getAdjustedAmount(reagent, batchKg, concentrationOverrides);
+                    const adjPricePerL = getAdjustedPricePerL(reagent, concentrationOverrides);
+                    const totalCost = totalAmount * adjPricePerL;
+                    const hasOptions = reagent.availableConcentrations && reagent.availableConcentrations.length > 1;
+                    const concChanged = effConc !== reagent.concentration;
+
                     return (
-                      <div key={reagent.name} className="flex items-center justify-between gap-2 bg-muted/30 px-3 py-2 rounded">
-                        <div className="flex-1 min-w-0">
-                          <span className="font-medium text-xs block leading-tight">{reagent.name}</span>
-                          <span className="text-muted-foreground font-mono text-[10px]">
-                            {reagent.formula} ({reagent.concentration}%) · {formatCurrency(reagent.pricePerLiter)}/L
-                          </span>
+                      <div key={reagent.name} className={cn(
+                        "bg-muted/30 px-3 py-2 rounded",
+                        concChanged && "ring-1 ring-primary/20"
+                      )}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium text-xs block leading-tight">{reagent.name}</span>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              <span className="text-muted-foreground font-mono text-[10px]">
+                                {reagent.formula}
+                              </span>
+                              {hasOptions ? (
+                                <select
+                                  value={effConc}
+                                  onChange={e => {
+                                    const val = Number(e.target.value);
+                                    setConcentrationOverrides(prev => ({ ...prev, [reagent.name]: val }));
+                                  }}
+                                  className="text-[10px] font-mono bg-muted border border-border rounded px-1 py-0 text-primary cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                >
+                                  {reagent.availableConcentrations!.map(c => (
+                                    <option key={c} value={c}>{c}%</option>
+                                  ))}
+                                </select>
+                              ) : (
+                                <span className="text-muted-foreground font-mono text-[10px]">{reagent.concentration}%</span>
+                              )}
+                              <span className="text-muted-foreground font-mono text-[10px]">·</span>
+                              <span className="text-muted-foreground font-mono text-[10px]">{formatCurrency(adjPricePerL)}/L</span>
+                            </div>
+                          </div>
+                          <div className="font-mono text-xs text-right shrink-0">
+                            <div className="font-medium">{totalAmount.toFixed(2)} L</div>
+                            <div className="text-muted-foreground text-[10px]">{formatCurrency(totalCost)}</div>
+                          </div>
                         </div>
-                        <div className="font-mono text-xs text-right shrink-0">
-                          <div className="font-medium">{totalAmount.toFixed(2)} L</div>
-                          <div className="text-muted-foreground text-[10px]">{formatCurrency(totalCost)}</div>
-                        </div>
+                        {concChanged && (
+                          <div className="mt-1 text-[9px] text-primary/70 leading-tight">
+                            Przeliczono z {reagent.concentration}%: {(reagent.amountPerKg * batchKg).toFixed(2)} L → {totalAmount.toFixed(2)} L (wyższe stęż. = mniej obj.)
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -245,6 +300,14 @@ export function ProcessesPage() {
                     <span className="text-xs font-bold text-primary">Razem odczynniki ({batchKg} kg)</span>
                     <span className="font-mono text-sm font-bold text-primary">{formatCurrency(totalReagentCost)}</span>
                   </div>
+                  {Object.keys(concentrationOverrides).length > 0 && (
+                    <button
+                      onClick={() => setConcentrationOverrides({})}
+                      className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 w-full text-right"
+                    >
+                      Przywróć domyślne stężenia
+                    </button>
+                  )}
                 </div>
 
                 <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-4 mb-2">Wydajność odzysku</h4>
