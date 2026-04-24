@@ -20,7 +20,18 @@ Full-stack precious metals recovery calculator for e-waste professionals. Fronte
 - **Material selector in Processes page**: pick material, see estimated grams recovered per metal (metalContent × processYield × batchKg)
 - **Mobile-responsive**: bottom navigation bar on mobile, stacked batch rows, short tab labels
 - **Editable reagent prices**: in calculator step 2 each reagent has an editable zł/L price field; changes apply to calculation and persist in localStorage
-- **Calibrated data** (Au/Ag/Pt/Pd content corrected for RAM, HDD, HDD heads vs real lab data)
+- **Comprehensively audited data** (Apr 2025): 8 materials corrected against GRF assay data, academic studies (Holgersson 2018, JSDEWES, Huang 2022) and Phoenix Refining:
+  - `ram_srebrne` Ag: 3.80 → **0.55 g/kg** (major correction — DDR3/4 Ag only from SnAg solder + MLCC, NOT 3-5 g/kg)
+  - `ram_simm` Au: 1.50 → **0.85 g/kg** (SIMM has thick plating but fewer contacts than SDRAM/DDR)
+  - `ram_zlote` Au: 1.10 → **1.30 g/kg** (DDR1/DDR2 typically 1.2-2.0 g/kg)
+  - `cpu_ceramic_486` Au: 9.5 → **7.0 g/kg** (GRF: 486DX2/DX4 = 6.4-8.0 g/kg; military up to 14)
+  - `cpu_ceramic_2str` Au: 5.5 → **6.0 g/kg** (GRF: Gold+Gold = 6.25 g/kg)
+  - `cpu_ceramic_nozki` Au: 3.5 → **2.2 g/kg** (GRF: simple ceramic no gold cap = 2.06 g/kg)
+  - `cpu_plastik_czarny` Au: 1.80 → **2.0 g/kg** (GRF: AMD K6 batch = 1.97 g/kg)
+  - `cpu_zielone_p3p4` Au: 0.45 → **0.65 g/kg** (GRF: green fiber CPUs = 0.76-0.80 g/kg)
+  - `pcb_telecom` Ag: 3.00 → **1.50 g/kg**, Pd: 0.080 → **0.025 g/kg** (Holgersson 2018: 1213 ppm Ag, 19.5 ppm Pd)
+  - `pcb_telefon_nowe` Au: 0.22 → **0.40 g/kg** (JSDEWES: phone PCB 1071 ppm; lower due to full module weight)
+  - `mb_laptop_stare` Ag: 2.20 → **0.80 g/kg** (old laptops use Pb-Sn solder without Ag)
 
 **API additions:**
 - `POST /api/calculator/estimate` now accepts `reagentPriceOverrides: Record<string, number>` — map of reagent name to custom price in PLN/L
