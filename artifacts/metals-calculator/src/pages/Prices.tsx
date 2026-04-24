@@ -125,9 +125,15 @@ export function PricesPage() {
     new Set(["Au"])
   );
 
-  const { data: history, isLoading: historyLoading } = useGetMetalPricesHistory(
+  const { data: history, isLoading: historyLoading, isError: historyError } = useGetMetalPricesHistory(
     { range },
-    { query: { queryKey: [...getGetMetalPricesHistoryQueryKey({ range }), range] } }
+    {
+      query: {
+        queryKey: [...getGetMetalPricesHistoryQueryKey({ range }), range],
+        retry: 2,
+        staleTime: 60 * 60 * 1000,
+      },
+    }
   );
 
   const spotPrice = (metal: string): number | null => {
@@ -330,6 +336,11 @@ export function PricesPage() {
                 <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
                 <span className="text-sm">Pobieranie danych historycznych…</span>
               </div>
+            </div>
+          ) : historyError ? (
+            <div className="h-64 flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
+              <span>Nie udało się pobrać historii cen.</span>
+              <span className="text-xs">Spróbuj odświeżyć stronę lub sprawdź połączenie z siecią.</span>
             </div>
           ) : chartData.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">

@@ -1,4 +1,22 @@
 import { Router, type IRouter } from "express";
+import { gte, lte, and } from "drizzle-orm";
+
+const DB_ENABLED = Boolean(process.env.DATABASE_URL);
+
+type DbType = typeof import("@workspace/db").db;
+type HistoryTable = typeof import("@workspace/db").metalPriceHistoryTable;
+
+let _db: DbType | null = null;
+let _historyTable: HistoryTable | null = null;
+
+if (DB_ENABLED) {
+  import("@workspace/db").then((mod) => {
+    _db = mod.db;
+    _historyTable = mod.metalPriceHistoryTable;
+  }).catch((err) => {
+    console.warn("[history] DB not available, using in-memory cache only:", err.message);
+  });
+}
 
 const router: IRouter = Router();
 
@@ -181,9 +199,6 @@ interface MetalHistoryPoint {
 
 type HistoryRange = "7d" | "30d" | "90d" | "365d";
 
-const HISTORY_CACHE: Map<HistoryRange, { data: MetalHistoryPoint[]; fetchedAt: number }> = new Map();
-const HISTORY_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
-
 function rangeTodays(range: HistoryRange): number {
   switch (range) {
     case "7d": return 7;
@@ -220,25 +235,72 @@ function deterministicNoise(metal: string, dateStr: string, magnitude: number): 
   return 1 + (normalized - 0.5) * 2 * magnitude;
 }
 
-async function buildHistoryForRange(range: HistoryRange): Promise<MetalHistoryPoint[]> {
-  const days = rangeTodays(range);
-  const endDate = new Date();
-  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+async function getHistoryFromDB(startDate: string, endDate: string): Promise<MetalHistoryPoint[]> {
+  if (!_db || !_historyTable) return [];
+  const db = _db;
+  const table = _historyTable;
+  try {
+    const rows = await db
+      .select()
+      .from(table)
+      .where(
+        and(
+          gte(table.date, startDate),
+          lte(table.date, endDate),
+        )
+      )
+      .orderBy(table.date);
 
-  const endStr = toDateStr(endDate);
-  const startStr = toDateStr(startDate);
+    return rows.map((r) => ({
+      date: r.date,
+      Au: r.au,
+      Ag: r.ag,
+      Pt: r.pt,
+      Pd: r.pd,
+    }));
+  } catch (err) {
+    console.error("[history] DB read error:", err);
+    return [];
+  }
+}
 
+async function saveHistoryToDB(points: MetalHistoryPoint[]): Promise<void> {
+  if (points.length === 0 || !_db || !_historyTable) return;
+  const db = _db;
+  const table = _historyTable;
+  try {
+    const rows = points.map((p) => ({
+      date: p.date,
+      au: p.Au,
+      ag: p.Ag,
+      pt: p.Pt,
+      pd: p.Pd,
+    }));
+    for (let i = 0; i < rows.length; i += 50) {
+      const chunk = rows.slice(i, i + 50);
+      await db
+        .insert(table)
+        .values(chunk)
+        .onConflictDoNothing();
+    }
+  } catch (err) {
+    console.error("[history] DB write error:", err);
+  }
+}
+
+async function fetchAndStoreRange(startDate: string, endDate: string, days: number): Promise<MetalHistoryPoint[]> {
   const currentPrices = await getOrFetchPrices();
 
   let goldEntries: Array<{ data: string; cena: number }> = [];
 
   if (days <= 93) {
-    goldEntries = await fetchNBPGoldHistory(startStr, endStr);
+    goldEntries = await fetchNBPGoldHistory(startDate, endDate);
   } else {
     const chunks: Array<[string, string]> = [];
     let chunkEnd = new Date(endDate);
-    while (chunkEnd > startDate) {
-      const chunkStart = new Date(Math.max(chunkEnd.getTime() - 92 * 24 * 60 * 60 * 1000, startDate.getTime()));
+    const start = new Date(startDate);
+    while (chunkEnd > start) {
+      const chunkStart = new Date(Math.max(chunkEnd.getTime() - 92 * 24 * 60 * 60 * 1000, start.getTime()));
       chunks.push([toDateStr(chunkStart), toDateStr(chunkEnd)]);
       chunkEnd = new Date(chunkStart.getTime() - 24 * 60 * 60 * 1000);
     }
@@ -246,16 +308,14 @@ async function buildHistoryForRange(range: HistoryRange): Promise<MetalHistoryPo
     goldEntries = results.flat().sort((a, b) => a.data.localeCompare(b.data));
   }
 
-  if (goldEntries.length === 0) {
-    return [];
-  }
+  if (goldEntries.length === 0) return [];
 
   const currentAu = currentPrices.Au;
   const ratioAg = currentPrices.Ag / currentAu;
   const ratioPt = currentPrices.Pt / currentAu;
   const ratioPd = currentPrices.Pd / currentAu;
 
-  const result: MetalHistoryPoint[] = goldEntries.map((entry) => {
+  const points: MetalHistoryPoint[] = goldEntries.map((entry) => {
     const au = Math.round(entry.cena * 100) / 100;
     const ag = Math.round(au * ratioAg * deterministicNoise("Ag", entry.data, 0.04) * 100) / 100;
     const pt = Math.round(au * ratioPt * deterministicNoise("Pt", entry.data, 0.06) * 100) / 100;
@@ -263,7 +323,8 @@ async function buildHistoryForRange(range: HistoryRange): Promise<MetalHistoryPo
     return { date: entry.data, Au: au, Ag: ag, Pt: pt, Pd: pd };
   });
 
-  return result;
+  await saveHistoryToDB(points);
+  return points;
 }
 
 router.get("/metals/prices/history", async (req, res) => {
@@ -271,21 +332,35 @@ router.get("/metals/prices/history", async (req, res) => {
   const validRanges: HistoryRange[] = ["7d", "30d", "90d", "365d"];
   const safeRange: HistoryRange = validRanges.includes(range) ? range : "30d";
 
-  const cached = HISTORY_CACHE.get(safeRange);
-  if (cached && Date.now() - cached.fetchedAt < HISTORY_CACHE_TTL_MS) {
-    return res.json(cached.data);
+  const days = rangeTodays(safeRange);
+  const endDate = toDateStr(new Date());
+  const startDate = toDateStr(new Date(Date.now() - days * 24 * 60 * 60 * 1000));
+
+  const dbRows = await getHistoryFromDB(startDate, endDate);
+
+  const today = endDate;
+  const hasToday = dbRows.some((r) => r.date === today);
+  const hasEnoughData = dbRows.length >= Math.floor(days * 0.4);
+
+  if (hasToday && hasEnoughData) {
+    return res.json(dbRows);
   }
 
-  try {
-    const data = await buildHistoryForRange(safeRange);
-    HISTORY_CACHE.set(safeRange, { data, fetchedAt: Date.now() });
-    return res.json(data);
-  } catch (err) {
-    if (cached) {
-      return res.json(cached.data);
-    }
-    return res.status(500).json({ error: "Failed to fetch historical prices" });
+  const fetched = await fetchAndStoreRange(startDate, endDate, days);
+
+  if (fetched.length > 0) {
+    const merged = new Map<string, MetalHistoryPoint>();
+    for (const r of dbRows) merged.set(r.date, r);
+    for (const r of fetched) merged.set(r.date, r);
+    const result = Array.from(merged.values()).sort((a, b) => a.date.localeCompare(b.date));
+    return res.json(result);
   }
+
+  if (dbRows.length > 0) {
+    return res.json(dbRows);
+  }
+
+  return res.status(503).json({ error: "Brak dostępu do danych historycznych. Spróbuj później." });
 });
 
 export default router;
