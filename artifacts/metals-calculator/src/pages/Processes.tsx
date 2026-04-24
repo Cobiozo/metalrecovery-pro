@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useGetElectronicMaterials, getGetElectronicMaterialsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,34 +59,53 @@ export function ProcessesPage() {
     query: { queryKey: getGetChemicalProcessesQueryKey() }
   });
 
-  const { data: materials } = useGetElectronicMaterials({
+  const { data: materialsRaw } = useGetElectronicMaterials({
     query: { queryKey: getGetElectronicMaterialsQueryKey() }
   });
 
-  const selectedProcess = selectedId
-    ? processes?.find(p => p.id === selectedId) ?? processes?.[0]
-    : processes?.[0];
+  // Keep a stable reference to materials — avoids flicker when React Query briefly
+  // returns undefined during background re-fetch, which caused selectedMaterial to
+  // become null and estimatedRecovery to disappear / not update on material change.
+  const materialsRef = useRef(materialsRaw);
+  if (materialsRaw) materialsRef.current = materialsRaw;
+  const materials = materialsRef.current;
 
-  const selectedMaterial = selectedMaterialId
-    ? materials?.find(m => m.id === selectedMaterialId) ?? null
-    : null;
+  const selectedProcess = useMemo(
+    () => selectedId
+      ? processes?.find(p => p.id === selectedId) ?? processes?.[0]
+      : processes?.[0],
+    [selectedId, processes]
+  );
 
-  const totalReagentCost = selectedProcess
-    ? selectedProcess.reagents.reduce((sum, r) => {
-        const amt = getAdjustedAmount(r, batchKg, concentrationOverrides);
-        const price = getAdjustedPricePerL(r, concentrationOverrides);
-        return sum + amt * price;
-      }, 0)
-    : 0;
+  const selectedMaterial = useMemo(
+    () => selectedMaterialId && materials
+      ? materials.find(m => m.id === selectedMaterialId) ?? null
+      : null,
+    [selectedMaterialId, materials]
+  );
 
-  const estimatedRecovery = selectedMaterial && selectedProcess
-    ? {
-        Au: selectedMaterial.metalContentPerKg.Au.typical * batchKg * selectedProcess.yieldPercent.Au / 100,
-        Ag: selectedMaterial.metalContentPerKg.Ag.typical * batchKg * selectedProcess.yieldPercent.Ag / 100,
-        Pt: selectedMaterial.metalContentPerKg.Pt.typical * batchKg * selectedProcess.yieldPercent.Pt / 100,
-        Pd: selectedMaterial.metalContentPerKg.Pd.typical * batchKg * selectedProcess.yieldPercent.Pd / 100,
-      }
-    : null;
+  const totalReagentCost = useMemo(
+    () => selectedProcess
+      ? selectedProcess.reagents.reduce((sum, r) => {
+          const amt = getAdjustedAmount(r, batchKg, concentrationOverrides);
+          const price = getAdjustedPricePerL(r, concentrationOverrides);
+          return sum + amt * price;
+        }, 0)
+      : 0,
+    [selectedProcess, batchKg, concentrationOverrides]
+  );
+
+  const estimatedRecovery = useMemo(
+    () => selectedMaterial && selectedProcess
+      ? {
+          Au: selectedMaterial.metalContentPerKg.Au.typical * batchKg * selectedProcess.yieldPercent.Au / 100,
+          Ag: selectedMaterial.metalContentPerKg.Ag.typical * batchKg * selectedProcess.yieldPercent.Ag / 100,
+          Pt: selectedMaterial.metalContentPerKg.Pt.typical * batchKg * selectedProcess.yieldPercent.Pt / 100,
+          Pd: selectedMaterial.metalContentPerKg.Pd.typical * batchKg * selectedProcess.yieldPercent.Pd / 100,
+        }
+      : null,
+    [selectedMaterial, selectedProcess, batchKg]
+  );
 
   if (isLoading) {
     return (
@@ -122,7 +141,7 @@ export function ProcessesPage() {
           return (
             <button
               key={process.id}
-              onClick={() => setSelectedId(process.id)}
+              onClick={() => { setSelectedId(process.id); setConcentrationOverrides({}); }}
               className={cn(
                 "shrink-0 snap-start px-3 py-2 rounded-md border text-left transition-colors",
                 isSelected
@@ -150,7 +169,7 @@ export function ProcessesPage() {
             return (
               <button
                 key={process.id}
-                onClick={() => setSelectedId(process.id)}
+                onClick={() => { setSelectedId(process.id); setConcentrationOverrides({}); }}
                 className={cn(
                   "w-full text-left px-3 py-2.5 rounded-md border transition-colors",
                   isSelected
@@ -285,7 +304,10 @@ export function ProcessesPage() {
                   </div>
                   <select
                     value={selectedMaterialId}
-                    onChange={e => setSelectedMaterialId(e.target.value)}
+                    onChange={e => {
+                      const id = e.currentTarget.value;
+                      setSelectedMaterialId(id);
+                    }}
                     className="w-full text-xs bg-background border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                   >
                     <option value="">— wybierz materiał aby zobaczyć szacunkowy odzysk —</option>
@@ -384,7 +406,7 @@ export function ProcessesPage() {
                 </div>
 
                 {estimatedRecovery && selectedMaterial && (
-                  <div className="mt-4">
+                  <div key={selectedMaterialId} className="mt-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
                       <Microscope className="w-3 h-3" />
                       Szac. odzysk: {selectedMaterial.name} × {batchKg} kg
