@@ -9,6 +9,19 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface MetalHistoryPoint {
+  /** Date in YYYY-MM-DD format */
+  date: string;
+  /** Gold price in PLN per gram */
+  Au: number;
+  /** Silver price in PLN per gram */
+  Ag: number;
+  /** Platinum price in PLN per gram */
+  Pt: number;
+  /** Palladium price in PLN per gram */
+  Pd: number;
+}
+
 export interface MetalPrices {
   /** Gold price in PLN per gram */
   Au: number;
@@ -106,8 +119,6 @@ export interface Reagent {
   formula: string;
   /** Concentration in percent */
   concentration: number;
-  /** Available concentration options in percent (for UI selector) */
-  availableConcentrations?: number[];
   /** Amount in liters per kg of input material */
   amountPerKg: number;
   /** Price in PLN per liter */
@@ -241,3 +252,17 @@ export interface CalculationResult {
   profitabilityNote: string;
   metalPricesSnapshot: MetalPrices;
 }
+
+export type GetMetalPricesHistoryParams = {
+  range?: GetMetalPricesHistoryRange;
+};
+
+export type GetMetalPricesHistoryRange =
+  (typeof GetMetalPricesHistoryRange)[keyof typeof GetMetalPricesHistoryRange];
+
+export const GetMetalPricesHistoryRange = {
+  "7d": "7d",
+  "30d": "30d",
+  "90d": "90d",
+  "365d": "365d",
+} as const;

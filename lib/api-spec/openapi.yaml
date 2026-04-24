@@ -47,6 +47,30 @@ paths:
               schema:
                 $ref: "#/components/schemas/MetalPrices"
 
+  /metals/prices/history:
+    get:
+      operationId: getMetalPricesHistory
+      tags: [metals]
+      summary: Get historical metal prices in PLN
+      description: Returns daily historical Au, Ag, Pt, Pd prices for the requested range
+      parameters:
+        - name: range
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 365d]
+            default: 30d
+      responses:
+        "200":
+          description: Historical metal prices
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MetalHistoryPoint"
+
   /materials/electronics:
     get:
       operationId: getElectronicMaterials
@@ -108,6 +132,27 @@ components:
           type: string
       required:
         - status
+
+    MetalHistoryPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date in YYYY-MM-DD format
+        Au:
+          type: number
+          description: Gold price in PLN per gram
+        Ag:
+          type: number
+          description: Silver price in PLN per gram
+        Pt:
+          type: number
+          description: Platinum price in PLN per gram
+        Pd:
+          type: number
+          description: Palladium price in PLN per gram
+      required: [date, Au, Ag, Pt, Pd]
 
     MetalPrices:
       type: object

@@ -29,6 +29,29 @@ export const GetMetalPricesResponse = zod.object({
 });
 
 /**
+ * Returns daily historical Au, Ag, Pt, Pd prices for the requested range
+ * @summary Get historical metal prices in PLN
+ */
+export const getMetalPricesHistoryQueryRangeDefault = `30d`;
+
+export const GetMetalPricesHistoryQueryParams = zod.object({
+  range: zod
+    .enum(["7d", "30d", "90d", "365d"])
+    .default(getMetalPricesHistoryQueryRangeDefault),
+});
+
+export const GetMetalPricesHistoryResponseItem = zod.object({
+  date: zod.coerce.date().describe("Date in YYYY-MM-DD format"),
+  Au: zod.number().describe("Gold price in PLN per gram"),
+  Ag: zod.number().describe("Silver price in PLN per gram"),
+  Pt: zod.number().describe("Platinum price in PLN per gram"),
+  Pd: zod.number().describe("Palladium price in PLN per gram"),
+});
+export const GetMetalPricesHistoryResponse = zod.array(
+  GetMetalPricesHistoryResponseItem,
+);
+
+/**
  * Returns a comprehensive list of electronic types with min/max metal content per kg or unit
  * @summary Get list of electronic component types with precious metal content
  */
@@ -106,10 +129,6 @@ export const GetChemicalProcessesResponseItem = zod.object({
       name: zod.string(),
       formula: zod.string(),
       concentration: zod.number().describe("Concentration in percent"),
-      availableConcentrations: zod
-        .array(zod.number())
-        .optional()
-        .describe("Available concentration options in percent (for UI selector)"),
       amountPerKg: zod
         .number()
         .describe("Amount in liters per kg of input material"),

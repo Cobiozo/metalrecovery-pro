@@ -21,7 +21,9 @@ import type {
   CalculationResult,
   ChemicalProcess,
   ElectronicMaterial,
+  GetMetalPricesHistoryParams,
   HealthStatus,
+  MetalHistoryPoint,
   MetalPrices,
 } from "./api.schemas";
 
@@ -178,6 +180,107 @@ export function useGetMetalPrices<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetMetalPricesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Returns daily historical Au, Ag, Pt, Pd prices for the requested range
+ * @summary Get historical metal prices in PLN
+ */
+export const getGetMetalPricesHistoryUrl = (
+  params?: GetMetalPricesHistoryParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/metals/prices/history?${stringifiedParams}`
+    : `/api/metals/prices/history`;
+};
+
+export const getMetalPricesHistory = async (
+  params?: GetMetalPricesHistoryParams,
+  options?: RequestInit,
+): Promise<MetalHistoryPoint[]> => {
+  return customFetch<MetalHistoryPoint[]>(getGetMetalPricesHistoryUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMetalPricesHistoryQueryKey = (
+  params?: GetMetalPricesHistoryParams,
+) => {
+  return [`/api/metals/prices/history`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetMetalPricesHistoryQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMetalPricesHistory>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetMetalPricesHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMetalPricesHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMetalPricesHistoryQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMetalPricesHistory>>
+  > = ({ signal }) =>
+    getMetalPricesHistory(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMetalPricesHistory>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMetalPricesHistoryQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMetalPricesHistory>>
+>;
+export type GetMetalPricesHistoryQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get historical metal prices in PLN
+ */
+
+export function useGetMetalPricesHistory<
+  TData = Awaited<ReturnType<typeof getMetalPricesHistory>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetMetalPricesHistoryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMetalPricesHistory>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMetalPricesHistoryQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

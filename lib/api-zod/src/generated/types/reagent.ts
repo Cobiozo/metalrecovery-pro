@@ -11,8 +11,6 @@ export interface Reagent {
   formula: string;
   /** Concentration in percent */
   concentration: number;
-  /** Available concentration options in percent (for UI selector) */
-  availableConcentrations?: number[];
   /** Amount in liters per kg of input material */
   amountPerKg: number;
   /** Price in PLN per liter */
