@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X } from "lucide-react";
+import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown } from "lucide-react";
+import { generateCalculationPdf } from "@/lib/generatePdf";
 import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -238,6 +239,24 @@ export function CalculatorPage() {
     const updated = savedSessions.filter(s => s.id !== id);
     setSavedSessions(updated);
     saveSessions(updated);
+  };
+
+  const handleDownloadPdf = () => {
+    if (!result) return;
+    const batchForPdf = batchItems.map(item => {
+      const material = materials?.find(m => m.id === item.materialId);
+      const effectiveUnit = getEffectiveUnit(item);
+      return {
+        materialName: material?.name ?? item.materialId,
+        quantity: item.quantity,
+        unit: effectiveUnit === 'piece' ? 'szt.' : 'kg',
+      };
+    }).filter(item => item.materialName);
+    generateCalculationPdf({
+      result,
+      batchItems: batchForPdf,
+      processParams,
+    });
   };
 
   const getEffectiveUnit = (item: BatchItemState): 'kg' | 'piece' => {
@@ -722,6 +741,12 @@ export function CalculatorPage() {
                       </div>
                     )}
                     <div className="pt-2 space-y-2">
+                      <Button
+                        className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                        onClick={handleDownloadPdf}
+                      >
+                        <FileDown className="h-4 w-4 mr-2" />Pobierz PDF
+                      </Button>
                       {!showSaveDialog ? (
                         <Button variant="outline" className="w-full" onClick={() => setShowSaveDialog(true)}>
                           <Save className="h-4 w-4 mr-2" />Zapisz sesję
