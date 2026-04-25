@@ -26,6 +26,7 @@ const VisionItemSchema = z.object({
   materialType: z.string(),
   description: z.string(),
   quantity: z.number().int().min(0),
+  massGrams: z.number().min(0).nullable().optional(),
   metalContent: z.object({
     Au: MetalEstimateSchema,
     Ag: MetalEstimateSchema,
@@ -45,6 +46,12 @@ const VisionItemSchema = z.object({
 const VisionResultSchema = z.object({
   items: z.array(VisionItemSchema).min(1),
   caveats: z.string(),
+  scaleReading: z.object({
+    detected: z.boolean(),
+    weightGrams: z.number().nullable().optional(),
+    confidence: z.enum(["low", "medium", "high"]),
+    displayText: z.string().nullable().optional(),
+  }).optional(),
 });
 
 const ANALYSIS_PROMPT = `You are an expert in precious metal recovery from electronic waste (e-waste).
@@ -52,6 +59,15 @@ const ANALYSIS_PROMPT = `You are an expert in precious metal recovery from elect
 {{CATALOG_SECTION}}
 
 Analyze the uploaded photo and return a JSON object following these steps:
+
+STEP 0 — DETECT WEIGHING SCALE.
+Scan the entire image for a digital kitchen scale, postal scale, or any weighing device with a numeric display.
+If a scale display is visible:
+  • Read the number shown on the display as precisely as possible (e.g. "100", "156", "2.3 kg").
+  • Determine the unit from the display or the scale label (g or kg). Convert to grams.
+  • Record: scaleReading.detected = true, scaleReading.weightGrams = <number in grams>, scaleReading.displayText = "<exact text on display>", scaleReading.confidence = "high"/"medium"/"low".
+  • This is the ACTUAL MEASURED WEIGHT of all the items on the scale — use it to calibrate quantities.
+If no scale is visible: scaleReading.detected = false, scaleReading.weightGrams = null, scaleReading.confidence = "low".
 
 STEP 1 — IDENTIFY distinct material types.
 Are there different component types (e.g. motherboards AND CPUs AND RAM)? Each distinct type → separate item in "items".
@@ -80,21 +96,33 @@ CRITICAL VISUAL SHAPE GUIDE — read before identifying:
 STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above — do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".
 
-STEP 3 — COUNT each type carefully.
-Scan the image systematically: left column top→bottom, then next column, etc.
-Count EVERY visible unit, including partially visible ones at edges.
-If items overlap, estimate based on visible corners/edges — prefer overcounting over undercounting.
-Write down your count before moving on.
+STEP 3 — Determine quantities.
+A) COUNT each type carefully: scan systematically left→right, top→bottom. Count EVERY visible unit including partially visible ones at edges.
+   If items overlap, estimate based on visible corners/edges — prefer overcounting over undercounting.
+B) IF a scale was detected in STEP 0 with a valid weight reading:
+   — scaleReading.weightGrams is the ACTUAL TOTAL MASS of all items on the scale.
+   — Estimate what PERCENTAGE of that total mass belongs to each identified type.
+     Example: scale shows 100g, pile is roughly 70% ZIF sockets + 30% SIMM connectors → ZIF massGrams=70, SIMM massGrams=30.
+   — Set "massGrams" on each item to its share. ALL massGrams values MUST sum exactly to scaleReading.weightGrams.
+   — This is more accurate than piece counts — use it as the primary quantity for calculations.
+   IF no scale was detected: set massGrams = null for all items.
 
 STEP 4 — Estimate metal content and plating for each type.
 
 STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {
+  "scaleReading": {
+    "detected": <true|false from STEP 0>,
+    "weightGrams": <number in grams, or null if not detected>,
+    "confidence": "high|medium|low",
+    "displayText": "<exact text visible on scale display, or null>"
+  },
   "items": [
     {
       "materialType": "exact catalog name or descriptive Polish name",
       "description": "2-3 sentences in Polish about this type and its metal characteristics",
-      "quantity": <integer from STEP 3; 0 only if truly impossible to count>,
+      "quantity": <integer piece count from STEP 3A; 0 only if truly impossible to count>,
+      "massGrams": <number from STEP 3B if scale detected, otherwise null>,
       "metalContent": {
         "Au": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
         "Ag": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },

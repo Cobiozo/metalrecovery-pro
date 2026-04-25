@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Camera, Upload, ScanLine, Loader2, AlertTriangle, Info,
   FlaskConical, Star, CheckCircle2, XCircle, Sparkles,
-  ChevronRight, ImageIcon, RotateCcw, ShoppingCart, Calculator,
+  ChevronRight, ImageIcon, RotateCcw, ShoppingCart, Calculator, Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomMaterials } from "@/lib/useCustomMaterials";
@@ -34,6 +34,7 @@ type VisionItem = {
   materialType: string;
   description: string;
   quantity: number;
+  massGrams?: number | null;
   metalContent: {
     Au: MetalEstimate;
     Ag: MetalEstimate;
@@ -44,9 +45,17 @@ type VisionItem = {
   recommendedProcess: string;
 };
 
+type ScaleReading = {
+  detected: boolean;
+  weightGrams?: number | null;
+  confidence: "low" | "medium" | "high";
+  displayText?: string | null;
+};
+
 type VisionResultSet = {
   items: VisionItem[];
   caveats: string;
+  scaleReading?: ScaleReading;
 };
 
 function getApiBase(): string {
@@ -116,17 +125,23 @@ function VisionResultCard({
   onSaveProfile,
   onQuantityChange,
   weightPerPieceKg,
+  initialMassKg,
 }: {
   result: VisionItem;
   onSaveProfile: () => void;
   onQuantityChange: (qty: number) => void;
   weightPerPieceKg?: number;
+  initialMassKg?: number | null;
 }) {
-  const [qty, setQty] = useState<number>(result.quantity > 0 ? result.quantity : 0);
+  const scaleMode = initialMassKg != null && initialMassKg > 0;
+  const [qty, setQty] = useState<number>(
+    scaleMode ? initialMassKg : (result.quantity > 0 ? result.quantity : 0)
+  );
 
   const updateQty = (next: number) => {
-    setQty(next);
-    onQuantityChange(next);
+    const safe = Math.max(0, Math.round(scaleMode ? next * 1000 : next) / (scaleMode ? 1000 : 1));
+    setQty(safe);
+    onQuantityChange(safe);
   };
 
   const metals = [
@@ -169,53 +184,101 @@ function VisionResultCard({
           </div>
         </CardHeader>
         <CardContent className="pt-0 pb-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground shrink-0">Ilość (szt.):</span>
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40"
-                onClick={() => updateQty(Math.max(0, qty - 1))}
-                disabled={qty <= 0}
-                aria-label="Zmniejsz ilość"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min={0}
-                value={qty}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 0) updateQty(v);
-                }}
-                className="w-14 h-7 text-center text-sm font-mono bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-              <button
-                type="button"
-                className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors"
-                onClick={() => updateQty(qty + 1)}
-                aria-label="Zwiększ ilość"
-              >
-                +
-              </button>
+          {scaleMode ? (
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
+                <Scale className="w-3 h-3" />
+                Masa (kg):
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40"
+                  onClick={() => updateQty(Math.max(0, qty - 0.005))}
+                  disabled={qty <= 0}
+                  aria-label="Zmniejsz masę"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.001}
+                  value={qty.toFixed(3)}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    if (!isNaN(v) && v >= 0) updateQty(v);
+                  }}
+                  className="w-20 h-7 text-center text-sm font-mono bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors"
+                  onClick={() => updateQty(qty + 0.005)}
+                  aria-label="Zwiększ masę"
+                >
+                  +
+                </button>
+              </div>
+              <span className="text-xs font-mono text-green-400 flex items-center gap-1">
+                <Scale className="w-3 h-3" />
+                {Math.round(qty * 1000)} g z wagi
+              </span>
+              {result.quantity > 0 && (
+                <span className="text-xs text-muted-foreground/60">
+                  (AI liczyło: ~{result.quantity} szt.)
+                </span>
+              )}
             </div>
-            {result.quantity > 0 && qty !== result.quantity && (
-              <span className="text-xs text-muted-foreground italic">
-                (AI: ~{result.quantity})
-              </span>
-            )}
-            {result.quantity > 0 && qty === result.quantity && (
-              <span className="text-xs text-muted-foreground/60 font-mono">
-                ~{result.quantity} wg AI
-              </span>
-            )}
-            {weightPerPieceKg && qty > 0 && (
-              <span className="text-xs text-blue-400 font-mono">
-                ≈ {(qty * weightPerPieceKg).toFixed(3)} kg
-              </span>
-            )}
-          </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground shrink-0">Ilość (szt.):</span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40"
+                  onClick={() => updateQty(Math.max(0, qty - 1))}
+                  disabled={qty <= 0}
+                  aria-label="Zmniejsz ilość"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={0}
+                  value={qty}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v) && v >= 0) updateQty(v);
+                  }}
+                  className="w-14 h-7 text-center text-sm font-mono bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+                <button
+                  type="button"
+                  className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors"
+                  onClick={() => updateQty(qty + 1)}
+                  aria-label="Zwiększ ilość"
+                >
+                  +
+                </button>
+              </div>
+              {result.quantity > 0 && qty !== result.quantity && (
+                <span className="text-xs text-muted-foreground italic">
+                  (AI: ~{result.quantity})
+                </span>
+              )}
+              {result.quantity > 0 && qty === result.quantity && (
+                <span className="text-xs text-muted-foreground/60 font-mono">
+                  ~{result.quantity} wg AI
+                </span>
+              )}
+              {weightPerPieceKg && qty > 0 && (
+                <span className="text-xs text-blue-400 font-mono">
+                  ≈ {(qty * weightPerPieceKg).toFixed(3)} kg
+                </span>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -415,7 +478,8 @@ export function PhotoAnalysisPage() {
         const { item, qty } = ewaste[0];
         const quality = item.platingAnalysis.quality_1_to_5 ?? null;
         const materialId = resolveItemMaterial(item);
-        const usesPieces = isKgMaterialWithPieceWeight(materialId);
+        const scaleBased = item.massGrams != null && item.massGrams > 0;
+        const usesPieces = !scaleBased && isKgMaterialWithPieceWeight(materialId);
         localStorage.setItem("metalrecovery_vision_new_material", materialId);
         if (qty > 0) {
           localStorage.setItem("metalrecovery_vision_quantity", String(qty));
@@ -438,10 +502,11 @@ export function PhotoAnalysisPage() {
           const quality = item.platingAnalysis.quality_1_to_5 ?? null;
           const auMult = quality ? (QUALITY_AU_MULTIPLIER[quality] ?? 1.0) : undefined;
           const materialId = resolveItemMaterial(item);
-          const usesPieces = isKgMaterialWithPieceWeight(materialId);
+          const scaleBased = item.massGrams != null && item.massGrams > 0;
+          const usesPieces = !scaleBased && isKgMaterialWithPieceWeight(materialId);
           return {
             materialId,
-            quantity: Math.max(1, qty),
+            quantity: Math.max(scaleBased ? 0.001 : 1, qty),
             ...(usesPieces ? { unitOverride: "piece" as const } : {}),
             ...(auMult !== undefined && auMult !== 1.0 ? { auMultiplier: auMult } : {}),
           };
@@ -515,7 +580,10 @@ export function PhotoAnalysisPage() {
 
       const parsed = data as VisionResultSet;
       setResult(parsed);
-      setEditedQuantities(parsed.items.map((i: VisionItem) => Math.max(0, i.quantity || 0)));
+      setEditedQuantities(parsed.items.map((i: VisionItem) => {
+        if (i.massGrams != null && i.massGrams > 0) return i.massGrams / 1000;
+        return Math.max(0, i.quantity || 0);
+      }));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Nieznany błąd";
       setError(msg);
@@ -689,11 +757,31 @@ export function PhotoAnalysisPage() {
 
       {result && !loading && (
         <div className="space-y-4">
+          {result.scaleReading?.detected && result.scaleReading.weightGrams != null && (
+            <div className="flex items-start gap-3 bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3">
+              <Scale className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-green-400 flex items-center gap-2">
+                  Waga wykryta
+                  <Badge variant="outline" className={cn("text-xs", confidenceColor(result.scaleReading.confidence))}>
+                    pewność: {confidenceLabel(result.scaleReading.confidence)}
+                  </Badge>
+                </p>
+                <p className="text-xs text-green-400/80 mt-0.5 leading-relaxed">
+                  Wskazanie: <span className="font-mono font-bold">{result.scaleReading.displayText ?? `${result.scaleReading.weightGrams} g`}</span>
+                  {" "}· całkowita masa: <span className="font-mono font-bold">{result.scaleReading.weightGrams} g</span>
+                  . Ilości obliczone na podstawie wskazania wagi, a nie liczby sztuk.
+                </p>
+              </div>
+            </div>
+          )}
+
           {result.items.map((item, idx) => (
             <VisionResultCard
               key={idx}
               result={item}
               weightPerPieceKg={getWeightPerPieceKg(item.materialType)}
+              initialMassKg={item.massGrams != null && item.massGrams > 0 ? item.massGrams / 1000 : null}
               onSaveProfile={() => setSaveItem(item)}
               onQuantityChange={(qty) =>
                 setEditedQuantities((prev) => {
