@@ -387,12 +387,9 @@ export function PhotoAnalysisPage() {
     return mat.id;
   }
 
-  function piecesToKg(materialId: string, pieceCnt: number): number {
+  function isKgMaterialWithPieceWeight(materialId: string): boolean {
     const mat = apiMaterials?.find(m => m.id === materialId) as any;
-    if (mat && mat.unit === "kg" && mat.weightPerPiece > 0 && pieceCnt > 0) {
-      return Math.round(pieceCnt * mat.weightPerPiece * 1000) / 1000;
-    }
-    return pieceCnt;
+    return !!(mat && mat.unit === "kg" && mat.weightPerPiece > 0);
   }
 
   function getWeightPerPieceKg(materialType: string): number | undefined {
@@ -418,12 +415,17 @@ export function PhotoAnalysisPage() {
         const { item, qty } = ewaste[0];
         const quality = item.platingAnalysis.quality_1_to_5 ?? null;
         const materialId = resolveItemMaterial(item);
-        const effectiveQty = piecesToKg(materialId, qty);
+        const usesPieces = isKgMaterialWithPieceWeight(materialId);
         localStorage.setItem("metalrecovery_vision_new_material", materialId);
-        if (effectiveQty > 0) {
-          localStorage.setItem("metalrecovery_vision_quantity", String(effectiveQty));
+        if (qty > 0) {
+          localStorage.setItem("metalrecovery_vision_quantity", String(qty));
         } else {
           localStorage.removeItem("metalrecovery_vision_quantity");
+        }
+        if (usesPieces) {
+          localStorage.setItem("metalrecovery_vision_unit_override", "piece");
+        } else {
+          localStorage.removeItem("metalrecovery_vision_unit_override");
         }
         if (quality) {
           localStorage.setItem("metalrecovery_vision_plating_quality", String(quality));
@@ -436,10 +438,11 @@ export function PhotoAnalysisPage() {
           const quality = item.platingAnalysis.quality_1_to_5 ?? null;
           const auMult = quality ? (QUALITY_AU_MULTIPLIER[quality] ?? 1.0) : undefined;
           const materialId = resolveItemMaterial(item);
-          const effectiveQty = piecesToKg(materialId, qty);
+          const usesPieces = isKgMaterialWithPieceWeight(materialId);
           return {
             materialId,
-            quantity: Math.max(0.001, effectiveQty),
+            quantity: Math.max(1, qty),
+            ...(usesPieces ? { unitOverride: "piece" as const } : {}),
             ...(auMult !== undefined && auMult !== 1.0 ? { auMultiplier: auMult } : {}),
           };
         });
@@ -447,6 +450,7 @@ export function PhotoAnalysisPage() {
         localStorage.removeItem("metalrecovery_vision_new_material");
         localStorage.removeItem("metalrecovery_vision_quantity");
         localStorage.removeItem("metalrecovery_vision_plating_quality");
+        localStorage.removeItem("metalrecovery_vision_unit_override");
       }
     } catch {
       // private mode

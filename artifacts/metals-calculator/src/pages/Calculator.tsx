@@ -147,13 +147,14 @@ export function CalculatorPage() {
       const visionBatch = localStorage.getItem("metalrecovery_vision_batch");
       if (visionBatch) {
         localStorage.removeItem("metalrecovery_vision_batch");
-        const parsed: Array<{ materialId: string; quantity: number; auMultiplier?: number }> = JSON.parse(visionBatch);
+        const parsed: Array<{ materialId: string; quantity: number; unitOverride?: 'kg' | 'piece'; auMultiplier?: number }> = JSON.parse(visionBatch);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setBatchItems(
             parsed.map((entry, i) => ({
               id: (Date.now() + i).toString(),
               materialId: entry.materialId,
-              quantity: Math.max(0.001, entry.quantity || 0.001),
+              quantity: Math.max(1, entry.quantity || 1),
+              ...(entry.unitOverride ? { unitOverride: entry.unitOverride } : {}),
               ...(entry.auMultiplier ? { auMultiplier: entry.auMultiplier } : {}),
             })),
           );
@@ -165,15 +166,19 @@ export function CalculatorPage() {
         localStorage.removeItem("metalrecovery_vision_new_material");
         const rawQty = localStorage.getItem("metalrecovery_vision_quantity");
         localStorage.removeItem("metalrecovery_vision_quantity");
+        const rawUnitOverride = localStorage.getItem("metalrecovery_vision_unit_override") as 'kg' | 'piece' | null;
+        localStorage.removeItem("metalrecovery_vision_unit_override");
         const rawQuality = localStorage.getItem("metalrecovery_vision_plating_quality");
         localStorage.removeItem("metalrecovery_vision_plating_quality");
         const QUALITY_MULT: Record<number, number> = { 1: 0.65, 2: 0.80, 3: 1.00, 4: 1.20, 5: 1.40 };
         const auMultiplier = rawQuality ? (QUALITY_MULT[Number(rawQuality)] ?? undefined) : undefined;
-        const qty = rawQty ? Math.max(0.001, parseFloat(rawQty) || 0.001) : 1;
+        const isPiece = rawUnitOverride === "piece";
+        const qty = rawQty ? Math.max(isPiece ? 1 : 0.001, parseFloat(rawQty) || (isPiece ? 1 : 0.001)) : 1;
         setBatchItems([{
           id: Date.now().toString(),
           materialId: visionMaterialId,
           quantity: qty,
+          ...(rawUnitOverride ? { unitOverride: rawUnitOverride } : {}),
           ...(auMultiplier && auMultiplier !== 1.0 ? { auMultiplier } : {}),
         }]);
       }
