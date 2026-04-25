@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Camera, Upload, ScanLine, Loader2, AlertTriangle, Info,
   FlaskConical, Star, CheckCircle2, XCircle, Sparkles,
-  ChevronRight, ImageIcon, RotateCcw, ShoppingCart,
+  ChevronRight, ImageIcon, RotateCcw, ShoppingCart, Calculator,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomMaterials } from "@/lib/useCustomMaterials";
@@ -30,7 +30,7 @@ type PlatingAnalysis = {
   notes?: string;
 };
 
-type VisionResult = {
+type VisionItem = {
   materialType: string;
   description: string;
   quantity: number;
@@ -42,6 +42,10 @@ type VisionResult = {
   };
   platingAnalysis: PlatingAnalysis;
   recommendedProcess: string;
+};
+
+type VisionResultSet = {
+  items: VisionItem[];
   caveats: string;
 };
 
@@ -113,7 +117,7 @@ function VisionResultCard({
   onCalculate,
   onSkup,
 }: {
-  result: VisionResult;
+  result: VisionItem;
   onSaveProfile: () => void;
   onCalculate: () => void;
   onSkup: () => void;
@@ -292,10 +296,6 @@ function VisionResultCard({
         </div>
       )}
 
-      <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2.5">
-        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-400 leading-relaxed">{result.caveats}</p>
-      </div>
     </div>
   );
 }
@@ -322,29 +322,29 @@ export function PhotoAnalysisPage() {
   const { toast } = useToast();
   const { data: apiMaterials } = useGetElectronicMaterials();
 
-  function navigateWithVision(result: VisionResult, dest: string) {
-    const quality = result.platingAnalysis.quality_1_to_5 ?? null;
-    const adjustedAu = applyQualityToAu(result.metalContent.Au.value_g_per_kg, quality);
+  function resolveItemMaterial(item: VisionItem): string {
+    const quality = item.platingAnalysis.quality_1_to_5 ?? null;
+    const adjustedAu = applyQualityToAu(item.metalContent.Au.value_g_per_kg, quality);
+    const dbId = findDbMaterial(apiMaterials, item.materialType);
+    if (dbId) return dbId;
+    const mat = add({
+      name: item.materialType,
+      au: adjustedAu,
+      ag: item.metalContent.Ag.value_g_per_kg,
+      pt: item.metalContent.Pt.value_g_per_kg,
+      pd: item.metalContent.Pd.value_g_per_kg,
+      notes: `Analiza AI ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(item.metalContent.Au.confidence)}, Ag ${confidenceLabel(item.metalContent.Ag.confidence)}.${quality ? ` Jakość złoceń: ${quality}/5.` : ""}`,
+    });
+    return mat.id;
+  }
 
-    const dbId = findDbMaterial(apiMaterials, result.materialType);
-    let materialId: string;
-    if (dbId) {
-      materialId = dbId;
-    } else {
-      const mat = add({
-        name: result.materialType,
-        au: adjustedAu,
-        ag: result.metalContent.Ag.value_g_per_kg,
-        pt: result.metalContent.Pt.value_g_per_kg,
-        pd: result.metalContent.Pd.value_g_per_kg,
-        notes: `Analiza AI ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(result.metalContent.Au.confidence)}, Ag ${confidenceLabel(result.metalContent.Ag.confidence)}.${quality ? ` Jakość złoceń: ${quality}/5.` : ""} ${result.caveats}`,
-      });
-      materialId = mat.id;
-    }
+  function navigateWithVision(item: VisionItem, dest: string) {
+    const quality = item.platingAnalysis.quality_1_to_5 ?? null;
+    const materialId = resolveItemMaterial(item);
     try {
       localStorage.setItem("metalrecovery_vision_new_material", materialId);
-      if (result.quantity > 0) {
-        localStorage.setItem("metalrecovery_vision_quantity", String(result.quantity));
+      if (item.quantity > 0) {
+        localStorage.setItem("metalrecovery_vision_quantity", String(item.quantity));
       } else {
         localStorage.removeItem("metalrecovery_vision_quantity");
       }
@@ -353,6 +353,27 @@ export function PhotoAnalysisPage() {
       } else {
         localStorage.removeItem("metalrecovery_vision_plating_quality");
       }
+      localStorage.removeItem("metalrecovery_vision_batch");
+    } catch {
+      // private mode
+    }
+    navigate(dest);
+  }
+
+  function navigateAllToCalculator(resultSet: VisionResultSet, dest: string) {
+    const ewaste = resultSet.items.filter(
+      (i) => !i.materialType.toLowerCase().startsWith("nieelektroniczne"),
+    );
+    if (ewaste.length === 0) return;
+    const batch = ewaste.map((item) => ({
+      materialId: resolveItemMaterial(item),
+      quantity: Math.max(1, item.quantity || 1),
+    }));
+    try {
+      localStorage.setItem("metalrecovery_vision_batch", JSON.stringify(batch));
+      localStorage.removeItem("metalrecovery_vision_new_material");
+      localStorage.removeItem("metalrecovery_vision_quantity");
+      localStorage.removeItem("metalrecovery_vision_plating_quality");
     } catch {
       // private mode
     }
@@ -362,9 +383,9 @@ export function PhotoAnalysisPage() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<VisionResult | null>(null);
+  const [result, setResult] = useState<VisionResultSet | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saveModalOpen, setSaveModalOpen] = useState(false);
+  const [saveItem, setSaveItem] = useState<VisionItem | null>(null);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -407,7 +428,7 @@ export function PhotoAnalysisPage() {
         throw new Error(data.error ?? `Błąd serwera (${response.status})`);
       }
 
-      setResult(data as VisionResult);
+      setResult(data as VisionResultSet);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Nieznany błąd";
       setError(msg);
@@ -422,9 +443,12 @@ export function PhotoAnalysisPage() {
     setPreview(null);
     setResult(null);
     setError(null);
+    setSaveItem(null);
   };
 
-  const defaultProfileName = result ? result.materialType : "";
+  const ewasteItems = result?.items.filter(
+    (i) => !i.materialType.toLowerCase().startsWith("nieelektroniczne"),
+  ) ?? [];
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
@@ -576,12 +600,48 @@ export function PhotoAnalysisPage() {
       )}
 
       {result && !loading && (
-        <VisionResultCard
-          result={result}
-          onSaveProfile={() => setSaveModalOpen(true)}
-          onCalculate={() => navigateWithVision(result, "/")}
-          onSkup={() => navigateWithVision(result, "/skup")}
-        />
+        <div className="space-y-4">
+          {ewasteItems.length > 1 && (
+            <div className="flex flex-col sm:flex-row gap-2 p-3 bg-primary/5 border border-primary/20 rounded-md">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">
+                  Wykryto {result.items.length}{" "}
+                  {result.items.length === 2 ? "typy materiałów" : result.items.length < 5 ? "typy materiałów" : "typów materiałów"}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Dodaj wszystkie materiały e-waste ({ewasteItems.length}) do kalkulatora wsadowego jednym kliknięciem
+                </p>
+              </div>
+              <Button
+                size="sm"
+                className="shrink-0"
+                onClick={() => navigateAllToCalculator(result, "/")}
+              >
+                <Calculator className="w-4 h-4 mr-1.5" />
+                Dodaj wszystkie do kalkulatora
+              </Button>
+            </div>
+          )}
+
+          {result.items.map((item, idx) => (
+            <VisionResultCard
+              key={idx}
+              result={item}
+              onSaveProfile={() => setSaveItem(item)}
+              onCalculate={() => navigateWithVision(item, "/")}
+              onSkup={() => navigateWithVision(item, "/skup")}
+            />
+          ))}
+
+          {result.caveats && (
+            <div className="flex items-start gap-2 bg-amber-500/5 border border-amber-500/20 rounded-md px-3 py-3">
+              <Info className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-relaxed">
+                {result.caveats}
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       <Separator />
@@ -597,22 +657,23 @@ export function PhotoAnalysisPage() {
       </div>
 
       <CustomMaterialModal
-        open={saveModalOpen}
-        onOpenChange={setSaveModalOpen}
+        open={saveItem !== null}
+        onOpenChange={(open) => { if (!open) setSaveItem(null); }}
         existing={null}
         onSave={(data) => {
           add(data);
           toast({ title: "Profil zapisany", description: `"${data.name}" dodany do własnych profili` });
+          setSaveItem(null);
         }}
         prefill={
-          result
+          saveItem
             ? {
-                name: defaultProfileName,
-                au: result.metalContent.Au.value_g_per_kg,
-                ag: result.metalContent.Ag.value_g_per_kg,
-                pt: result.metalContent.Pt.value_g_per_kg,
-                pd: result.metalContent.Pd.value_g_per_kg,
-                notes: `Analiza AI z dnia ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(result.metalContent.Au.confidence)}, Ag ${confidenceLabel(result.metalContent.Ag.confidence)}. ${result.caveats}`,
+                name: saveItem.materialType,
+                au: saveItem.metalContent.Au.value_g_per_kg,
+                ag: saveItem.metalContent.Ag.value_g_per_kg,
+                pt: saveItem.metalContent.Pt.value_g_per_kg,
+                pd: saveItem.metalContent.Pd.value_g_per_kg,
+                notes: `Analiza AI z dnia ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(saveItem.metalContent.Au.confidence)}, Ag ${confidenceLabel(saveItem.metalContent.Ag.confidence)}.`,
               }
             : undefined
         }

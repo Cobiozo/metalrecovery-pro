@@ -400,33 +400,46 @@ export interface VisionMetalEstimate {
 
 export interface VisionPlatingAnalysis {
   detected: boolean;
-  color?: string;
-  thickness?: string;
+  color?: string | null;
+  thickness?: string | null;
   /**
-   * @minimum 0
+   * @minimum 1
    * @maximum 5
    */
-  quality_1_to_5?: number;
-  notes?: string;
+  quality_1_to_5?: number | null;
+  notes?: string | null;
 }
 
-export type VisionAnalysisResultMetalContent = {
+export type VisionItemMetalContent = {
   Au: VisionMetalEstimate;
   Ag: VisionMetalEstimate;
   Pt: VisionMetalEstimate;
   Pd: VisionMetalEstimate;
 };
 
-export interface VisionAnalysisResult {
+export interface VisionItem {
   /** Polish name of the detected material type */
   materialType: string;
   /** Polish description of the material and its precious metal characteristics */
   description: string;
-  metalContent: VisionAnalysisResultMetalContent;
+  /**
+   * Number of same-type units visible in the image; 0 if unclear
+   * @minimum 0
+   */
+  quantity: number;
+  metalContent: VisionItemMetalContent;
   platingAnalysis: VisionPlatingAnalysis;
   /** Polish name of the recommended recovery process */
   recommendedProcess: string;
-  /** Polish description of limitations and what to verify in a lab */
+}
+
+export interface VisionAnalysisResult {
+  /**
+   * One entry per distinct material type detected in the image
+   * @minItems 1
+   */
+  items: VisionItem[];
+  /** Polish warning covering all detected materials */
   caveats: string;
 }
 

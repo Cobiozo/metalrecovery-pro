@@ -22,7 +22,7 @@ const MetalEstimateSchema = z.object({
   confidence: z.enum(["low", "medium", "high"]),
 });
 
-const VisionResultSchema = z.object({
+const VisionItemSchema = z.object({
   materialType: z.string(),
   description: z.string(),
   quantity: z.number().int().min(0),
@@ -40,59 +40,68 @@ const VisionResultSchema = z.object({
     notes: z.string().nullable().optional(),
   }),
   recommendedProcess: z.string(),
+});
+
+const VisionResultSchema = z.object({
+  items: z.array(VisionItemSchema).min(1),
   caveats: z.string(),
 });
 
 const ANALYSIS_PROMPT = `You are an expert in precious metal recovery from electronic waste (e-waste). A user has uploaded a photo for analysis.
 
-STEP 1 — IDENTIFY WHAT IS IN THE IMAGE HONESTLY.
-Look carefully. Is this actually electronic waste (PCB, connector, CPU, RAM, chip, gold fingers, etc.)? Or is it something else entirely (coins, buttons, jewelry, stones, tools, mechanical parts, fabric, food, etc.)?
+STEP 1 — IDENTIFY ALL DISTINCT MATERIAL TYPES in the image.
+Look carefully. Are there different types of components (e.g. motherboards AND CPUs AND RAM sticks)? Each distinct type must be a SEPARATE item in the "items" array.
+- If there is only one type, return one item.
+- If there are multiple distinct types (e.g. 5 motherboards and 3 CPUs), return a separate item for each type.
+- DO NOT merge different types into one item.
 
-DO NOT force-fit non-electronic objects into e-waste categories. Examples of common confusions to avoid:
-- Decorative/uniform buttons → NOT "styki kopułkowe". Buttons are NOT e-waste.
-- Coins or medals → NOT CPUs or chips.
-- Brass fittings, screws → NOT connectors.
+DO NOT force-fit non-electronic objects into e-waste categories:
+- Decorative buttons → NOT "styki kopułkowe". Not e-waste.
+- Coins, medals → Not CPUs.
+- Brass fittings → Not connectors.
+For non-e-waste: materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, confidence = "low", quantity = 0.
 
-STEP 2 — COUNT how many individual pieces/units of the SAME TYPE are visible. If there are 17 motherboards, quantity=17. If there's one PCB, quantity=1. If the image is not e-waste or you cannot count clearly, use quantity=0.
+STEP 2 — For EACH distinct material type, count how many individual pieces of that type are visible.
 
-STEP 3 — FILL IN THE JSON in POLISH language only.
-If NOT electronic waste: materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, confidence = "low", quantity = 0.
-If IS electronic waste: provide realistic estimates.
+STEP 3 — Fill in the JSON. ALL string values MUST be in POLISH:
+- color: "złoty", "srebrny", "niklowy", "mieszany" (NOT "gold", "silver", "nickel", "mixed")
+- thickness: "cienkie (<0,1μm)", "średnie (0,1-0,5μm)", "grube (>0,5μm)" (NOT "thin", "medium", "thick")
+- notes, descriptions: Polish only
 
-IMPORTANT — ALL string values must be in POLISH:
-- color values: "złoty", "srebrny", "niklowy", "mieszany" (NOT "gold", "silver", "nickel", "mixed")
-- thickness values: "cienkie (<0,1μm)", "średnie (0,1-0,5μm)", "grube (>0,5μm)" (NOT "thin", "medium", "thick")
-- notes: in Polish only
-
-Return ONLY a JSON object (no markdown, no explanation, just raw JSON):
+Return ONLY a JSON object (no markdown, no explanation):
 {
-  "materialType": "short Polish name of detected material type",
-  "description": "2-3 sentences in Polish describing what you see",
-  "quantity": <integer: number of visible same-type units, 0 if unclear or non-e-waste>,
-  "metalContent": {
-    "Au": { "value_g_per_kg": <number, 0.0 if not e-waste>, "confidence": "low|medium|high" },
-    "Ag": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
-    "Pt": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
-    "Pd": { "value_g_per_kg": <number>, "confidence": "low|medium|high" }
-  },
-  "platingAnalysis": {
-    "detected": <true only if you clearly see gold-plated electronic contacts/pins/pads>,
-    "color": "złoty|srebrny|niklowy|mieszany or null",
-    "thickness": "cienkie (<0,1μm)|średnie (0,1-0,5μm)|grube (>0,5μm) or null",
-    "quality_1_to_5": <integer 1-5 or null>,
-    "notes": "Polish note on plating quality/coverage or null"
-  },
-  "recommendedProcess": "Polish name of recommended recovery process, or 'Brak — materiał nieelektroniczny' if not e-waste",
-  "caveats": "1-2 sentence Polish warning about accuracy limits or why material is not suitable for e-waste recovery"
+  "items": [
+    {
+      "materialType": "Polish short name of this material type (e.g. 'Płyty główne ATX', 'Procesory Socket AM2', 'Pamięci RAM DDR2')",
+      "description": "2-3 sentences in Polish about this specific type and its metal characteristics",
+      "quantity": <integer: count of visible same-type units; 0 if unclear>,
+      "metalContent": {
+        "Au": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
+        "Ag": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
+        "Pt": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
+        "Pd": { "value_g_per_kg": <number>, "confidence": "low|medium|high" }
+      },
+      "platingAnalysis": {
+        "detected": <true only if gold-plated contacts/pins clearly visible for THIS type>,
+        "color": "złoty|srebrny|niklowy|mieszany or null",
+        "thickness": "cienkie (<0,1μm)|średnie (0,1-0,5μm)|grube (>0,5μm) or null",
+        "quality_1_to_5": <integer 1-5 or null>,
+        "notes": "Polish note or null"
+      },
+      "recommendedProcess": "Polish name of recovery process for this type"
+    }
+  ],
+  "caveats": "1-2 sentence Polish warning covering all detected materials"
 }
 
-Reference values for e-waste:
+Reference values:
 - PCB motherboards: ~0.2–0.5 g Au/kg
 - Ceramic CPUs: ~3–10 g Au/kg
 - Gold fingers / edge connectors: ~2–15 g Au/kg
 - RAM sticks: ~0.5–1.5 g Au/kg
+- Standard CPUs (non-ceramic): ~0.1–0.3 g Au/kg
 
-Be conservative and honest. Never invent e-waste categories for non-electronic objects.`;
+Be conservative. Each material type gets its own separate item in the array.`;
 
 function handleUpload(req: Request, res: Response, next: NextFunction): void {
   upload.single("image")(req, res, (err: unknown) => {
@@ -128,7 +137,7 @@ router.post(
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-5.4",
-        max_completion_tokens: 2048,
+        max_completion_tokens: 4096,
         messages: [
           {
             role: "user",

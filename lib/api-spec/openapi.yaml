@@ -846,7 +846,7 @@ components:
           nullable: true
       required: [detected]
 
-    VisionAnalysisResult:
+    VisionItem:
       type: object
       properties:
         materialType:
@@ -858,7 +858,7 @@ components:
         quantity:
           type: integer
           minimum: 0
-          description: Number of same-type units visible in the image; 0 if unclear or non-e-waste
+          description: Number of same-type units visible in the image; 0 if unclear
         metalContent:
           type: object
           properties:
@@ -876,10 +876,21 @@ components:
         recommendedProcess:
           type: string
           description: Polish name of the recommended recovery process
+      required: [materialType, description, quantity, metalContent, platingAnalysis, recommendedProcess]
+
+    VisionAnalysisResult:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/VisionItem"
+          minItems: 1
+          description: One entry per distinct material type detected in the image
         caveats:
           type: string
-          description: Polish description of limitations and what to verify in a lab
-      required: [materialType, description, quantity, metalContent, platingAnalysis, recommendedProcess, caveats]
+          description: Polish warning covering all detected materials
+      required: [items, caveats]
 
     ProcessCompareResult:
       type: object

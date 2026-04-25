@@ -134,6 +134,21 @@ export function CalculatorPage() {
 
   useEffect(() => {
     try {
+      const visionBatch = localStorage.getItem("metalrecovery_vision_batch");
+      if (visionBatch) {
+        localStorage.removeItem("metalrecovery_vision_batch");
+        const parsed: Array<{ materialId: string; quantity: number }> = JSON.parse(visionBatch);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setBatchItems(
+            parsed.map((entry, i) => ({
+              id: (Date.now() + i).toString(),
+              materialId: entry.materialId,
+              quantity: Math.max(1, entry.quantity || 1),
+            })),
+          );
+          return;
+        }
+      }
       const visionMaterialId = localStorage.getItem("metalrecovery_vision_new_material");
       if (visionMaterialId) {
         localStorage.removeItem("metalrecovery_vision_new_material");

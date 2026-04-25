@@ -435,61 +435,75 @@ export const AnalyzeImageBody = zod.object({
     .describe("Image file (JPG, PNG, or WebP), max 10 MB"),
 });
 
-export const analyzeImageResponsePlatingAnalysisQuality1To5Min = 0;
-export const analyzeImageResponsePlatingAnalysisQuality1To5Max = 5;
+export const analyzeImageResponseItemsItemQuantityMin = 0;
+
+export const analyzeImageResponseItemsItemPlatingAnalysisQuality1To5Max = 5;
 
 export const AnalyzeImageResponse = zod.object({
-  materialType: zod
-    .string()
-    .describe("Polish name of the detected material type"),
-  description: zod
-    .string()
-    .describe(
-      "Polish description of the material and its precious metal characteristics",
-    ),
-  metalContent: zod.object({
-    Au: zod.object({
-      value_g_per_kg: zod
-        .number()
-        .describe("Estimated metal content in grams per kg"),
-      confidence: zod.enum(["low", "medium", "high"]),
-    }),
-    Ag: zod.object({
-      value_g_per_kg: zod
-        .number()
-        .describe("Estimated metal content in grams per kg"),
-      confidence: zod.enum(["low", "medium", "high"]),
-    }),
-    Pt: zod.object({
-      value_g_per_kg: zod
-        .number()
-        .describe("Estimated metal content in grams per kg"),
-      confidence: zod.enum(["low", "medium", "high"]),
-    }),
-    Pd: zod.object({
-      value_g_per_kg: zod
-        .number()
-        .describe("Estimated metal content in grams per kg"),
-      confidence: zod.enum(["low", "medium", "high"]),
-    }),
-  }),
-  platingAnalysis: zod.object({
-    detected: zod.boolean(),
-    color: zod.string().optional(),
-    thickness: zod.string().optional(),
-    quality_1_to_5: zod
-      .number()
-      .min(analyzeImageResponsePlatingAnalysisQuality1To5Min)
-      .max(analyzeImageResponsePlatingAnalysisQuality1To5Max)
-      .optional(),
-    notes: zod.string().optional(),
-  }),
-  recommendedProcess: zod
-    .string()
-    .describe("Polish name of the recommended recovery process"),
+  items: zod
+    .array(
+      zod.object({
+        materialType: zod
+          .string()
+          .describe("Polish name of the detected material type"),
+        description: zod
+          .string()
+          .describe(
+            "Polish description of the material and its precious metal characteristics",
+          ),
+        quantity: zod
+          .number()
+          .min(analyzeImageResponseItemsItemQuantityMin)
+          .describe(
+            "Number of same-type units visible in the image; 0 if unclear",
+          ),
+        metalContent: zod.object({
+          Au: zod.object({
+            value_g_per_kg: zod
+              .number()
+              .describe("Estimated metal content in grams per kg"),
+            confidence: zod.enum(["low", "medium", "high"]),
+          }),
+          Ag: zod.object({
+            value_g_per_kg: zod
+              .number()
+              .describe("Estimated metal content in grams per kg"),
+            confidence: zod.enum(["low", "medium", "high"]),
+          }),
+          Pt: zod.object({
+            value_g_per_kg: zod
+              .number()
+              .describe("Estimated metal content in grams per kg"),
+            confidence: zod.enum(["low", "medium", "high"]),
+          }),
+          Pd: zod.object({
+            value_g_per_kg: zod
+              .number()
+              .describe("Estimated metal content in grams per kg"),
+            confidence: zod.enum(["low", "medium", "high"]),
+          }),
+        }),
+        platingAnalysis: zod.object({
+          detected: zod.boolean(),
+          color: zod.string().nullish(),
+          thickness: zod.string().nullish(),
+          quality_1_to_5: zod
+            .number()
+            .min(1)
+            .max(analyzeImageResponseItemsItemPlatingAnalysisQuality1To5Max)
+            .nullish(),
+          notes: zod.string().nullish(),
+        }),
+        recommendedProcess: zod
+          .string()
+          .describe("Polish name of the recommended recovery process"),
+      }),
+    )
+    .min(1)
+    .describe("One entry per distinct material type detected in the image"),
   caveats: zod
     .string()
-    .describe("Polish description of limitations and what to verify in a lab"),
+    .describe("Polish warning covering all detected materials"),
 });
 
 /**
