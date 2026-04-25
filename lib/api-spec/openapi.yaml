@@ -123,6 +123,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/CalculationResult"
 
+  /calculator/purchase-price:
+    post:
+      operationId: calculatePurchasePrice
+      tags: [calculator]
+      summary: Calculate maximum purchase price for electronic scrap
+      description: Given a material, process, and target profit margin, calculates the maximum price to pay per kg of input material
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchasePriceRequest"
+      responses:
+        "200":
+          description: Purchase price calculation result with per-kg breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchasePriceResult"
+
   /calculator/compare:
     post:
       operationId: compareProcesses
@@ -505,6 +525,75 @@ components:
           type: number
           description: Electricity price in PLN per kWh (default 0.80)
       required: [batch]
+
+    PurchasePriceRequest:
+      type: object
+      properties:
+        materialId:
+          type: string
+          description: ID of the electronic material
+        processId:
+          type: string
+          description: ID of the chemical process
+        targetMarginPercent:
+          type: number
+          description: Target profit margin percentage (0–90)
+        electricityPricePerKwh:
+          type: number
+          description: Electricity price in PLN per kWh (default 0.80)
+      required: [materialId, processId, targetMarginPercent]
+
+    PurchasePriceResult:
+      type: object
+      properties:
+        materialId:
+          type: string
+        materialName:
+          type: string
+        processId:
+          type: string
+        processName:
+          type: string
+        targetMarginPercent:
+          type: number
+        maxPurchasePricePerKgPln:
+          type: number
+          description: Maximum purchase price per kg of input material in PLN
+        revenuePerKgPln:
+          type: number
+          description: Expected revenue per kg of input material in PLN
+        processCostPerKgPln:
+          type: number
+          description: Total process cost per kg (chemistry + electricity) in PLN
+        chemistryCostPerKgPln:
+          type: number
+          description: Chemistry reagents cost per kg in PLN
+        electricityCostPerKgPln:
+          type: number
+          description: Electricity cost per kg in PLN
+        grossProfitPerKgPln:
+          type: number
+          description: Gross profit per kg (revenue - process cost) before margin in PLN
+        isBreakEven:
+          type: boolean
+          description: True when targetMarginPercent is 0 (break-even mode)
+        isProfitable:
+          type: boolean
+          description: True when gross profit per kg is positive
+      required:
+        - materialId
+        - materialName
+        - processId
+        - processName
+        - targetMarginPercent
+        - maxPurchasePricePerKgPln
+        - revenuePerKgPln
+        - processCostPerKgPln
+        - chemistryCostPerKgPln
+        - electricityCostPerKgPln
+        - grossProfitPerKgPln
+        - isBreakEven
+        - isProfitable
 
     ProcessCompareResult:
       type: object

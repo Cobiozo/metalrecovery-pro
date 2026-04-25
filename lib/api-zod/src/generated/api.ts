@@ -248,6 +248,56 @@ export const CalculateRecoveryResponse = zod.object({
 });
 
 /**
+ * Given a material, process, and target profit margin, calculates the maximum price to pay per kg of input material
+ * @summary Calculate maximum purchase price for electronic scrap
+ */
+export const CalculatePurchasePriceBody = zod.object({
+  materialId: zod.string().describe("ID of the electronic material"),
+  processId: zod.string().describe("ID of the chemical process"),
+  targetMarginPercent: zod
+    .number()
+    .describe("Target profit margin percentage (0–90)"),
+  electricityPricePerKwh: zod
+    .number()
+    .optional()
+    .describe("Electricity price in PLN per kWh (default 0.80)"),
+});
+
+export const CalculatePurchasePriceResponse = zod.object({
+  materialId: zod.string(),
+  materialName: zod.string(),
+  processId: zod.string(),
+  processName: zod.string(),
+  targetMarginPercent: zod.number(),
+  maxPurchasePricePerKgPln: zod
+    .number()
+    .describe("Maximum purchase price per kg of input material in PLN"),
+  revenuePerKgPln: zod
+    .number()
+    .describe("Expected revenue per kg of input material in PLN"),
+  processCostPerKgPln: zod
+    .number()
+    .describe("Total process cost per kg (chemistry + electricity) in PLN"),
+  chemistryCostPerKgPln: zod
+    .number()
+    .describe("Chemistry reagents cost per kg in PLN"),
+  electricityCostPerKgPln: zod
+    .number()
+    .describe("Electricity cost per kg in PLN"),
+  grossProfitPerKgPln: zod
+    .number()
+    .describe(
+      "Gross profit per kg (revenue - process cost) before margin in PLN",
+    ),
+  isBreakEven: zod
+    .boolean()
+    .describe("True when targetMarginPercent is 0 (break-even mode)"),
+  isProfitable: zod
+    .boolean()
+    .describe("True when gross profit per kg is positive"),
+});
+
+/**
  * Runs the recovery estimate for all available processes using default parameters and returns a ranked summary table
  * @summary Compare all chemical processes for a given batch
  */

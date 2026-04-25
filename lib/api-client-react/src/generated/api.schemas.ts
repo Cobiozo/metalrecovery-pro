@@ -260,6 +260,41 @@ export interface CompareRequest {
   electricityPricePerKwh?: number;
 }
 
+export interface PurchasePriceRequest {
+  /** ID of the electronic material */
+  materialId: string;
+  /** ID of the chemical process */
+  processId: string;
+  /** Target profit margin percentage (0–90) */
+  targetMarginPercent: number;
+  /** Electricity price in PLN per kWh (default 0.80) */
+  electricityPricePerKwh?: number;
+}
+
+export interface PurchasePriceResult {
+  materialId: string;
+  materialName: string;
+  processId: string;
+  processName: string;
+  targetMarginPercent: number;
+  /** Maximum purchase price per kg of input material in PLN */
+  maxPurchasePricePerKgPln: number;
+  /** Expected revenue per kg of input material in PLN */
+  revenuePerKgPln: number;
+  /** Total process cost per kg (chemistry + electricity) in PLN */
+  processCostPerKgPln: number;
+  /** Chemistry reagents cost per kg in PLN */
+  chemistryCostPerKgPln: number;
+  /** Electricity cost per kg in PLN */
+  electricityCostPerKgPln: number;
+  /** Gross profit per kg (revenue - process cost) before margin in PLN */
+  grossProfitPerKgPln: number;
+  /** True when targetMarginPercent is 0 (break-even mode) */
+  isBreakEven: boolean;
+  /** True when gross profit per kg is positive */
+  isProfitable: boolean;
+}
+
 export type ProcessCompareResultProfitabilityRating =
   (typeof ProcessCompareResultProfitabilityRating)[keyof typeof ProcessCompareResultProfitabilityRating];
 

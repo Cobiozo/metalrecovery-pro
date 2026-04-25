@@ -31,6 +31,8 @@ export * from "./metalHistoryPoint";
 export * from "./metalPrices";
 export * from "./processCompareResult";
 export * from "./processCompareResultProfitabilityRating";
+export * from "./purchasePriceRequest";
+export * from "./purchasePriceResult";
 export * from "./reagent";
 export * from "./recoveredMetal";
 export * from "./recoveredMetalMetal";

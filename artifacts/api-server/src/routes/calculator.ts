@@ -748,4 +748,91 @@ router.post("/calculator/estimate", async (req, res) => {
   });
 });
 
+router.post("/calculator/purchase-price", async (req, res) => {
+  const body = req.body as {
+    materialId: string;
+    processId: string;
+    targetMarginPercent: number;
+    electricityPricePerKwh?: number;
+  };
+
+  if (!body.materialId || !body.processId) {
+    res.status(400).json({ error: "materialId and processId are required" });
+    return;
+  }
+
+  if (
+    typeof body.targetMarginPercent !== "number" ||
+    !isFinite(body.targetMarginPercent) ||
+    body.targetMarginPercent < 0 ||
+    body.targetMarginPercent > 90
+  ) {
+    res.status(400).json({ error: "targetMarginPercent must be a number between 0 and 90" });
+    return;
+  }
+
+  if (
+    body.electricityPricePerKwh !== undefined &&
+    (typeof body.electricityPricePerKwh !== "number" ||
+      !isFinite(body.electricityPricePerKwh) ||
+      body.electricityPricePerKwh < 0 ||
+      body.electricityPricePerKwh > 10000)
+  ) {
+    res.status(400).json({ error: "electricityPricePerKwh must be a number between 0 and 10000" });
+    return;
+  }
+
+  const material = electronicMaterialsMap[body.materialId];
+  if (!material) {
+    res.status(400).json({ error: `Unknown materialId: ${body.materialId}` });
+    return;
+  }
+
+  const process = chemicalProcessesMap[body.processId];
+  if (!process) {
+    res.status(400).json({ error: `Unknown processId: ${body.processId}` });
+    return;
+  }
+
+  const metalPrices = await getOrFetchPrices();
+  const elPrice = body.electricityPricePerKwh ?? 0.8;
+
+  const metals = ["Au", "Ag", "Pt", "Pd"] as const;
+  let revenuePerKg = 0;
+  for (const metal of metals) {
+    const gramsInOnKg = material.metalContentPerKg[metal].typical;
+    const recovered = gramsInOnKg * (process.yieldPercent[metal] / 100);
+    revenuePerKg += recovered * metalPrices[metal];
+  }
+
+  const chemistryCostPerKg = process.reagents.reduce(
+    (sum, r) => sum + r.amountPerKg * r.pricePerLiter,
+    0,
+  );
+  const electricityCostPerKg = process.electricityKwhPerKg * elPrice;
+  const processCostPerKg = chemistryCostPerKg + electricityCostPerKg;
+
+  const grossProfitPerKg = revenuePerKg - processCostPerKg;
+  const maxPurchasePricePerKg = grossProfitPerKg * (1 - body.targetMarginPercent / 100);
+
+  const materialName =
+    electronicMaterials.find((m) => m.id === body.materialId)?.name ?? body.materialId;
+
+  res.json({
+    materialId: body.materialId,
+    materialName,
+    processId: body.processId,
+    processName: process.name,
+    targetMarginPercent: body.targetMarginPercent,
+    maxPurchasePricePerKgPln: Math.round(maxPurchasePricePerKg * 100) / 100,
+    revenuePerKgPln: Math.round(revenuePerKg * 100) / 100,
+    processCostPerKgPln: Math.round(processCostPerKg * 100) / 100,
+    chemistryCostPerKgPln: Math.round(chemistryCostPerKg * 100) / 100,
+    electricityCostPerKgPln: Math.round(electricityCostPerKg * 100) / 100,
+    grossProfitPerKgPln: Math.round(grossProfitPerKg * 100) / 100,
+    isBreakEven: body.targetMarginPercent === 0,
+    isProfitable: grossProfitPerKg > 0,
+  });
+});
+
 export default router;

@@ -27,6 +27,8 @@ import type {
   MetalHistoryPoint,
   MetalPrices,
   ProcessCompareResult,
+  PurchasePriceRequest,
+  PurchasePriceResult,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -529,6 +531,93 @@ export const useCalculateRecovery = <
   TContext
 > => {
   return useMutation(getCalculateRecoveryMutationOptions(options));
+};
+
+/**
+ * Given a material, process, and target profit margin, calculates the maximum price to pay per kg of input material
+ * @summary Calculate maximum purchase price for electronic scrap
+ */
+export const getCalculatePurchasePriceUrl = () => {
+  return `/api/calculator/purchase-price`;
+};
+
+export const calculatePurchasePrice = async (
+  purchasePriceRequest: PurchasePriceRequest,
+  options?: RequestInit,
+): Promise<PurchasePriceResult> => {
+  return customFetch<PurchasePriceResult>(getCalculatePurchasePriceUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(purchasePriceRequest),
+  });
+};
+
+export const getCalculatePurchasePriceMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calculatePurchasePrice>>,
+    TError,
+    { data: BodyType<PurchasePriceRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof calculatePurchasePrice>>,
+  TError,
+  { data: BodyType<PurchasePriceRequest> },
+  TContext
+> => {
+  const mutationKey = ["calculatePurchasePrice"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof calculatePurchasePrice>>,
+    { data: BodyType<PurchasePriceRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return calculatePurchasePrice(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CalculatePurchasePriceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof calculatePurchasePrice>>
+>;
+export type CalculatePurchasePriceMutationBody = BodyType<PurchasePriceRequest>;
+export type CalculatePurchasePriceMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Calculate maximum purchase price for electronic scrap
+ */
+export const useCalculatePurchasePrice = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calculatePurchasePrice>>,
+    TError,
+    { data: BodyType<PurchasePriceRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof calculatePurchasePrice>>,
+  TError,
+  { data: BodyType<PurchasePriceRequest> },
+  TContext
+> => {
+  return useMutation(getCalculatePurchasePriceMutationOptions(options));
 };
 
 /**

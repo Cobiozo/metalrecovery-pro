@@ -8,6 +8,7 @@ import { Layout } from "@/components/layout/Layout";
 import { CalculatorPage } from "@/pages/Calculator";
 import { PricesPage } from "@/pages/Prices";
 import { ProcessesPage } from "@/pages/Processes";
+import { PurchaseCalculatorPage } from "@/pages/PurchaseCalculator";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ function Router() {
         <Route path="/" component={CalculatorPage} />
         <Route path="/kursy" component={PricesPage} />
         <Route path="/procesy" component={ProcessesPage} />
+        <Route path="/skup" component={PurchaseCalculatorPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>
