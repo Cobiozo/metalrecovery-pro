@@ -13,7 +13,8 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, TrendingUp, TrendingDown, Minus, Zap, Beaker, CircleDollarSign, Info } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ShoppingCart, TrendingUp, TrendingDown, Minus, Zap, Beaker, CircleDollarSign, Info, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
@@ -43,6 +44,7 @@ export function PurchaseCalculatorPage() {
   const [processId, setProcessId] = useState("");
   const [targetMargin, setTargetMargin] = useState(20);
   const [electricityPrice, setElectricityPrice] = useState(0.8);
+  const [isCleaned, setIsCleaned] = useState(false);
   const [result, setResult] = useState<PurchasePriceResult | null>(null);
 
   const { data: materials, isLoading: materialsLoading } = useGetElectronicMaterials({
@@ -56,6 +58,13 @@ export function PurchaseCalculatorPage() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seqRef = useRef(0);
+
+  const selectedMaterial = materials?.find((m) => m.id === materialId);
+  const materialRequiresCleaning = selectedMaterial?.requiresCleaning === true;
+
+  useEffect(() => {
+    if (!materialRequiresCleaning) setIsCleaned(false);
+  }, [materialId, materialRequiresCleaning]);
 
   useEffect(() => {
     if (!materialId || !processId) {
@@ -72,6 +81,7 @@ export function PurchaseCalculatorPage() {
             processId,
             targetMarginPercent: targetMargin,
             electricityPricePerKwh: electricityPrice,
+            isCleaned: materialRequiresCleaning ? isCleaned : undefined,
           },
         },
         {
@@ -84,7 +94,7 @@ export function PurchaseCalculatorPage() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [materialId, processId, targetMargin, electricityPrice]);
+  }, [materialId, processId, targetMargin, electricityPrice, isCleaned, materialRequiresCleaning]);
 
   const isLoading = purchaseMutation.isPending;
   const canCompute = Boolean(materialId && processId);
@@ -140,6 +150,20 @@ export function PurchaseCalculatorPage() {
               </SelectContent>
             </Select>
           </div>
+
+          {materialRequiresCleaning && (
+            <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-md px-3 py-2.5">
+              <Checkbox
+                id="purchase-cleaned"
+                checked={isCleaned}
+                onCheckedChange={(checked) => setIsCleaned(checked === true)}
+              />
+              <label htmlFor="purchase-cleaned" className="text-xs text-amber-600 dark:text-amber-400 cursor-pointer select-none font-medium flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                Oczyszczony (plastik/obudowa usunięte) — wyższa zawartość metali/kg
+              </label>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
@@ -241,13 +265,13 @@ export function PurchaseCalculatorPage() {
       )}
 
       {canCompute && !isLoading && result && (
-        <ResultCard result={result} />
+        <ResultCard result={result} isCleaned={materialRequiresCleaning && isCleaned} />
       )}
     </div>
   );
 }
 
-function ResultCard({ result }: { result: PurchasePriceResult }) {
+function ResultCard({ result, isCleaned }: { result: PurchasePriceResult; isCleaned?: boolean }) {
   const price = result.maxPurchasePricePerKgPln;
   const isPricePositive = price > 0;
 
@@ -288,8 +312,14 @@ function ResultCard({ result }: { result: PurchasePriceResult }) {
             )}
           </div>
         </div>
-        <CardDescription className="text-xs">
-          {result.materialName} · {result.processName}
+        <CardDescription className="text-xs flex items-center gap-2 flex-wrap">
+          <span>{result.materialName} · {result.processName}</span>
+          {isCleaned && (
+            <span className="inline-flex items-center gap-0.5 font-medium text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5">
+              <Sparkles className="h-3 w-3" />
+              oczyszczony
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">

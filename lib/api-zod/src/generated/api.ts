@@ -109,6 +109,23 @@ export const GetElectronicMaterialsResponseItem = zod.object({
     })
     .describe("Metal content in grams per kg of material"),
   notes: zod.string().optional(),
+  requiresCleaning: zod
+    .boolean()
+    .optional()
+    .describe(
+      "True if this material can be cleaned (plastic\/housing removed) to increase effective metal content per kg",
+    ),
+  cleanedMultiplier: zod
+    .object({
+      Au: zod.number(),
+      Ag: zod.number(),
+      Pt: zod.number(),
+      Pd: zod.number(),
+    })
+    .optional()
+    .describe(
+      "Per-metal multipliers applied to metal content when material is cleaned (plastic\/housing removed)",
+    ),
 });
 export const GetElectronicMaterialsResponse = zod.array(
   GetElectronicMaterialsResponseItem,
@@ -181,6 +198,12 @@ export const CalculateRecoveryBody = zod.object({
         quantity: zod
           .number()
           .describe("Amount in kg or pieces (depending on unit)"),
+        isCleaned: zod
+          .boolean()
+          .optional()
+          .describe(
+            "If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation",
+          ),
       }),
     )
     .min(1),
@@ -261,6 +284,12 @@ export const CalculatePurchasePriceBody = zod.object({
     .number()
     .optional()
     .describe("Electricity price in PLN per kWh (default 0.80)"),
+  isCleaned: zod
+    .boolean()
+    .optional()
+    .describe(
+      "If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation",
+    ),
 });
 
 export const CalculatePurchasePriceResponse = zod.object({
@@ -310,6 +339,12 @@ export const CompareProcessesBody = zod.object({
         quantity: zod
           .number()
           .describe("Amount in kg or pieces (depending on unit)"),
+        isCleaned: zod
+          .boolean()
+          .optional()
+          .describe(
+            "If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation",
+          ),
       }),
     )
     .min(1),

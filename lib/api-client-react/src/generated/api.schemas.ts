@@ -70,6 +70,16 @@ export interface MetalContent {
   Pd: MetalContentPd;
 }
 
+/**
+ * Per-metal multipliers applied to metal content when material is cleaned (plastic/housing removed)
+ */
+export interface CleanedMultiplier {
+  Au: number;
+  Ag: number;
+  Pt: number;
+  Pd: number;
+}
+
 export type ElectronicMaterialCategory =
   (typeof ElectronicMaterialCategory)[keyof typeof ElectronicMaterialCategory];
 
@@ -112,6 +122,9 @@ export interface ElectronicMaterial {
   weightPerPiece?: number;
   metalContentPerKg: MetalContent;
   notes?: string;
+  /** True if this material can be cleaned (plastic/housing removed) to increase effective metal content per kg */
+  requiresCleaning?: boolean;
+  cleanedMultiplier?: CleanedMultiplier;
 }
 
 export interface Reagent {
@@ -175,6 +188,8 @@ export interface BatchItem {
   materialId: string;
   /** Amount in kg or pieces (depending on unit) */
   quantity: number;
+  /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
+  isCleaned?: boolean;
 }
 
 /**
@@ -269,6 +284,8 @@ export interface PurchasePriceRequest {
   targetMarginPercent: number;
   /** Electricity price in PLN per kWh (default 0.80) */
   electricityPricePerKwh?: number;
+  /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
+  isCleaned?: boolean;
 }
 
 export interface PurchasePriceResult {

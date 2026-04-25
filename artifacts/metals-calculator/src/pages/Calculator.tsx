@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2, Sparkles } from "lucide-react";
 import { generateCalculationPdf } from "@/lib/generatePdf";
 import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +20,7 @@ type BatchItemState = {
   materialId: string;
   quantity: number;
   unitOverride?: 'kg' | 'piece';
+  isCleaned?: boolean;
 };
 
 type SavedSession = {
@@ -166,7 +168,7 @@ export function CalculatorPage() {
           const wpp = getWeightPerPiece(item);
           quantity = wpp > 0 ? Math.round(item.quantity / wpp) : item.quantity;
         }
-        return { materialId: item.materialId, quantity };
+        return { materialId: item.materialId, quantity, isCleaned: item.isCleaned };
       });
 
   const handleCompare = () => {
@@ -212,11 +214,20 @@ export function CalculatorPage() {
   };
 
   const handleBatchMaterialChange = (id: string, value: string) => {
-    setBatchItems(batchItems.map(item => item.id === id ? { ...item, materialId: value } : item));
+    const newMaterial = materials?.find(m => m.id === value);
+    setBatchItems(batchItems.map(item =>
+      item.id === id
+        ? { ...item, materialId: value, isCleaned: newMaterial?.requiresCleaning ? item.isCleaned : false }
+        : item
+    ));
   };
 
   const handleBatchQuantityChange = (id: string, value: number) => {
     setBatchItems(batchItems.map(item => item.id === id ? { ...item, quantity: value } : item));
+  };
+
+  const handleBatchIsCleanedToggle = (id: string, checked: boolean) => {
+    setBatchItems(batchItems.map(item => item.id === id ? { ...item, isCleaned: checked } : item));
   };
 
   const handleReagentPriceChange = (name: string, value: number) => {
@@ -396,7 +407,8 @@ export function CalculatorPage() {
               {batchItems.map((item) => {
                 const selectedMaterial = materials?.find(m => m.id === item.materialId);
                 return (
-                  <div key={item.id} className="flex flex-col sm:flex-row gap-4 items-start bg-muted/30 p-4 rounded-lg border border-border">
+                  <div key={item.id} className="flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start bg-muted/30 p-4 rounded-lg border border-border">
                     <div className="flex-1 w-full">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Materiał</label>
                       <Select
@@ -474,6 +486,20 @@ export function CalculatorPage() {
                         </Button>
                       </div>
                     </div>
+                  </div>
+                  {selectedMaterial?.requiresCleaning && (
+                    <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/25 rounded-md px-3 py-2">
+                      <Checkbox
+                        id={`cleaned-${item.id}`}
+                        checked={item.isCleaned === true}
+                        onCheckedChange={(checked) => handleBatchIsCleanedToggle(item.id, checked === true)}
+                      />
+                      <label htmlFor={`cleaned-${item.id}`} className="text-xs text-amber-600 dark:text-amber-400 cursor-pointer select-none font-medium flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                        Oczyszczony (plastik/obudowa usunięte) — wyższa zawartość metali/kg
+                      </label>
+                    </div>
+                  )}
                   </div>
                 );
               })}
@@ -803,10 +829,16 @@ export function CalculatorPage() {
                   const mat = materials?.find(m => m.id === item.materialId);
                   const unitLabel = (item.unitOverride ?? mat?.unit ?? 'kg') === 'piece' ? 'szt.' : 'kg';
                   return (
-                    <span key={idx} className="font-semibold text-foreground">
+                    <span key={idx} className="font-semibold text-foreground inline-flex items-center gap-1 flex-wrap">
                       {mat?.name ?? item.materialId}
                       <span className="font-mono text-primary ml-1">× {item.quantity} {unitLabel}</span>
-                      {idx < batchItems.filter(i => i.materialId).length - 1 && <span className="text-muted-foreground ml-2">+</span>}
+                      {item.isCleaned && (
+                        <span className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5 ml-1">
+                          <Sparkles className="h-3 w-3" />
+                          oczyszczony
+                        </span>
+                      )}
+                      {idx < batchItems.filter(i => i.materialId).length - 1 && <span className="text-muted-foreground ml-1">+</span>}
                     </span>
                   );
                 })}

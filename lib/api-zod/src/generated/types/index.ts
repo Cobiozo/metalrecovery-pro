@@ -15,6 +15,7 @@ export * from "./chemicalProcess";
 export * from "./chemicalProcessTargetMetalsItem";
 export * from "./chemicalProcessYieldPercent";
 export * from "./chemistryCost";
+export * from "./cleanedMultiplier";
 export * from "./compareRequest";
 export * from "./electronicMaterial";
 export * from "./electronicMaterialCategory";

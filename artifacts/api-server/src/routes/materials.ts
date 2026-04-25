@@ -135,6 +135,8 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.15,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.18, Ag: 1.18, Pt: 1.18, Pd: 1.18 },
     metalContentPerKg: {
       Au: { min: 0.04, max: 0.20, typical: 0.10 },
       Ag: { min: 0.5, max: 2.5, typical: 1.2 },
@@ -150,6 +152,8 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.10,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
     metalContentPerKg: {
       Au: { min: 0.01, max: 0.08, typical: 0.04 },
       Ag: { min: 0.2, max: 1.2, typical: 0.6 },
@@ -165,6 +169,8 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.30,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
     metalContentPerKg: {
       Au: { min: 0.10, max: 0.50, typical: 0.25 },
       Ag: { min: 0.50, max: 3.00, typical: 1.50 },
@@ -857,6 +863,8 @@ export const electronicMaterials = [
     category: "zlacza",
     unit: "kg",
     weightPerPiece: 0.006,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 2.2, Ag: 2.2, Pt: 2.2, Pd: 2.2 },
     metalContentPerKg: {
       Au: { min: 1.0, max: 5.0, typical: 2.5 },
       Ag: { min: 0.5, max: 3.0, typical: 1.5 },
@@ -872,6 +880,8 @@ export const electronicMaterials = [
     category: "zlacza",
     unit: "kg",
     weightPerPiece: 0.020,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.8, Ag: 1.8, Pt: 1.8, Pd: 1.8 },
     metalContentPerKg: {
       Au: { min: 0.5, max: 2.5, typical: 1.2 },
       Ag: { min: 0.3, max: 2.0, typical: 1.0 },
@@ -887,6 +897,8 @@ export const electronicMaterials = [
     category: "zlacza",
     unit: "kg",
     weightPerPiece: 0.012,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 2.0, Ag: 2.0, Pt: 2.0, Pd: 2.0 },
     metalContentPerKg: {
       Au: { min: 0.2, max: 1.5, typical: 0.7 },
       Ag: { min: 0.3, max: 2.0, typical: 1.0 },

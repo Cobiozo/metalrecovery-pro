@@ -271,6 +271,20 @@ components:
           required: [min, max, typical]
       required: [Au, Ag, Pt, Pd]
 
+    CleanedMultiplier:
+      type: object
+      description: Per-metal multipliers applied to metal content when material is cleaned (plastic/housing removed)
+      properties:
+        Au:
+          type: number
+        Ag:
+          type: number
+        Pt:
+          type: number
+        Pd:
+          type: number
+      required: [Au, Ag, Pt, Pd]
+
     ElectronicMaterial:
       type: object
       properties:
@@ -296,6 +310,11 @@ components:
           $ref: "#/components/schemas/MetalContent"
         notes:
           type: string
+        requiresCleaning:
+          type: boolean
+          description: True if this material can be cleaned (plastic/housing removed) to increase effective metal content per kg
+        cleanedMultiplier:
+          $ref: "#/components/schemas/CleanedMultiplier"
       required: [id, name, nameEn, category, unit, metalContentPerKg]
 
     Reagent:
@@ -399,6 +418,9 @@ components:
         quantity:
           type: number
           description: Amount in kg or pieces (depending on unit)
+        isCleaned:
+          type: boolean
+          description: If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation
       required: [materialId, quantity]
 
     CalculationRequest:
@@ -541,6 +563,9 @@ components:
         electricityPricePerKwh:
           type: number
           description: Electricity price in PLN per kWh (default 0.80)
+        isCleaned:
+          type: boolean
+          description: If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation
       required: [materialId, processId, targetMarginPercent]
 
     PurchasePriceResult:

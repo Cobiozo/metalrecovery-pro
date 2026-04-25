@@ -7,6 +7,7 @@ const router: IRouter = Router();
 interface BatchItem {
   materialId: string;
   quantity: number;
+  isCleaned?: boolean;
 }
 
 interface CalculationRequest {
@@ -18,21 +19,41 @@ interface CalculationRequest {
   reagentPriceOverrides?: Record<string, number>;
 }
 
+type MaterialEntry = {
+  unit: string;
+  weightPerPiece?: number;
+  requiresCleaning?: boolean;
+  cleanedMultiplier?: { Au: number; Ag: number; Pt: number; Pd: number };
+  metalContentPerKg: {
+    Au: { typical: number };
+    Ag: { typical: number };
+    Pt: { typical: number };
+    Pd: { typical: number };
+  };
+};
+
 const electronicMaterialsMap = Object.fromEntries(
-  electronicMaterials.map((m) => [
-    m.id,
-    {
+  electronicMaterials.map((m) => {
+    const mat = m as typeof m & {
+      weightPerPiece?: number;
+      requiresCleaning?: boolean;
+      cleanedMultiplier?: { Au: number; Ag: number; Pt: number; Pd: number };
+    };
+    const entry: MaterialEntry = {
       unit: m.unit,
-      weightPerPiece: (m as { weightPerPiece?: number }).weightPerPiece,
+      weightPerPiece: mat.weightPerPiece,
+      requiresCleaning: mat.requiresCleaning,
+      cleanedMultiplier: mat.cleanedMultiplier,
       metalContentPerKg: {
         Au: { typical: m.metalContentPerKg.Au.typical },
         Ag: { typical: m.metalContentPerKg.Ag.typical },
         Pt: { typical: m.metalContentPerKg.Pt.typical },
         Pd: { typical: m.metalContentPerKg.Pd.typical },
       },
-    },
-  ]),
-);
+    };
+    return [m.id, entry];
+  }),
+) as Record<string, MaterialEntry>;
 
 const chemicalProcessesMap: Record<
   string,
@@ -390,6 +411,27 @@ function computeParameterYieldMultiplier(
   return Math.min(99.5, Math.max(0, adjusted));
 }
 
+function getEffectiveMetalContent(
+  mat: MaterialEntry,
+  isCleaned: boolean,
+): { Au: number; Ag: number; Pt: number; Pd: number } {
+  const base = {
+    Au: mat.metalContentPerKg.Au.typical,
+    Ag: mat.metalContentPerKg.Ag.typical,
+    Pt: mat.metalContentPerKg.Pt.typical,
+    Pd: mat.metalContentPerKg.Pd.typical,
+  };
+  if (isCleaned && mat.requiresCleaning && mat.cleanedMultiplier) {
+    return {
+      Au: base.Au * mat.cleanedMultiplier.Au,
+      Ag: base.Ag * mat.cleanedMultiplier.Ag,
+      Pt: base.Pt * mat.cleanedMultiplier.Pt,
+      Pd: base.Pd * mat.cleanedMultiplier.Pd,
+    };
+  }
+  return base;
+}
+
 function computeCompareResult(
   batch: BatchItem[],
   processId: string,
@@ -408,10 +450,11 @@ function computeCompareResult(
         ? item.quantity * (mat.weightPerPiece ?? 0.1)
         : item.quantity;
     totalMassKg += massKg;
-    totalMetalsG.Au += mat.metalContentPerKg.Au.typical * massKg;
-    totalMetalsG.Ag += mat.metalContentPerKg.Ag.typical * massKg;
-    totalMetalsG.Pt += mat.metalContentPerKg.Pt.typical * massKg;
-    totalMetalsG.Pd += mat.metalContentPerKg.Pd.typical * massKg;
+    const content = getEffectiveMetalContent(mat, item.isCleaned === true);
+    totalMetalsG.Au += content.Au * massKg;
+    totalMetalsG.Ag += content.Ag * massKg;
+    totalMetalsG.Pt += content.Pt * massKg;
+    totalMetalsG.Pd += content.Pd * massKg;
   }
 
   const metals = ["Au", "Ag", "Pt", "Pd"] as const;
@@ -611,10 +654,11 @@ router.post("/calculator/estimate", async (req, res) => {
 
     totalMassKg += massKg;
 
-    totalMetalsGPerKg.Au += material.metalContentPerKg.Au.typical * massKg;
-    totalMetalsGPerKg.Ag += material.metalContentPerKg.Ag.typical * massKg;
-    totalMetalsGPerKg.Pt += material.metalContentPerKg.Pt.typical * massKg;
-    totalMetalsGPerKg.Pd += material.metalContentPerKg.Pd.typical * massKg;
+    const content = getEffectiveMetalContent(material, item.isCleaned === true);
+    totalMetalsGPerKg.Au += content.Au * massKg;
+    totalMetalsGPerKg.Ag += content.Ag * massKg;
+    totalMetalsGPerKg.Pt += content.Pt * massKg;
+    totalMetalsGPerKg.Pd += content.Pd * massKg;
   }
 
   const processDefaultConc = process.reagents[0]?.concentration;
@@ -754,6 +798,7 @@ router.post("/calculator/purchase-price", async (req, res) => {
     processId: string;
     targetMarginPercent: number;
     electricityPricePerKwh?: number;
+    isCleaned?: boolean;
   };
 
   if (!body.materialId || !body.processId) {
@@ -799,8 +844,9 @@ router.post("/calculator/purchase-price", async (req, res) => {
 
   const metals = ["Au", "Ag", "Pt", "Pd"] as const;
   let revenuePerKg = 0;
+  const effectiveContent = getEffectiveMetalContent(material, body.isCleaned === true);
   for (const metal of metals) {
-    const gramsInOnKg = material.metalContentPerKg[metal].typical;
+    const gramsInOnKg = effectiveContent[metal];
     const recovered = gramsInOnKg * (process.yieldPercent[metal] / 100);
     revenuePerKg += recovered * metalPrices[metal];
   }

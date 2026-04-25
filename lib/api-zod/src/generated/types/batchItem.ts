@@ -10,4 +10,6 @@ export interface BatchItem {
   materialId: string;
   /** Amount in kg or pieces (depending on unit) */
   quantity: number;
+  /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
+  isCleaned?: boolean;
 }

@@ -15,4 +15,6 @@ export interface PurchasePriceRequest {
   targetMarginPercent: number;
   /** Electricity price in PLN per kWh (default 0.80) */
   electricityPricePerKwh?: number;
+  /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
+  isCleaned?: boolean;
 }

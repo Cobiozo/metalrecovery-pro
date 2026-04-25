@@ -5,6 +5,7 @@
  * API specification for Precious Metals Recovery Calculator
  * OpenAPI spec version: 0.1.0
  */
+import type { CleanedMultiplier } from "./cleanedMultiplier";
 import type { ElectronicMaterialCategory } from "./electronicMaterialCategory";
 import type { ElectronicMaterialUnit } from "./electronicMaterialUnit";
 import type { MetalContent } from "./metalContent";
@@ -22,4 +23,7 @@ export interface ElectronicMaterial {
   weightPerPiece?: number;
   metalContentPerKg: MetalContent;
   notes?: string;
+  /** True if this material can be cleaned (plastic/housing removed) to increase effective metal content per kg */
+  requiresCleaning?: boolean;
+  cleanedMultiplier?: CleanedMultiplier;
 }
