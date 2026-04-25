@@ -29,9 +29,9 @@ npm install
 | Zmienna | Domyślna | Opis |
 |---|---|---|
 | `PORT` | `3000` | Port serwera (Passenger ustawia automatycznie) |
-| `OPENAI_API_KEY` | — | **Wymagany** do funkcji analizy zdjęć (Vision AI) |
+| `OPENAI_API_KEY` | — | Opcjonalny — do Vision AI bezpośrednio na Cyberfolks |
 
-Ustaw `OPENAI_API_KEY` w cPanel → **Environment Variables** lub w pliku `.env`.
+> **Preferowane rozwiązanie Vision AI:** Zamiast klucza OpenAI na Cyberfolks, użyj API serwera wdrożonego na Replit (patrz niżej).
 
 ## Struktura plików
 ```
@@ -53,11 +53,33 @@ package.json   → minimalne zależności runtime
 
 ---
 
-## Jak aktualizować deploy po zmianach kodu
+## Vision AI przez Replit (zalecane)
+
+Funkcja analizy zdjęć wymaga klucza OpenAI. Zamiast konfigurować klucz na Cyberfolks,
+możesz wdrożyć API serwer na Replit (który ma wbudowaną integrację AI) i przekierować
+do niego tylko requesty vision.
+
+### Kroki:
+1. W Replit kliknij **Publish** → wybierz artefakt **API Server** → wdróż
+2. Skopiuj URL wdrożonego API, np. `https://api-server-xyz.replit.app`
+3. Zbuduj frontend z tym URL:
+```bash
+VITE_VISION_API_URL=https://api-server-xyz.replit.app/api bash scripts/build-deploy.sh
+```
+4. Zatwierdź zmiany i push do Cyberfolks jak zwykle.
+
+Frontend będzie używał Replit API **tylko** dla endpointów vision (status + analyze).
+Ceny NBP i kalkulator pozostają na serwerze Cyberfolks.
+
+---
+
+## Jak aktualizować deploy po zwykłych zmianach kodu
 
 **W Replit:** uruchom skrypt z terminala:
 ```bash
 bash scripts/build-deploy.sh
+# lub z vision URL (jeśli skonfigurowane):
+VITE_VISION_API_URL=https://api-server-xyz.replit.app/api bash scripts/build-deploy.sh
 ```
 Skrypt:
 1. Buduje frontend (Vite) z `BASE_PATH=/` dla Cyberfolks

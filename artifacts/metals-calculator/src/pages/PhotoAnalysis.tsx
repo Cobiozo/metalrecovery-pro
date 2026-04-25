@@ -63,6 +63,12 @@ function getApiBase(): string {
   return `${base}/api`;
 }
 
+function getVisionApiBase(): string {
+  const override = import.meta.env.VITE_VISION_API_URL;
+  if (override) return override.replace(/\/$/, "");
+  return getApiBase();
+}
+
 function confidenceLabel(c: Confidence): string {
   return c === "high" ? "wysoka" : c === "medium" ? "średnia" : "niska";
 }
@@ -533,7 +539,7 @@ export function PhotoAnalysisPage() {
   const [saveItem, setSaveItem] = useState<VisionItem | null>(null);
 
   useEffect(() => {
-    fetch(`${getApiBase()}/vision/status`)
+    fetch(`${getVisionApiBase()}/vision/status`)
       .then((r) => r.json())
       .then((d: { available: boolean }) => setAiAvailable(d.available))
       .catch(() => setAiAvailable(false));
@@ -575,7 +581,7 @@ export function PhotoAnalysisPage() {
         );
       }
 
-      const response = await fetch(`${getApiBase()}/vision/analyze`, {
+      const response = await fetch(`${getVisionApiBase()}/vision/analyze`, {
         method: "POST",
         body: formData,
       });
