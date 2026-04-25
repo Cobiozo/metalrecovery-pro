@@ -58811,7 +58811,7 @@ if (DB_ENABLED) {
 var router2 = (0, import_express2.Router)();
 var cachedPrices = null;
 var cacheTimestamp = 0;
-var CACHE_TTL_MS = 24 * 60 * 60 * 1e3;
+var CACHE_TTL_MS = 60 * 60 * 1e3;
 var FETCH_TIMEOUT_MS = 8e3;
 var pendingFetch = null;
 function fetchWithTimeout(url) {

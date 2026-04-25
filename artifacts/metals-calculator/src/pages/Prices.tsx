@@ -110,7 +110,11 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
 
 export function PricesPage() {
   const { data: prices, isLoading } = useGetMetalPrices({
-    query: { queryKey: getGetMetalPricesQueryKey() },
+    query: {
+      queryKey: getGetMetalPricesQueryKey(),
+      staleTime: 60 * 60 * 1000,
+      refetchInterval: 60 * 60 * 1000,
+    },
   });
 
   const [selected, setSelected] = useState<Record<string, number>>({
@@ -132,6 +136,7 @@ export function PricesPage() {
         queryKey: [...getGetMetalPricesHistoryQueryKey({ range }), range],
         retry: 2,
         staleTime: 60 * 60 * 1000,
+        refetchInterval: 60 * 60 * 1000,
       },
     }
   );
