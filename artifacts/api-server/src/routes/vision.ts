@@ -11,7 +11,7 @@ function getOpenAIClient(): OpenAI {
     process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ||
     process.env.OPENAI_BASE_URL;
   if (!apiKey) {
-    throw new Error("Brak klucza API OpenAI. Ustaw OPENAI_API_KEY w zmiennych środowiskowych.");
+    throw new Error("Brak klucza API OpenAI. Ustaw AI_INTEGRATIONS_OPENAI_API_KEY w zmiennych środowiskowych.");
   }
   return new OpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) });
 }
