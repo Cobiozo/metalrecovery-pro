@@ -52,13 +52,10 @@ export function PurchaseCalculatorPage() {
     query: { queryKey: getGetChemicalProcessesQueryKey() },
   });
 
-  const purchaseMutation = useCalculatePurchasePrice({
-    mutation: {
-      onSuccess: (data) => setResult(data),
-    },
-  });
+  const purchaseMutation = useCalculatePurchasePrice();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seqRef = useRef(0);
 
   useEffect(() => {
     if (!materialId || !processId) {
@@ -66,15 +63,23 @@ export function PurchaseCalculatorPage() {
       return;
     }
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    const seq = ++seqRef.current;
     debounceRef.current = setTimeout(() => {
-      purchaseMutation.mutate({
-        data: {
-          materialId,
-          processId,
-          targetMarginPercent: targetMargin,
-          electricityPricePerKwh: electricityPrice,
+      purchaseMutation.mutate(
+        {
+          data: {
+            materialId,
+            processId,
+            targetMarginPercent: targetMargin,
+            electricityPricePerKwh: electricityPrice,
+          },
         },
-      });
+        {
+          onSuccess: (data) => {
+            if (seq === seqRef.current) setResult(data);
+          },
+        },
+      );
     }, 300);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
