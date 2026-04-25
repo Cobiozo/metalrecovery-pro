@@ -137,7 +137,11 @@ export function CalculatorPage() {
       const visionMaterialId = localStorage.getItem("metalrecovery_vision_new_material");
       if (visionMaterialId) {
         localStorage.removeItem("metalrecovery_vision_new_material");
-        setBatchItems([{ id: Date.now().toString(), materialId: visionMaterialId, quantity: 1 }]);
+        const rawQty = localStorage.getItem("metalrecovery_vision_quantity");
+        localStorage.removeItem("metalrecovery_vision_quantity");
+        localStorage.removeItem("metalrecovery_vision_plating_quality");
+        const qty = rawQty ? Math.max(1, parseInt(rawQty, 10) || 1) : 1;
+        setBatchItems([{ id: Date.now().toString(), materialId: visionMaterialId, quantity: qty }]);
       }
     } catch {
       // private mode — ignore

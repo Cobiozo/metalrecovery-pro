@@ -25,6 +25,7 @@ const MetalEstimateSchema = z.object({
 const VisionResultSchema = z.object({
   materialType: z.string(),
   description: z.string(),
+  quantity: z.number().int().min(0),
   metalContent: z.object({
     Au: MetalEstimateSchema,
     Ag: MetalEstimateSchema,
@@ -48,44 +49,50 @@ STEP 1 — IDENTIFY WHAT IS IN THE IMAGE HONESTLY.
 Look carefully. Is this actually electronic waste (PCB, connector, CPU, RAM, chip, gold fingers, etc.)? Or is it something else entirely (coins, buttons, jewelry, stones, tools, mechanical parts, fabric, food, etc.)?
 
 DO NOT force-fit non-electronic objects into e-waste categories. Examples of common confusions to avoid:
-- Decorative/uniform buttons → NOT "styki kopułkowe" (dome contacts). Buttons are NOT e-waste.
+- Decorative/uniform buttons → NOT "styki kopułkowe". Buttons are NOT e-waste.
 - Coins or medals → NOT CPUs or chips.
 - Brass fittings, screws → NOT connectors.
-- If uncertain about the object type, report uncertainty honestly.
 
-STEP 2 — FILL IN THE JSON accurately based on what you see.
-If the image is NOT electronic waste, use materialType like "Nieelektroniczne — [nazwa po polsku, np. Guziki ozdobne / Monety / Biżuteria]" and set ALL metal content values to 0.0 with confidence "low", and explain in description and caveats that this does not appear to be e-waste and therefore metal recovery estimates are not applicable.
+STEP 2 — COUNT how many individual pieces/units of the SAME TYPE are visible. If there are 17 motherboards, quantity=17. If there's one PCB, quantity=1. If the image is not e-waste or you cannot count clearly, use quantity=0.
 
-If the image IS electronic waste, analyze it carefully and return realistic estimates.
+STEP 3 — FILL IN THE JSON in POLISH language only.
+If NOT electronic waste: materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, confidence = "low", quantity = 0.
+If IS electronic waste: provide realistic estimates.
+
+IMPORTANT — ALL string values must be in POLISH:
+- color values: "złoty", "srebrny", "niklowy", "mieszany" (NOT "gold", "silver", "nickel", "mixed")
+- thickness values: "cienkie (<0,1μm)", "średnie (0,1-0,5μm)", "grube (>0,5μm)" (NOT "thin", "medium", "thick")
+- notes: in Polish only
 
 Return ONLY a JSON object (no markdown, no explanation, just raw JSON):
 {
-  "materialType": "Polish name — for e-waste e.g. 'Płytka PCB', 'Procesor ceramiczny', 'Złącze edge'. For non-e-waste: 'Nieelektroniczne — [Polish name of what it actually is]'",
-  "description": "2-3 sentences in Polish describing exactly what you see and why these estimates apply (or do not apply)",
+  "materialType": "short Polish name of detected material type",
+  "description": "2-3 sentences in Polish describing what you see",
+  "quantity": <integer: number of visible same-type units, 0 if unclear or non-e-waste>,
   "metalContent": {
     "Au": { "value_g_per_kg": <number, 0.0 if not e-waste>, "confidence": "low|medium|high" },
-    "Ag": { "value_g_per_kg": <number, 0.0 if not e-waste>, "confidence": "low|medium|high" },
-    "Pt": { "value_g_per_kg": <number, 0.0 if not e-waste>, "confidence": "low|medium|high" },
-    "Pd": { "value_g_per_kg": <number, 0.0 if not e-waste>, "confidence": "low|medium|high" }
+    "Ag": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
+    "Pt": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
+    "Pd": { "value_g_per_kg": <number>, "confidence": "low|medium|high" }
   },
   "platingAnalysis": {
     "detected": <true only if you clearly see gold-plated electronic contacts/pins/pads>,
-    "color": "gold|silver|nickel|mixed or null",
-    "thickness": "thin (<0.1μm)|medium (0.1-0.5μm)|thick (>0.5μm) or null",
-    "quality_1_to_5": <integer 1-5 or null — only for actual electronic gold plating>,
-    "notes": "Polish note on plating or null"
+    "color": "złoty|srebrny|niklowy|mieszany or null",
+    "thickness": "cienkie (<0,1μm)|średnie (0,1-0,5μm)|grube (>0,5μm) or null",
+    "quality_1_to_5": <integer 1-5 or null>,
+    "notes": "Polish note on plating quality/coverage or null"
   },
   "recommendedProcess": "Polish name of recommended recovery process, or 'Brak — materiał nieelektroniczny' if not e-waste",
-  "caveats": "Polish warning — if not e-waste, clearly state that the uploaded image does not appear to contain electronic waste suitable for precious metal recovery"
+  "caveats": "1-2 sentence Polish warning about accuracy limits or why material is not suitable for e-waste recovery"
 }
 
-Reference values for e-waste (use only when applicable):
+Reference values for e-waste:
 - PCB motherboards: ~0.2–0.5 g Au/kg
 - Ceramic CPUs: ~3–10 g Au/kg
 - Gold fingers / edge connectors: ~2–15 g Au/kg
 - RAM sticks: ~0.5–1.5 g Au/kg
 
-Always be conservative and honest. Never invent e-waste categories to match objects that are clearly not electronic components.`;
+Be conservative and honest. Never invent e-waste categories for non-electronic objects.`;
 
 function handleUpload(req: Request, res: Response, next: NextFunction): void {
   upload.single("image")(req, res, (err: unknown) => {

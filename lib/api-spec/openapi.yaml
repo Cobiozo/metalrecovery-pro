@@ -855,6 +855,10 @@ components:
         description:
           type: string
           description: Polish description of the material and its precious metal characteristics
+        quantity:
+          type: integer
+          minimum: 0
+          description: Number of same-type units visible in the image; 0 if unclear or non-e-waste
         metalContent:
           type: object
           properties:
@@ -875,7 +879,7 @@ components:
         caveats:
           type: string
           description: Polish description of limitations and what to verify in a lab
-      required: [materialType, description, metalContent, platingAnalysis, recommendedProcess, caveats]
+      required: [materialType, description, quantity, metalContent, platingAnalysis, recommendedProcess, caveats]
 
     ProcessCompareResult:
       type: object

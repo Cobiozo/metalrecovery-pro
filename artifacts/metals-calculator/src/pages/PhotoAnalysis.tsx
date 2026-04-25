@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   Camera, Upload, ScanLine, Loader2, AlertTriangle, Info,
   FlaskConical, Star, CheckCircle2, XCircle, Sparkles,
-  ChevronRight, ImageIcon, RotateCcw,
+  ChevronRight, ImageIcon, RotateCcw, ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCustomMaterials } from "@/lib/useCustomMaterials";
@@ -33,6 +33,7 @@ type PlatingAnalysis = {
 type VisionResult = {
   materialType: string;
   description: string;
+  quantity: number;
   metalContent: {
     Au: MetalEstimate;
     Ag: MetalEstimate;
@@ -61,6 +62,35 @@ function confidenceColor(c: Confidence): string {
     : "border-red-500/50 text-red-400 bg-red-500/10";
 }
 
+const COLOR_PL: Record<string, string> = {
+  gold: "złoty", silver: "srebrny", nickel: "niklowy", mixed: "mieszany",
+  "złoty": "złoty", "srebrny": "srebrny", "niklowy": "niklowy", "mieszany": "mieszany",
+};
+const THICKNESS_PL: Record<string, string> = {
+  "thin (<0.1μm)": "cienkie (<0,1μm)",
+  "medium (0.1-0.5μm)": "średnie (0,1-0,5μm)",
+  "thick (>0.5μm)": "grube (>0,5μm)",
+  "thin": "cienkie (<0,1μm)",
+  "medium": "średnie (0,1-0,5μm)",
+  "thick": "grube (>0,5μm)",
+};
+function translateColor(v?: string | null): string | null {
+  if (!v) return null;
+  return COLOR_PL[v.toLowerCase()] ?? v;
+}
+function translateThickness(v?: string | null): string | null {
+  if (!v) return null;
+  return THICKNESS_PL[v.toLowerCase()] ?? THICKNESS_PL[v] ?? v;
+}
+
+const QUALITY_AU_MULTIPLIER: Record<number, number> = {
+  1: 0.65, 2: 0.80, 3: 1.00, 4: 1.20, 5: 1.40,
+};
+function applyQualityToAu(au: number, quality: number | null | undefined): number {
+  if (!quality) return au;
+  return au * (QUALITY_AU_MULTIPLIER[quality] ?? 1.0);
+}
+
 function StarRating({ value }: { value: number }) {
   return (
     <span className="flex items-center gap-0.5">
@@ -81,10 +111,12 @@ function VisionResultCard({
   result,
   onSaveProfile,
   onCalculate,
+  onSkup,
 }: {
   result: VisionResult;
   onSaveProfile: () => void;
   onCalculate: () => void;
+  onSkup: () => void;
 }) {
   const metals = [
     { key: "Au" as const, label: "Złoto (Au)", color: "text-yellow-400" },
@@ -116,7 +148,14 @@ function VisionResultCard({
               <ScanLine className={cn("w-5 h-5", isNonEwaste ? "text-muted-foreground" : "text-primary")} />
             </div>
             <div className="flex-1 min-w-0">
-              <CardTitle className="text-base">{result.materialType}</CardTitle>
+              <div className="flex items-center gap-2 flex-wrap">
+                <CardTitle className="text-base">{result.materialType}</CardTitle>
+                {result.quantity > 0 && (
+                  <Badge variant="outline" className="text-xs border-primary/40 text-primary bg-primary/10 font-mono shrink-0">
+                    ~{result.quantity} szt.
+                  </Badge>
+                )}
+              </div>
               <CardDescription className="text-sm mt-1 leading-relaxed">
                 {result.description}
               </CardDescription>
@@ -181,14 +220,14 @@ function VisionResultCard({
               {result.platingAnalysis.color && (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground w-20 shrink-0">Kolor:</span>
-                  <span className="font-medium">{result.platingAnalysis.color}</span>
+                  <span className="font-medium">{translateColor(result.platingAnalysis.color)}</span>
                 </div>
               )}
               {result.platingAnalysis.thickness && (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground w-20 shrink-0">Grubość:</span>
                   <Badge variant="outline" className="text-xs border-yellow-500/40 text-yellow-400 bg-yellow-500/5">
-                    {result.platingAnalysis.thickness}
+                    {translateThickness(result.platingAnalysis.thickness)}
                   </Badge>
                 </div>
               )}
@@ -224,20 +263,34 @@ function VisionResultCard({
         </CardContent>
       </Card>
 
-      <div className="flex flex-col sm:flex-row gap-2">
-        {!isNonEwaste && (
-          <Button className="flex-1 gap-2" onClick={onSaveProfile}>
-            <FlaskConical className="w-4 h-4" />
-            Zapisz jako własny profil
+      {!isNonEwaste && (
+        <div className="space-y-2">
+          {result.platingAnalysis.quality_1_to_5 && (
+            <div className="flex items-center gap-2 bg-yellow-500/5 border border-yellow-500/20 rounded-md px-3 py-2">
+              <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+              <p className="text-xs text-yellow-400/90 leading-snug">
+                Jakość złoceń {result.platingAnalysis.quality_1_to_5}/5 wpływa na szacowany odzysk Au
+                {" "}({result.platingAnalysis.quality_1_to_5 >= 4 ? "+" : result.platingAnalysis.quality_1_to_5 <= 2 ? "" : "±"}
+                {Math.round((QUALITY_AU_MULTIPLIER[result.platingAnalysis.quality_1_to_5] - 1) * 100)}% Au)
+              </p>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <Button className="gap-2 text-sm" onClick={onCalculate}>
+              <FlaskConical className="w-4 h-4" />
+              Kalkulator
+            </Button>
+            <Button variant="outline" className="gap-2 text-sm" onClick={onSkup}>
+              <ShoppingCart className="w-4 h-4" />
+              Skup
+            </Button>
+          </div>
+          <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground text-xs" onClick={onSaveProfile}>
+            <FlaskConical className="w-3.5 h-3.5" />
+            Zapisz jako własny profil materiału
           </Button>
-        )}
-        {!isNonEwaste && (
-          <Button variant="outline" className="flex-1 gap-2" onClick={onCalculate}>
-            Przelicz w kalkulatorze
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2.5">
         <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
@@ -268,6 +321,43 @@ export function PhotoAnalysisPage() {
   const { add } = useCustomMaterials();
   const { toast } = useToast();
   const { data: apiMaterials } = useGetElectronicMaterials();
+
+  function navigateWithVision(result: VisionResult, dest: string) {
+    const quality = result.platingAnalysis.quality_1_to_5 ?? null;
+    const adjustedAu = applyQualityToAu(result.metalContent.Au.value_g_per_kg, quality);
+
+    const dbId = findDbMaterial(apiMaterials, result.materialType);
+    let materialId: string;
+    if (dbId) {
+      materialId = dbId;
+    } else {
+      const mat = add({
+        name: result.materialType,
+        au: adjustedAu,
+        ag: result.metalContent.Ag.value_g_per_kg,
+        pt: result.metalContent.Pt.value_g_per_kg,
+        pd: result.metalContent.Pd.value_g_per_kg,
+        notes: `Analiza AI ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(result.metalContent.Au.confidence)}, Ag ${confidenceLabel(result.metalContent.Ag.confidence)}.${quality ? ` Jakość złoceń: ${quality}/5.` : ""} ${result.caveats}`,
+      });
+      materialId = mat.id;
+    }
+    try {
+      localStorage.setItem("metalrecovery_vision_new_material", materialId);
+      if (result.quantity > 0) {
+        localStorage.setItem("metalrecovery_vision_quantity", String(result.quantity));
+      } else {
+        localStorage.removeItem("metalrecovery_vision_quantity");
+      }
+      if (quality) {
+        localStorage.setItem("metalrecovery_vision_plating_quality", String(quality));
+      } else {
+        localStorage.removeItem("metalrecovery_vision_plating_quality");
+      }
+    } catch {
+      // private mode
+    }
+    navigate(dest);
+  }
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -489,29 +579,8 @@ export function PhotoAnalysisPage() {
         <VisionResultCard
           result={result}
           onSaveProfile={() => setSaveModalOpen(true)}
-          onCalculate={() => {
-            const dbId = findDbMaterial(apiMaterials, result.materialType);
-            let materialId: string;
-            if (dbId) {
-              materialId = dbId;
-            } else {
-              const mat = add({
-                name: result.materialType,
-                au: result.metalContent.Au.value_g_per_kg,
-                ag: result.metalContent.Ag.value_g_per_kg,
-                pt: result.metalContent.Pt.value_g_per_kg,
-                pd: result.metalContent.Pd.value_g_per_kg,
-                notes: `Analiza AI z dnia ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(result.metalContent.Au.confidence)}, Ag ${confidenceLabel(result.metalContent.Ag.confidence)}. ${result.caveats}`,
-              });
-              materialId = mat.id;
-            }
-            try {
-              localStorage.setItem("metalrecovery_vision_new_material", materialId);
-            } catch {
-              // private mode — silently ignore
-            }
-            navigate("/");
-          }}
+          onCalculate={() => navigateWithVision(result, "/")}
+          onSkup={() => navigateWithVision(result, "/skup")}
         />
       )}
 

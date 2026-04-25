@@ -359,6 +359,20 @@ function SingleMode({
   const [isCleaned, setIsCleaned] = useState(false);
   const [result, setResult] = useState<PurchasePriceResult | null>(null);
 
+  useEffect(() => {
+    try {
+      const visionMaterialId = localStorage.getItem("metalrecovery_vision_new_material");
+      if (visionMaterialId) {
+        localStorage.removeItem("metalrecovery_vision_new_material");
+        localStorage.removeItem("metalrecovery_vision_quantity");
+        localStorage.removeItem("metalrecovery_vision_plating_quality");
+        setMaterialId(visionMaterialId);
+      }
+    } catch {
+      // private mode
+    }
+  }, []);
+
   const purchaseMutation = useCalculatePurchasePrice();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seqRef = useRef(0);
