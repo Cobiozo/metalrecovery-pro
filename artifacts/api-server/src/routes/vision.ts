@@ -47,37 +47,34 @@ const VisionResultSchema = z.object({
   caveats: z.string(),
 });
 
-const ANALYSIS_PROMPT = `You are an expert in precious metal recovery from electronic waste (e-waste). A user has uploaded a photo for analysis.
+const ANALYSIS_PROMPT = `You are an expert in precious metal recovery from electronic waste (e-waste).
 
-STEP 1 — IDENTIFY ALL DISTINCT MATERIAL TYPES in the image.
-Look carefully. Are there different types of components (e.g. motherboards AND CPUs AND RAM sticks)? Each distinct type must be a SEPARATE item in the "items" array.
-- If there is only one type, return one item.
-- If there are multiple distinct types (e.g. 5 motherboards and 3 CPUs), return a separate item for each type.
-- DO NOT merge different types into one item.
-
-DO NOT force-fit non-electronic objects into e-waste categories:
-- Decorative buttons → NOT "styki kopułkowe". Not e-waste.
-- Coins, medals → Not CPUs.
-- Brass fittings → Not connectors.
-For non-e-waste: materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, confidence = "low", quantity = 0.
-
-STEP 2 — For EACH distinct material type, count how many individual pieces of that type are visible.
-
-STEP 3 — For EACH material type, select "materialType":
 {{CATALOG_SECTION}}
 
-STEP 4 — Fill in the JSON. ALL string values MUST be in POLISH:
-- color: "złoty", "srebrny", "niklowy", "mieszany" (NOT "gold", "silver", "nickel", "mixed")
-- thickness: "cienkie (<0,1μm)", "średnie (0,1-0,5μm)", "grube (>0,5μm)" (NOT "thin", "medium", "thick")
-- notes, descriptions: Polish only
+Analyze the uploaded photo and return a JSON object following these steps:
 
-Return ONLY a JSON object (no markdown, no explanation):
+STEP 1 — IDENTIFY distinct material types.
+Are there different component types (e.g. motherboards AND CPUs AND RAM)? Each distinct type → separate item in "items".
+DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings are NOT e-waste.
+Non-e-waste → materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, quantity = 0.
+
+STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
+
+STEP 3 — COUNT each type carefully.
+Scan the image systematically: left column top→bottom, then next column, etc.
+Count EVERY visible unit, including partially visible ones at edges.
+If items overlap, estimate based on visible corners/edges — prefer overcounting over undercounting.
+Write down your count before moving on.
+
+STEP 4 — Estimate metal content and plating for each type.
+
+STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {
   "items": [
     {
-      "materialType": "EXACT name from the catalog above (or 'Nieelektroniczne — ...' if not e-waste)",
-      "description": "2-3 sentences in Polish about this specific type and its metal characteristics",
-      "quantity": <integer: count of visible same-type units; 0 if unclear>,
+      "materialType": "exact catalog name or descriptive Polish name",
+      "description": "2-3 sentences in Polish about this type and its metal characteristics",
+      "quantity": <integer from STEP 3; 0 only if truly impossible to count>,
       "metalContent": {
         "Au": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
         "Ag": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
@@ -85,26 +82,20 @@ Return ONLY a JSON object (no markdown, no explanation):
         "Pd": { "value_g_per_kg": <number>, "confidence": "low|medium|high" }
       },
       "platingAnalysis": {
-        "detected": <true only if gold-plated contacts/pins clearly visible for THIS type>,
+        "detected": <true only if gold-plated contacts/pins clearly visible>,
         "color": "złoty|srebrny|niklowy|mieszany or null",
         "thickness": "cienkie (<0,1μm)|średnie (0,1-0,5μm)|grube (>0,5μm) or null",
         "quality_1_to_5": <integer 1-5 or null>,
         "notes": "Polish note or null"
       },
-      "recommendedProcess": "Polish name of recovery process for this type"
+      "recommendedProcess": "Polish name of recommended recovery process"
     }
   ],
-  "caveats": "1-2 sentence Polish warning covering all detected materials"
+  "caveats": "1-2 sentence Polish warning about estimation accuracy"
 }
 
-Reference values:
-- PCB motherboards: ~0.2–0.5 g Au/kg
-- Ceramic CPUs: ~3–10 g Au/kg
-- Gold fingers / edge connectors: ~2–15 g Au/kg
-- RAM sticks: ~0.5–1.5 g Au/kg
-- Standard CPUs (non-ceramic): ~0.1–0.3 g Au/kg
-
-Be conservative. Each material type gets its own separate item in the array.`;
+ALL string values (color, thickness, notes, descriptions) MUST be in POLISH.
+Reference metal values: motherboards ~0.2–0.5 g Au/kg; ceramic CPUs ~3–10 g Au/kg; gold fingers ~2–15 g Au/kg; RAM ~0.5–1.5 g Au/kg.`;
 
 function handleUpload(req: Request, res: Response, next: NextFunction): void {
   upload.single("image")(req, res, (err: unknown) => {
