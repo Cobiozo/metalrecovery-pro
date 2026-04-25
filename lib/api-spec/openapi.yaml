@@ -170,7 +170,19 @@ paths:
       operationId: analyzeImage
       tags: [vision]
       summary: Analyze an image of electronic scrap for precious metal content
-      description: Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality. Use FormData on the client — this endpoint is not compatible with JSON body.
+      description: Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file (JPG, PNG, or WebP), max 10 MB
       responses:
         "200":
           description: Vision analysis result

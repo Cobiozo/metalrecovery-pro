@@ -453,7 +453,22 @@ export function PhotoAnalysisPage() {
         <VisionResultCard
           result={result}
           onSaveProfile={() => setSaveModalOpen(true)}
-          onCalculate={() => navigate("/")}
+          onCalculate={() => {
+            const mat = add({
+              name: result.materialType,
+              au: result.metalContent.Au.value_g_per_kg,
+              ag: result.metalContent.Ag.value_g_per_kg,
+              pt: result.metalContent.Pt.value_g_per_kg,
+              pd: result.metalContent.Pd.value_g_per_kg,
+              notes: `Analiza AI z dnia ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(result.metalContent.Au.confidence)}, Ag ${confidenceLabel(result.metalContent.Ag.confidence)}. ${result.caveats}`,
+            });
+            try {
+              localStorage.setItem("metalrecovery_vision_new_material", mat.id);
+            } catch {
+              // private mode — silently ignore
+            }
+            navigate("/");
+          }}
         />
       )}
 

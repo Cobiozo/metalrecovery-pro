@@ -426,9 +426,15 @@ export const CalculatePurchasePriceBatchResponse = zod.object({
 });
 
 /**
- * Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality. Use FormData on the client — this endpoint is not compatible with JSON body.
+ * Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality.
  * @summary Analyze an image of electronic scrap for precious metal content
  */
+export const AnalyzeImageBody = zod.object({
+  image: zod
+    .instanceof(File)
+    .describe("Image file (JPG, PNG, or WebP), max 10 MB"),
+});
+
 export const analyzeImageResponsePlatingAnalysisQuality1To5Min = 0;
 export const analyzeImageResponsePlatingAnalysisQuality1To5Max = 5;
 

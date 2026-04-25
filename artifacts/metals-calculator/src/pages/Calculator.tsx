@@ -133,6 +133,18 @@ export function CalculatorPage() {
   const selectedProcess = processes?.find(p => p.id === selectedProcessId);
 
   useEffect(() => {
+    try {
+      const visionMaterialId = localStorage.getItem("metalrecovery_vision_new_material");
+      if (visionMaterialId) {
+        localStorage.removeItem("metalrecovery_vision_new_material");
+        setBatchItems([{ id: Date.now().toString(), materialId: visionMaterialId, quantity: 1 }]);
+      }
+    } catch {
+      // private mode — ignore
+    }
+  }, []);
+
+  useEffect(() => {
     if (selectedProcess) {
       setProcessParams(prev => ({
         ...prev,

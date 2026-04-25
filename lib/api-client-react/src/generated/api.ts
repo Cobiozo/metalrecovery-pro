@@ -17,6 +17,7 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AnalyzeImageBody,
   CalculationRequest,
   CalculationResult,
   ChemicalProcess,
@@ -715,7 +716,7 @@ export const useCalculatePurchasePriceBatch = <
 };
 
 /**
- * Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality. Use FormData on the client — this endpoint is not compatible with JSON body.
+ * Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality.
  * @summary Analyze an image of electronic scrap for precious metal content
  */
 export const getAnalyzeImageUrl = () => {
@@ -723,11 +724,16 @@ export const getAnalyzeImageUrl = () => {
 };
 
 export const analyzeImage = async (
+  analyzeImageBody: AnalyzeImageBody,
   options?: RequestInit,
 ): Promise<VisionAnalysisResult> => {
+  const formData = new FormData();
+  formData.append(`image`, analyzeImageBody.image);
+
   return customFetch<VisionAnalysisResult>(getAnalyzeImageUrl(), {
     ...options,
     method: "POST",
+    body: formData,
   });
 };
 
@@ -738,14 +744,14 @@ export const getAnalyzeImageMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof analyzeImage>>,
     TError,
-    void,
+    { data: BodyType<AnalyzeImageBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof analyzeImage>>,
   TError,
-  void,
+  { data: BodyType<AnalyzeImageBody> },
   TContext
 > => {
   const mutationKey = ["analyzeImage"];
@@ -759,9 +765,11 @@ export const getAnalyzeImageMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof analyzeImage>>,
-    void
-  > = () => {
-    return analyzeImage(requestOptions);
+    { data: BodyType<AnalyzeImageBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return analyzeImage(data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -770,7 +778,7 @@ export const getAnalyzeImageMutationOptions = <
 export type AnalyzeImageMutationResult = NonNullable<
   Awaited<ReturnType<typeof analyzeImage>>
 >;
-
+export type AnalyzeImageMutationBody = BodyType<AnalyzeImageBody>;
 export type AnalyzeImageMutationError = ErrorType<void>;
 
 /**
@@ -783,14 +791,14 @@ export const useAnalyzeImage = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof analyzeImage>>,
     TError,
-    void,
+    { data: BodyType<AnalyzeImageBody> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof analyzeImage>>,
   TError,
-  void,
+  { data: BodyType<AnalyzeImageBody> },
   TContext
 > => {
   return useMutation(getAnalyzeImageMutationOptions(options));

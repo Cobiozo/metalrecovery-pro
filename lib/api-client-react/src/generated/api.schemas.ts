@@ -468,3 +468,8 @@ export const GetMetalPricesHistoryRange = {
   "90d": "90d",
   "365d": "365d",
 } as const;
+
+export type AnalyzeImageBody = {
+  /** Image file (JPG, PNG, or WebP), max 10 MB */
+  image: Blob;
+};
