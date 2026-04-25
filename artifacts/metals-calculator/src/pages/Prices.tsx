@@ -200,7 +200,7 @@ export function PricesPage() {
           Aktualne Kursy Metali
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Ceny skupu z rynku globalnego (PLN/g) · aktualizacja co 1h
+          Ceny skupu z rynku globalnego (PLN/g) · NBP publikuje raz dziennie, serwer sprawdza co 1h
         </p>
       </div>
 
@@ -405,12 +405,14 @@ export function PricesPage() {
         <CardContent className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-4 h-4 shrink-0" />
           <span>
-            Ostatnia aktualizacja:{" "}
+            Dane pobrane z NBP:{" "}
             {prices ? (
               new Date(prices.updatedAt).toLocaleString("pl-PL")
             ) : (
               <Skeleton className="h-4 w-32 inline-block ml-1" />
             )}
+            {" · "}
+            <span className="text-xs opacity-70">NBP aktualizuje ceny złota raz dziennie (dni robocze)</span>
           </span>
         </CardContent>
       </Card>
