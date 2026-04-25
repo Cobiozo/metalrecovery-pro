@@ -9,7 +9,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
   fileFilter: (_req, file, cb) => {
-    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.mimetype)) {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.mimetype)) {
       cb(new Error("Nieobsługiwany format pliku. Wymagany JPG, PNG lub WebP."));
     } else {
       cb(null, true);
