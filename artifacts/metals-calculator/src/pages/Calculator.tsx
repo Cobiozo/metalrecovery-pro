@@ -238,13 +238,17 @@ export function CalculatorPage() {
         const parsed: Array<{ materialId: string; quantity: number; unitOverride?: 'kg' | 'piece'; auMultiplier?: number }> = JSON.parse(visionBatch);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setBatchItems(
-            parsed.map((entry, i) => ({
-              id: (Date.now() + i).toString(),
-              materialId: entry.materialId,
-              quantity: Math.max(1, entry.quantity || 1),
-              ...(entry.unitOverride ? { unitOverride: entry.unitOverride } : {}),
-              ...(entry.auMultiplier ? { auMultiplier: entry.auMultiplier } : {}),
-            })),
+            parsed.map((entry, i) => {
+              const isPiece = entry.unitOverride === "piece";
+              const minQty = isPiece ? 1 : 0.001;
+              return {
+                id: (Date.now() + i).toString(),
+                materialId: entry.materialId,
+                quantity: Math.max(minQty, entry.quantity || minQty),
+                ...(entry.unitOverride ? { unitOverride: entry.unitOverride } : {}),
+                ...(entry.auMultiplier ? { auMultiplier: entry.auMultiplier } : {}),
+              };
+            }),
           );
           return;
         }
