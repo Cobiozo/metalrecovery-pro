@@ -63,7 +63,10 @@ For non-e-waste: materialType = "Nieelektroniczne — [Polish name]", all metal 
 
 STEP 2 — For EACH distinct material type, count how many individual pieces of that type are visible.
 
-STEP 3 — Fill in the JSON. ALL string values MUST be in POLISH:
+STEP 3 — For EACH material type, select "materialType":
+{{CATALOG_SECTION}}
+
+STEP 4 — Fill in the JSON. ALL string values MUST be in POLISH:
 - color: "złoty", "srebrny", "niklowy", "mieszany" (NOT "gold", "silver", "nickel", "mixed")
 - thickness: "cienkie (<0,1μm)", "średnie (0,1-0,5μm)", "grube (>0,5μm)" (NOT "thin", "medium", "thick")
 - notes, descriptions: Polish only
@@ -72,7 +75,7 @@ Return ONLY a JSON object (no markdown, no explanation):
 {
   "items": [
     {
-      "materialType": "Polish short name of this material type (e.g. 'Płyty główne ATX', 'Procesory Socket AM2', 'Pamięci RAM DDR2')",
+      "materialType": "EXACT name from the catalog above (or 'Nieelektroniczne — ...' if not e-waste)",
       "description": "2-3 sentences in Polish about this specific type and its metal characteristics",
       "quantity": <integer: count of visible same-type units; 0 if unclear>,
       "metalContent": {
@@ -130,6 +133,30 @@ router.post(
       return;
     }
 
+    // Build catalog section from optional materialCatalog form field
+    let catalogSection =
+      "Use a short descriptive Polish name that best describes the material type you see.";
+    const rawCatalog = req.body?.materialCatalog;
+    if (typeof rawCatalog === "string" && rawCatalog.trim()) {
+      try {
+        const catalog: Array<{ id: string; name: string; nameEn?: string }> =
+          JSON.parse(rawCatalog);
+        if (Array.isArray(catalog) && catalog.length > 0) {
+          const lines = catalog
+            .map((m) => `  - "${m.name}"${m.nameEn ? ` (${m.nameEn})` : ""}`)
+            .join("\n");
+          catalogSection =
+            `Choose "materialType" from this EXACT catalog — use the EXACT Polish name as written:\n${lines}\n` +
+            `  If none matches well, you may use a descriptive Polish name. ` +
+            `  For non-e-waste always use "Nieelektroniczne — [Polish name]".`;
+        }
+      } catch {
+        // malformed JSON — fall back to free text
+      }
+    }
+
+    const prompt = ANALYSIS_PROMPT.replace("{{CATALOG_SECTION}}", catalogSection);
+
     const base64 = req.file.buffer.toString("base64");
     const dataUri = `data:${req.file.mimetype};base64,${base64}`;
 
@@ -142,7 +169,7 @@ router.post(
           {
             role: "user",
             content: [
-              { type: "text", text: ANALYSIS_PROMPT },
+              { type: "text", text: prompt },
               { type: "image_url", image_url: { url: dataUri, detail: "high" } },
             ],
           },

@@ -306,6 +306,13 @@ function findDbMaterial(
 ): string | null {
   if (!apiMaterials || !materialType) return null;
   const query = materialType.toLowerCase().trim();
+
+  // 1. Exact match (AI was given the catalog, so this should usually succeed)
+  for (const mat of apiMaterials) {
+    if (mat.name.toLowerCase().trim() === query) return mat.id;
+  }
+
+  // 2. Substring containment fallback
   for (const mat of apiMaterials) {
     const name = mat.name.toLowerCase();
     const nameEn = (mat.nameEn ?? "").toLowerCase();
@@ -313,6 +320,7 @@ function findDbMaterial(
       return mat.id;
     }
   }
+
   return null;
 }
 
@@ -416,6 +424,12 @@ export function PhotoAnalysisPage() {
     try {
       const formData = new FormData();
       formData.append("image", file);
+      if (apiMaterials && apiMaterials.length > 0) {
+        formData.append(
+          "materialCatalog",
+          JSON.stringify(apiMaterials.map((m) => ({ id: m.id, name: m.name, nameEn: m.nameEn }))),
+        );
+      }
 
       const response = await fetch(`${getApiBase()}/vision/analyze`, {
         method: "POST",
