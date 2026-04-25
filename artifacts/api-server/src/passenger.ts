@@ -1,6 +1,8 @@
 import express from "express";
 import compression from "compression";
 import path from "node:path";
+import { exec } from "node:child_process";
+import fs from "node:fs";
 
 import router from "./routes/index.js";
 
@@ -38,6 +40,40 @@ app.use("/api", function (req, res) {
   res
     .status(404)
     .json({ error: "Endpoint not found: " + req.method + " /api" + req.path });
+});
+
+app.post("/deploy", function (req, res) {
+  const secret = process.env.DEPLOY_SECRET;
+  if (!secret) {
+    res.status(503).json({ error: "Deploy endpoint not configured (brak DEPLOY_SECRET)" });
+    return;
+  }
+  const auth = req.headers["authorization"];
+  if (!auth || auth !== "Bearer " + secret) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const repoRoot = path.join(__dirname, "..");
+  const cmd = [
+    "git fetch origin",
+    "git checkout origin/main -- deploy/",
+  ].join(" && ");
+  exec(cmd, { cwd: repoRoot }, function (err, stdout, stderr) {
+    if (err) {
+      console.error("[deploy] git error:", err.message, stderr);
+      res.status(500).json({ error: err.message, stderr });
+      return;
+    }
+    try {
+      const tmpDir = path.join(__dirname, "tmp");
+      fs.mkdirSync(tmpDir, { recursive: true });
+      fs.writeFileSync(path.join(tmpDir, "restart.txt"), new Date().toISOString() + "\n");
+    } catch (e) {
+      console.warn("[deploy] restart.txt warning:", e);
+    }
+    console.log("[deploy] OK:", stdout.trim());
+    res.json({ ok: true, stdout: stdout.trim(), stderr: stderr.trim() });
+  });
 });
 
 const publicDir = path.join(__dirname, "public");

@@ -70,3 +70,8 @@ externalPort = 6000
 [[ports]]
 localPort = 21512
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+METALRECOVERY_DEPLOY_URL = "https://metalrecovery.online"
