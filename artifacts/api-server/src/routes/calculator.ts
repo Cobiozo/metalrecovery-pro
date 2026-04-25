@@ -134,13 +134,13 @@ const chemicalProcessesMap: Record<
       {
         name: "Kwas azotowy rozcieńczony (HNO3 25%)",
         concentration: 25,
-        amountPerKg: 0.5,
+        amountPerKg: 1.2,
         pricePerLiter: 22.0,
       },
       {
         name: "Chlorek sodu (wytrącanie AgCl)",
         concentration: 100,
-        amountPerKg: 0.01,
+        amountPerKg: 0.02,
         pricePerLiter: 3.0,
       },
       {
@@ -152,7 +152,7 @@ const chemicalProcessesMap: Record<
       {
         name: "Kwas solny HCl — rozpuszczenie cynku z osadu",
         concentration: 35,
-        amountPerKg: 0.05,
+        amountPerKg: 0.08,
         pricePerLiter: 18.0,
       },
     ],
@@ -168,7 +168,7 @@ const chemicalProcessesMap: Record<
       {
         name: "Kwas azotowy stężony (HNO3 65%)",
         concentration: 65,
-        amountPerKg: 0.4,
+        amountPerKg: 0.6,
         pricePerLiter: 28.0,
       },
       {
@@ -236,13 +236,13 @@ const chemicalProcessesMap: Record<
       {
         name: "Azotan sodu (NaNO3)",
         concentration: 99,
-        amountPerKg: 0.15,
+        amountPerKg: 0.20,
         pricePerLiter: 18.0,
       },
       {
         name: "Kwas siarkowy (H2SO4)",
         concentration: 98,
-        amountPerKg: 0.5,
+        amountPerKg: 0.3,
         pricePerLiter: 28.0,
       },
       {

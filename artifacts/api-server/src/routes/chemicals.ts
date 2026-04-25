@@ -115,14 +115,14 @@ const chemicalProcesses = [
         formula: "HNO3",
         concentration: 25,
         availableConcentrations: [20, 25, 30, 35, 45, 50],
-        amountPerKg: 0.5,
+        amountPerKg: 1.2,
         pricePerLiter: 22.0,
       },
       {
         name: "Chlorek sodu (wytrącanie AgCl)",
         formula: "NaCl",
         concentration: 100,
-        amountPerKg: 0.01,
+        amountPerKg: 0.02,
         pricePerLiter: 3.0,
       },
       {
@@ -137,7 +137,7 @@ const chemicalProcesses = [
         formula: "HCl",
         concentration: 35,
         availableConcentrations: [25, 30, 33, 35, 37],
-        amountPerKg: 0.05,
+        amountPerKg: 0.08,
         pricePerLiter: 18.0,
       },
     ],
@@ -153,8 +153,8 @@ const chemicalProcesses = [
     steps: [
       ...PREP_STEPS_ELECTRONIC,
       "BHP: wyciąg, rękawice kwasoodporne, gogle ochronne",
-      "Przygotuj HNO3 25% w naczyniu kwasoodpornym",
-      "Dodaj wsad elektroniczny porcjami — obserwuj intensywność reakcji (opary NO2)",
+      "Przygotuj HNO3 25% w naczyniu kwasoodpornym (~1200 ml/kg wsadu aktywnego — ilość krytyczna dla pełnego rozpuszczenia Cu/Ag/Ni)",
+      "Dodaj wsad elektroniczny porcjami — obserwuj intensywność reakcji (brunatne opary NO2)",
       "Mieszaj i podgrzewaj do 40°C przez 2-4h — Cu, Ag, Ni, Pb przechodzą do roztworu",
       "Odsącz osad (Au, Pt, ceramika) — cenny wsad do dalszego procesu wody królewskiej",
       "Wytrącanie Ag: do filtratu dodaj NaCl — wytrąca się AgCl (biały osad)",
@@ -179,7 +179,7 @@ const chemicalProcesses = [
         formula: "HNO3",
         concentration: 65,
         availableConcentrations: [50, 55, 60, 65, 68],
-        amountPerKg: 0.4,
+        amountPerKg: 0.6,
         pricePerLiter: 28.0,
       },
       {
@@ -305,7 +305,7 @@ const chemicalProcesses = [
         name: "Azotan sodu (NaNO3)",
         formula: "NaNO3",
         concentration: 99,
-        amountPerKg: 0.15,
+        amountPerKg: 0.20,
         pricePerLiter: 18.0,
       },
       {
@@ -313,7 +313,7 @@ const chemicalProcesses = [
         formula: "H2SO4",
         concentration: 98,
         availableConcentrations: [50, 70, 80, 96, 98],
-        amountPerKg: 0.5,
+        amountPerKg: 0.3,
         pricePerLiter: 28.0,
       },
       {
