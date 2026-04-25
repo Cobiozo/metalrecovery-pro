@@ -115,10 +115,12 @@ function VisionResultCard({
   result,
   onSaveProfile,
   onQuantityChange,
+  weightPerPieceKg,
 }: {
   result: VisionItem;
   onSaveProfile: () => void;
   onQuantityChange: (qty: number) => void;
+  weightPerPieceKg?: number;
 }) {
   const [qty, setQty] = useState<number>(result.quantity > 0 ? result.quantity : 0);
 
@@ -206,6 +208,11 @@ function VisionResultCard({
             {result.quantity > 0 && qty === result.quantity && (
               <span className="text-xs text-muted-foreground/60 font-mono">
                 ~{result.quantity} wg AI
+              </span>
+            )}
+            {weightPerPieceKg && qty > 0 && (
+              <span className="text-xs text-blue-400 font-mono">
+                ≈ {(qty * weightPerPieceKg).toFixed(3)} kg
               </span>
             )}
           </div>
@@ -380,6 +387,21 @@ export function PhotoAnalysisPage() {
     return mat.id;
   }
 
+  function piecesToKg(materialId: string, pieceCnt: number): number {
+    const mat = apiMaterials?.find(m => m.id === materialId) as any;
+    if (mat && mat.unit === "kg" && mat.weightPerPiece > 0 && pieceCnt > 0) {
+      return Math.round(pieceCnt * mat.weightPerPiece * 1000) / 1000;
+    }
+    return pieceCnt;
+  }
+
+  function getWeightPerPieceKg(materialType: string): number | undefined {
+    const dbId = findDbMaterial(apiMaterials, materialType);
+    if (!dbId) return undefined;
+    const mat = apiMaterials?.find(m => m.id === dbId) as any;
+    return (mat?.unit === "kg" && mat?.weightPerPiece > 0) ? mat.weightPerPiece : undefined;
+  }
+
   function navigateAll(
     items: VisionItem[],
     quantities: number[],
@@ -396,9 +418,10 @@ export function PhotoAnalysisPage() {
         const { item, qty } = ewaste[0];
         const quality = item.platingAnalysis.quality_1_to_5 ?? null;
         const materialId = resolveItemMaterial(item);
+        const effectiveQty = piecesToKg(materialId, qty);
         localStorage.setItem("metalrecovery_vision_new_material", materialId);
-        if (qty > 0) {
-          localStorage.setItem("metalrecovery_vision_quantity", String(qty));
+        if (effectiveQty > 0) {
+          localStorage.setItem("metalrecovery_vision_quantity", String(effectiveQty));
         } else {
           localStorage.removeItem("metalrecovery_vision_quantity");
         }
@@ -412,9 +435,11 @@ export function PhotoAnalysisPage() {
         const batch = ewaste.map(({ item, qty }) => {
           const quality = item.platingAnalysis.quality_1_to_5 ?? null;
           const auMult = quality ? (QUALITY_AU_MULTIPLIER[quality] ?? 1.0) : undefined;
+          const materialId = resolveItemMaterial(item);
+          const effectiveQty = piecesToKg(materialId, qty);
           return {
-            materialId: resolveItemMaterial(item),
-            quantity: Math.max(1, qty),
+            materialId,
+            quantity: Math.max(0.001, effectiveQty),
             ...(auMult !== undefined && auMult !== 1.0 ? { auMultiplier: auMult } : {}),
           };
         });
@@ -664,6 +689,7 @@ export function PhotoAnalysisPage() {
             <VisionResultCard
               key={idx}
               result={item}
+              weightPerPieceKg={getWeightPerPieceKg(item.materialType)}
               onSaveProfile={() => setSaveItem(item)}
               onQuantityChange={(qty) =>
                 setEditedQuantities((prev) => {

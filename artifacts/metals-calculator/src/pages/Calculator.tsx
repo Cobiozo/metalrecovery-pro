@@ -152,7 +152,7 @@ export function CalculatorPage() {
             parsed.map((entry, i) => ({
               id: (Date.now() + i).toString(),
               materialId: entry.materialId,
-              quantity: Math.max(1, entry.quantity || 1),
+              quantity: Math.max(0.001, entry.quantity || 0.001),
               ...(entry.auMultiplier ? { auMultiplier: entry.auMultiplier } : {}),
             })),
           );
@@ -168,7 +168,7 @@ export function CalculatorPage() {
         localStorage.removeItem("metalrecovery_vision_plating_quality");
         const QUALITY_MULT: Record<number, number> = { 1: 0.65, 2: 0.80, 3: 1.00, 4: 1.20, 5: 1.40 };
         const auMultiplier = rawQuality ? (QUALITY_MULT[Number(rawQuality)] ?? undefined) : undefined;
-        const qty = rawQty ? Math.max(1, parseInt(rawQty, 10) || 1) : 1;
+        const qty = rawQty ? Math.max(0.001, parseFloat(rawQty) || 0.001) : 1;
         setBatchItems([{
           id: Date.now().toString(),
           materialId: visionMaterialId,
