@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useCalculateRecovery, useCompareProcesses, CalculationResult, ProcessCompareResult } from "@workspace/api-client-react";
 import { useCustomMaterials, getInlineContent } from "@/lib/useCustomMaterials";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -120,6 +120,13 @@ export function CalculatorPage() {
   const [showCompare, setShowCompare] = useState(false);
   const [compareData, setCompareData] = useState<ProcessCompareResult[] | null>(null);
 
+  const processNextBtnRef = useRef<HTMLDivElement>(null);
+
+  const changeTab = useCallback((tab: string) => {
+    setActiveTab(tab);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   const { data: apiMaterials, isLoading: materialsLoading } = useGetElectronicMaterials({
     query: { queryKey: getGetElectronicMaterialsQueryKey() }
   });
@@ -188,7 +195,7 @@ export function CalculatorPage() {
     mutation: {
       onSuccess: (data) => {
         setResult(data);
-        setActiveTab("wyniki");
+        changeTab("wyniki");
       }
     }
   });
@@ -337,7 +344,7 @@ export function CalculatorPage() {
     setProcessParams(session.processParams);
     setResult(session.result);
     setShowHistory(false);
-    setActiveTab("wyniki");
+    changeTab("wyniki");
   };
 
   const handleDeleteSession = (id: string) => {
@@ -436,7 +443,7 @@ export function CalculatorPage() {
         </Card>
       )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={changeTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8 h-12 bg-muted/50 p-1">
           <TabsTrigger value="wsad" className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <span className="hidden sm:inline">1. Materiał wsadu</span>
@@ -594,7 +601,7 @@ export function CalculatorPage() {
                   )}
                 </Button>
                 <Button
-                  onClick={() => setActiveTab("proces")}
+                  onClick={() => changeTab("proces")}
                   disabled={!canGoToProcess}
                   className="flex-1 sm:flex-none"
                 >
@@ -654,7 +661,12 @@ export function CalculatorPage() {
                         ? 'border-primary bg-primary/5'
                         : 'border-border bg-card hover:border-primary/50'
                     }`}
-                    onClick={() => setSelectedProcessId(process.id)}
+                    onClick={() => {
+                      setSelectedProcessId(process.id);
+                      setTimeout(() => {
+                        processNextBtnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                      }, 120);
+                    }}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold text-lg leading-tight">{process.name}</h3>
@@ -819,8 +831,8 @@ export function CalculatorPage() {
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
-                <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do materiału</Button>
+              <CardFooter ref={processNextBtnRef} className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
+                <Button variant="ghost" onClick={() => changeTab("wsad")}>Wróć do materiału</Button>
                 <Button
                   onClick={handleCalculate}
                   disabled={!selectedProcessId || calculateMutation.isPending}
@@ -834,7 +846,7 @@ export function CalculatorPage() {
 
           {!selectedProcess && (
             <CardFooter className="bg-muted/30 border border-border rounded-lg flex justify-between items-center py-4 px-6">
-              <Button variant="ghost" onClick={() => setActiveTab("wsad")}>Wróć do materiału</Button>
+              <Button variant="ghost" onClick={() => changeTab("wsad")}>Wróć do materiału</Button>
               <Button
                 onClick={handleCalculate}
                 disabled={!selectedProcessId || calculateMutation.isPending}
@@ -987,7 +999,7 @@ export function CalculatorPage() {
                           </div>
                         </div>
                       )}
-                      <Button variant="outline" className="w-full" onClick={() => { setResult(null); setBatchItems([{ id: '1', materialId: '', quantity: 1 }]); setSelectedProcessId(''); setActiveTab("wsad"); }}>
+                      <Button variant="outline" className="w-full" onClick={() => { setResult(null); setBatchItems([{ id: '1', materialId: '', quantity: 1 }]); setSelectedProcessId(''); changeTab("wsad"); }}>
                         Nowa kalkulacja
                       </Button>
                     </div>

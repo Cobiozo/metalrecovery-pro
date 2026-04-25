@@ -186,7 +186,7 @@ export const electronicMaterials = [
     nameEn: "Telecom exchange backplane connectors (DIN/Metral)",
     category: "pcb",
     unit: "kg",
-    weightPerPiece: 0.80,
+    weightPerPiece: 0.15,
     requiresCleaning: true,
     cleanedMultiplier: { Au: 1.25, Ag: 1.15, Pt: 1.15, Pd: 1.20 },
     catalogHint: "DENSE ARRAY of hundreds of shiny gold-colored pins in a block/housing — connector assembly from telephone exchange, no green PCB substrate, looks like a golden comb or grid of pins",
