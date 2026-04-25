@@ -153,19 +153,21 @@ export function CalculatorPage() {
   });
 
   const buildBatchForApi = () =>
-    batchItems.map((item) => {
-      const material = materials?.find((m) => m.id === item.materialId);
-      const nativeUnit = material?.unit === "piece" ? "piece" : "kg";
-      const effectiveUnit = getEffectiveUnit(item);
-      let quantity = item.quantity;
-      if (effectiveUnit === "piece" && nativeUnit === "kg") {
-        quantity = item.quantity * getWeightPerPiece(item);
-      } else if (effectiveUnit === "kg" && nativeUnit === "piece") {
-        const wpp = getWeightPerPiece(item);
-        quantity = wpp > 0 ? Math.round(item.quantity / wpp) : item.quantity;
-      }
-      return { materialId: item.materialId, quantity };
-    });
+    batchItems
+      .filter((item) => item.materialId && item.quantity > 0)
+      .map((item) => {
+        const material = materials?.find((m) => m.id === item.materialId);
+        const nativeUnit = material?.unit === "piece" ? "piece" : "kg";
+        const effectiveUnit = getEffectiveUnit(item);
+        let quantity = item.quantity;
+        if (effectiveUnit === "piece" && nativeUnit === "kg") {
+          quantity = item.quantity * getWeightPerPiece(item);
+        } else if (effectiveUnit === "kg" && nativeUnit === "piece") {
+          const wpp = getWeightPerPiece(item);
+          quantity = wpp > 0 ? Math.round(item.quantity / wpp) : item.quantity;
+        }
+        return { materialId: item.materialId, quantity };
+      });
 
   const handleCompare = () => {
     if (!canGoToProcess) return;
