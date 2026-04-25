@@ -28,6 +28,10 @@ type MaterialEntry = {
   weightPerPiece?: number;
   requiresCleaning?: boolean;
   cleanedMultiplier?: { Au: number; Ag: number; Pt: number; Pd: number };
+  /** Fraction of the batch mass that is actually processed by chemistry (0–1).
+   *  For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers)
+   *  only the electronic sub-assembly fraction undergoes chemical dissolution. */
+  chemFraction?: number;
   metalContentPerKg: {
     Au: { typical: number };
     Ag: { typical: number };
@@ -42,12 +46,14 @@ const electronicMaterialsMap = Object.fromEntries(
       weightPerPiece?: number;
       requiresCleaning?: boolean;
       cleanedMultiplier?: { Au: number; Ag: number; Pt: number; Pd: number };
+      chemFraction?: number;
     };
     const entry: MaterialEntry = {
       unit: m.unit,
       weightPerPiece: mat.weightPerPiece,
       requiresCleaning: mat.requiresCleaning,
       cleanedMultiplier: mat.cleanedMultiplier,
+      chemFraction: mat.chemFraction,
       metalContentPerKg: {
         Au: { typical: m.metalContentPerKg.Au.typical },
         Ag: { typical: m.metalContentPerKg.Ag.typical },
@@ -471,6 +477,7 @@ function computeCompareResult(
   const process = chemicalProcessesMap[processId]!;
 
   let totalMassKg = 0;
+  let chemMassKg = 0; // mass fraction that actually undergoes chemical processing
   const totalMetalsG = { Au: 0, Ag: 0, Pt: 0, Pd: 0 };
 
   for (const item of batch) {
@@ -478,6 +485,8 @@ function computeCompareResult(
     const content = resolveItemMetalContent(item);
     if (!content) continue;
     totalMassKg += massKg;
+    const mat = electronicMaterialsMap[item.materialId];
+    chemMassKg += massKg * (mat?.chemFraction ?? 1.0);
     totalMetalsG.Au += content.Au * massKg;
     totalMetalsG.Ag += content.Ag * massKg;
     totalMetalsG.Pt += content.Pt * massKg;
@@ -499,10 +508,10 @@ function computeCompareResult(
   totalRevenuePln = Math.round(totalRevenuePln * 100) / 100;
 
   const chemistryCost = process.reagents.reduce(
-    (sum, r) => sum + r.amountPerKg * totalMassKg * r.pricePerLiter,
+    (sum, r) => sum + r.amountPerKg * chemMassKg * r.pricePerLiter,
     0,
   );
-  const electricityCost = process.electricityKwhPerKg * totalMassKg * electricityPricePerKwh;
+  const electricityCost = process.electricityKwhPerKg * chemMassKg * electricityPricePerKwh;
   const totalCostPln = Math.round((chemistryCost + electricityCost) * 100) / 100;
   const netProfitPln = Math.round((totalRevenuePln - totalCostPln) * 100) / 100;
 
@@ -666,6 +675,7 @@ router.post("/calculator/estimate", async (req, res) => {
   const metalPrices = await getOrFetchPrices();
 
   let totalMassKg = 0;
+  let chemMassKg = 0; // mass fraction that actually undergoes chemical processing
   const totalMetalsGPerKg = { Au: 0, Ag: 0, Pt: 0, Pd: 0 };
 
   for (const item of body.batch) {
@@ -673,6 +683,8 @@ router.post("/calculator/estimate", async (req, res) => {
     const content = resolveItemMetalContent(item);
     if (!content) continue;
     totalMassKg += massKg;
+    const mat = electronicMaterialsMap[item.materialId];
+    chemMassKg += massKg * (mat?.chemFraction ?? 1.0);
     totalMetalsGPerKg.Au += content.Au * massKg;
     totalMetalsGPerKg.Ag += content.Ag * massKg;
     totalMetalsGPerKg.Pt += content.Pt * massKg;
@@ -716,7 +728,7 @@ router.post("/calculator/estimate", async (req, res) => {
       : 1.0;
   const electricityConcFactor = Math.max(0.4, Math.min(1.5, concFactor));
   const electricityCostPln =
-    process.electricityKwhPerKg * totalMassKg * electricityPricePerKwh * electricityConcFactor;
+    process.electricityKwhPerKg * chemMassKg * electricityPricePerKwh * electricityConcFactor;
 
   const reagentPriceOverrides = body.reagentPriceOverrides ?? {};
   const chemistryCosts = process.reagents.map((reagent, idx) => {
@@ -740,7 +752,7 @@ router.post("/calculator/estimate", async (req, res) => {
       effectivePrice = basePrice / volFactor;
     }
 
-    const amountLiters = effectiveAmountPerKg * totalMassKg;
+    const amountLiters = effectiveAmountPerKg * chemMassKg;
     const totalCost = amountLiters * effectivePrice;
     return {
       reagentName: reagent.name,

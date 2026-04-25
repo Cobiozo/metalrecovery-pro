@@ -370,6 +370,9 @@ components:
         catalogHint:
           type: string
           description: Short English visual description to help AI/vision models match photos to this material type
+        chemFraction:
+          type: number
+          description: Fraction of batch mass that undergoes chemical processing (0–1). For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers) only the electronic sub-assembly fraction is dissolved. Used to compute realistic reagent volumes and electricity costs.
       required: [id, name, nameEn, category, unit, metalContentPerKg]
 
     Reagent:

@@ -127,6 +127,8 @@ export interface ElectronicMaterial {
   cleanedMultiplier?: CleanedMultiplier;
   /** Short English visual description to help AI/vision models match photos to this material type */
   catalogHint?: string;
+  /** Fraction of batch mass that undergoes chemical processing (0–1). For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers) only the electronic sub-assembly fraction is dissolved. */
+  chemFraction?: number;
 }
 
 export interface Reagent {
