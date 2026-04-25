@@ -119,9 +119,11 @@ function VisionResultCard({
 }: {
   result: VisionItem;
   onSaveProfile: () => void;
-  onCalculate: () => void;
-  onSkup: () => void;
+  onCalculate: (qty: number) => void;
+  onSkup: (qty: number) => void;
 }) {
+  const [qty, setQty] = useState<number>(result.quantity > 0 ? result.quantity : 0);
+
   const metals = [
     { key: "Au" as const, label: "Złoto (Au)", color: "text-yellow-400" },
     { key: "Ag" as const, label: "Srebro (Ag)", color: "text-slate-300" },
@@ -154,11 +156,6 @@ function VisionResultCard({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <CardTitle className="text-base">{result.materialType}</CardTitle>
-                {result.quantity > 0 && (
-                  <Badge variant="outline" className="text-xs border-primary/40 text-primary bg-primary/10 font-mono shrink-0">
-                    ~{result.quantity} szt.
-                  </Badge>
-                )}
               </div>
               <CardDescription className="text-sm mt-1 leading-relaxed">
                 {result.description}
@@ -166,6 +163,50 @@ function VisionResultCard({
             </div>
           </div>
         </CardHeader>
+        <CardContent className="pt-0 pb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground shrink-0">Ilość (szt.):</span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40"
+                onClick={() => setQty((q) => Math.max(0, q - 1))}
+                disabled={qty <= 0}
+                aria-label="Zmniejsz ilość"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min={0}
+                value={qty}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v) && v >= 0) setQty(v);
+                }}
+                className="w-14 h-7 text-center text-sm font-mono bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <button
+                type="button"
+                className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors"
+                onClick={() => setQty((q) => q + 1)}
+                aria-label="Zwiększ ilość"
+              >
+                +
+              </button>
+            </div>
+            {result.quantity > 0 && qty !== result.quantity && (
+              <span className="text-xs text-muted-foreground italic">
+                (AI: ~{result.quantity})
+              </span>
+            )}
+            {result.quantity > 0 && qty === result.quantity && (
+              <span className="text-xs text-muted-foreground/60 font-mono">
+                ~{result.quantity} wg AI
+              </span>
+            )}
+          </div>
+        </CardContent>
       </Card>
 
       <Card className="border-border">
@@ -280,11 +321,11 @@ function VisionResultCard({
             </div>
           )}
           <div className="grid grid-cols-2 gap-2">
-            <Button className="gap-2 text-sm" onClick={onCalculate}>
+            <Button className="gap-2 text-sm" onClick={() => onCalculate(qty)}>
               <FlaskConical className="w-4 h-4" />
               Kalkulator
             </Button>
-            <Button variant="outline" className="gap-2 text-sm" onClick={onSkup}>
+            <Button variant="outline" className="gap-2 text-sm" onClick={() => onSkup(qty)}>
               <ShoppingCart className="w-4 h-4" />
               Skup
             </Button>
@@ -642,8 +683,8 @@ export function PhotoAnalysisPage() {
               key={idx}
               result={item}
               onSaveProfile={() => setSaveItem(item)}
-              onCalculate={() => navigateWithVision(item, "/")}
-              onSkup={() => navigateWithVision(item, "/skup")}
+              onCalculate={(qty) => navigateWithVision({ ...item, quantity: qty }, "/")}
+              onSkup={(qty) => navigateWithVision({ ...item, quantity: qty }, "/skup")}
             />
           ))}
 
