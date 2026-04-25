@@ -88,31 +88,31 @@ const chemicalProcessesMap: Record<
       {
         name: "Kwas azotowy rozcieńczony — pre-trawienie (HNO3 25%)",
         concentration: 25,
-        amountPerKg: 0.5,
+        amountPerKg: 1.5,
         pricePerLiter: 22.0,
       },
       {
         name: "Kwas solny (HCl)",
         concentration: 35,
-        amountPerKg: 0.4,
+        amountPerKg: 1.0,
         pricePerLiter: 18.0,
       },
       {
         name: "Kwas azotowy stężony (HNO3 65%)",
         concentration: 65,
-        amountPerKg: 0.15,
+        amountPerKg: 0.33,
         pricePerLiter: 28.0,
       },
       {
         name: "Mocznik (rozkład nadmiaru HNO3)",
         concentration: 99,
-        amountPerKg: 0.03,
+        amountPerKg: 0.05,
         pricePerLiter: 4.0,
       },
       {
         name: "Wodorosiarczyn sodu — reduktor SMB (wytrącanie Au)",
         concentration: 40,
-        amountPerKg: 0.02,
+        amountPerKg: 0.03,
         pricePerLiter: 12.0,
       },
       {

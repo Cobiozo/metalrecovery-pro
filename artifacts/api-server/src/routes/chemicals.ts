@@ -35,7 +35,7 @@ const chemicalProcesses = [
         formula: "HNO3",
         concentration: 25,
         availableConcentrations: [20, 25, 30, 35, 45, 50],
-        amountPerKg: 0.5,
+        amountPerKg: 1.5,
         pricePerLiter: 22.0,
       },
       {
@@ -43,7 +43,7 @@ const chemicalProcesses = [
         formula: "HCl",
         concentration: 35,
         availableConcentrations: [25, 30, 33, 35, 37],
-        amountPerKg: 0.4,
+        amountPerKg: 1.0,
         pricePerLiter: 18.0,
       },
       {
@@ -51,14 +51,14 @@ const chemicalProcesses = [
         formula: "HNO3",
         concentration: 65,
         availableConcentrations: [50, 55, 60, 65, 68],
-        amountPerKg: 0.15,
+        amountPerKg: 0.33,
         pricePerLiter: 28.0,
       },
       {
         name: "Mocznik (rozkład nadmiaru HNO3)",
         formula: "CO(NH2)2",
         concentration: 99,
-        amountPerKg: 0.03,
+        amountPerKg: 0.05,
         pricePerLiter: 4.0,
       },
       {
@@ -66,7 +66,7 @@ const chemicalProcesses = [
         formula: "NaHSO3",
         concentration: 40,
         availableConcentrations: [35, 40, 45],
-        amountPerKg: 0.02,
+        amountPerKg: 0.03,
         pricePerLiter: 12.0,
       },
       {
@@ -89,7 +89,7 @@ const chemicalProcesses = [
     steps: [
       ...PREP_STEPS_ELECTRONIC,
       "BHP: sprawdź wyciąg, załóż maskę ABEK P3, rękawice kwasoodporne i gogle przed rozpoczęciem",
-      "Pre-trawienie HNO3: rozdrobniony wsad zalej HNO3 25% (~500 ml/kg), podgrzej do 40°C przez 2-3h — usuwa Cu, Ni, Pb, Fe, Sn",
+      "Pre-trawienie HNO3: rozdrobniony wsad zalej HNO3 25% (~1500 ml/kg wsadu aktywnego), podgrzej do 40–50°C przez 2-4h — usuwa Cu, Ni, Pb, Fe, Sn; HNO3 jest KONIECZNY przed wodą królewską",
       "Odsącz i przemyj osad (Au, Pt, Pd, AgCl, ceramika) wodą destylowaną — filtrat z HNO3 zachowaj do odzysku Ag i Cu",
       "Woda królewska: przygotuj mieszaninę HCl 35% + HNO3 65% w proporcji 3:1 (obj.) w naczyniu PTFE lub szkle borokrzemowym",
       "Powoli wsypuj osad do wody królewskiej, podgrzewaj do 60-70°C mieszając co 30 min — Au, Pt, Pd przechodzą do roztworu",

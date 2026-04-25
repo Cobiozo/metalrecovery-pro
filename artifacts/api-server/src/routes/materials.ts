@@ -206,6 +206,7 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.008,
+    chemFraction: 0.60,
     catalogHint: "black or gold plastic DIP socket (28/40/48-pin) with two rows of gold-plated contact pins and a lever or ZIF mechanism — used for IC programming or testing — typically 20-50mm long, from electronic repair equipment or chip programmer kits — NOT a telecom connector block",
     metalContentPerKg: {
       Au: { min: 0.5, max: 4.0, typical: 1.8 },
@@ -213,7 +214,7 @@ export const electronicMaterials = [
       Pt: { min: 0.0, max: 0.005, typical: 0.001 },
       Pd: { min: 0.005, max: 0.05, typical: 0.020 },
     },
-    notes: "Podstawki ZIF (Zero Insertion Force), gniazda do programowania i testowania układów scalonych DIP/PLCC/SOIC (~8g/szt). Kontakty pokryte Au (5-20 µin nad Ni/Co). Tańsze chińskie podstawki: ~0.5-1 g/kg Au. Precyzyjne (Textool, Enplas, Yamaichi): do 4 g/kg Au. Typowa partia mieszana ~1.5-2 g/kg. Głównie Cu/mosiądz w pinach. Plastik do usunięcia przed procesem.",
+    notes: "Podstawki ZIF (Zero Insertion Force), gniazda do programowania i testowania układów scalonych DIP/PLCC/SOIC (~8g/szt). Kontakty pokryte Au (5-20 µin nad Ni/Co). Tańsze chińskie podstawki: ~0.5-1 g/kg Au. Precyzyjne (Textool, Enplas, Yamaichi): do 4 g/kg Au. Typowa partia mieszana ~1.5-2 g/kg. Głównie Cu/mosiądz w pinach. chemFraction=0.60 — piny i obudowa metalowa ~60% masy, korpus plastikowy ~40% (usunąć mechanicznie dla lepszej czystości wsadu).",
   },
   {
     id: "simm_connector",
@@ -222,6 +223,7 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.005,
+    chemFraction: 0.65,
     catalogHint: "L-shaped or C-shaped gold-plated metal connector bracket (70-100mm long), narrow slot in the middle where a SIMM module slides in, rows of tiny gold-plated spring contacts inside — pulled from old motherboard or expansion card — NOT a modern DIMM slot",
     metalContentPerKg: {
       Au: { min: 0.8, max: 3.5, typical: 1.8 },
@@ -229,7 +231,7 @@ export const electronicMaterials = [
       Pt: { min: 0.0, max: 0.005, typical: 0.001 },
       Pd: { min: 0.010, max: 0.08, typical: 0.035 },
     },
-    notes: "Złącza slotów SIMM (30-pin i 72-pin) wyjęte z płyt głównych i kart pamięci (era ISA/486/Pentium, lata 1988-1998). Kontakty sprężynowe Au/Ni (~10-20 µin Au). Wartości podobne do podstawek ZIF. Plastik izolacyjny stanowi ~40-50% masy — uwzględnione w metalContentPerKg.",
+    notes: "Złącza slotów SIMM (30-pin i 72-pin) wyjęte z płyt głównych i kart pamięci (era ISA/486/Pentium, lata 1988-1998). Kontakty sprężynowe Au/Ni (~10-20 µin Au). chemFraction=0.65 — mosiężne piny i okucia metalowe ~65% masy; izolator plastikowy/ceramiczny ~35%. Wartości metalContent uwzględniają pełną masę (metal+plastik).",
   },
   {
     id: "ic_socket_mixed",
@@ -238,6 +240,7 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.003,
+    chemFraction: 0.50,
     catalogHint: "small black rectangular plastic DIP socket (8 to 40 pins), two rows of silver or gold contact pins on the sides — standard through-hole IC sockets — sold in bulk in repair workshops — lower gold plating than ZIF sockets",
     metalContentPerKg: {
       Au: { min: 0.1, max: 1.0, typical: 0.35 },
@@ -245,7 +248,7 @@ export const electronicMaterials = [
       Pt: { min: 0.0, max: 0.003, typical: 0.0 },
       Pd: { min: 0.002, max: 0.02, typical: 0.008 },
     },
-    notes: "Zwykłe podstawki DIP (standard grade, nie ZIF) do układów CMOS/TTL/EPROM w montażu PTH (~3g/szt). Tańsze złocenie niż ZIF — często tylko nikiel ze śladowym Au lub brak Au. Wartość odzysku niska — głównie Cu i śladowe Au z bond wires. Plastik ~30-40% masy.",
+    notes: "Zwykłe podstawki DIP (standard grade, nie ZIF) do układów CMOS/TTL/EPROM w montażu PTH (~3g/szt). Tańsze złocenie niż ZIF — często tylko nikiel ze śladowym Au lub brak Au. chemFraction=0.50 — piny metalowe ~50%, gruby korpus plastikowy ~50%. Wartość odzysku niska — głównie Cu i śladowe Au.",
   },
 
   {
