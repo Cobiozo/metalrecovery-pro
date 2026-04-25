@@ -200,7 +200,7 @@ export function PricesPage() {
           Aktualne Kursy Metali
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Ceny skupu z rynku globalnego (PLN/g) · aktualizacja raz na 24h
+          Ceny skupu z rynku globalnego (PLN/g) · aktualizacja co 1h
         </p>
       </div>
 
