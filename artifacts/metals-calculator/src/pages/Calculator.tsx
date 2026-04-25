@@ -119,6 +119,7 @@ export function CalculatorPage() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [compareData, setCompareData] = useState<ProcessCompareResult[] | null>(null);
+  const [purchaseCost, setPurchaseCost] = useState<number>(0);
 
   const processNextBtnRef = useRef<HTMLDivElement>(null);
 
@@ -578,12 +579,35 @@ export function CalculatorPage() {
                 <Plus className="mr-2 h-4 w-4" /> Dodaj kolejny materiał
               </Button>
             </CardContent>
-            <CardFooter className="bg-muted/30 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 py-4">
-              <div className="text-sm">
-                <span className="text-muted-foreground">Szacowana masa całkowita:</span>
-                <span className="font-mono font-bold ml-2 text-lg">{formatMass(totalMass, 'kg')}</span>
+            <CardFooter className="bg-muted/30 border-t border-border flex flex-col gap-3 py-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Szacowana masa całkowita:</span>
+                  <span className="font-mono font-bold ml-2 text-lg">{formatMass(totalMass, 'kg')}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <label htmlFor="purchase-cost" className="text-muted-foreground whitespace-nowrap">
+                    Wkład własny (koszt zakupu):
+                  </label>
+                  <div className="relative w-32">
+                    <Input
+                      id="purchase-cost"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="0"
+                      value={purchaseCost === 0 ? "" : purchaseCost}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        setPurchaseCost(isNaN(v) || v < 0 ? 0 : v);
+                      }}
+                      className="bg-background pr-7 font-mono text-sm h-8"
+                    />
+                    <span className="absolute right-2 top-1.5 text-xs text-muted-foreground">zł</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 w-full sm:w-auto sm:self-end">
                 <Button
                   variant="outline"
                   onClick={handleCompare}
@@ -861,43 +885,55 @@ export function CalculatorPage() {
           {result && (
             <>
               {/* ── Baner opłacalności (zawsze na górze) ─────────────────── */}
-              <div className={`rounded-xl border-2 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 ${
-                result.profitabilityRating === 'very_profitable' ? 'bg-success/10 border-success/40 text-success' :
-                result.profitabilityRating === 'profitable'      ? 'bg-primary/10 border-primary/40 text-primary' :
-                result.profitabilityRating === 'marginal'        ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-400' :
-                'bg-destructive/10 border-destructive/40 text-destructive'
-              }`}>
-                <div className="flex items-center gap-3 flex-1">
-                  {result.profitabilityRating === 'not_profitable'
-                    ? <AlertTriangle className="h-7 w-7 shrink-0" />
-                    : <TrendingUp className="h-7 w-7 shrink-0" />}
-                  <div>
-                    <div className="font-bold text-lg uppercase tracking-wider leading-tight">
-                      {{
-                        very_profitable: 'Bardzo opłacalne',
-                        profitable: 'Opłacalne',
-                        marginal: 'Marginalna opłacalność',
-                        not_profitable: 'Nieopłacalne',
-                      }[result.profitabilityRating] ?? result.profitabilityRating}
+              {(() => {
+                const finalProfit = result.netProfitPln - purchaseCost;
+                const hasPurchaseCost = purchaseCost > 0;
+                const finalRating = hasPurchaseCost
+                  ? (finalProfit > result.totalRevenuePln * 0.3 ? 'very_profitable'
+                    : finalProfit > 0 ? 'profitable'
+                    : finalProfit > -result.totalRevenuePln * 0.1 ? 'marginal'
+                    : 'not_profitable')
+                  : result.profitabilityRating;
+                return (
+                  <div className={`rounded-xl border-2 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 ${
+                    finalRating === 'very_profitable' ? 'bg-success/10 border-success/40 text-success' :
+                    finalRating === 'profitable'      ? 'bg-primary/10 border-primary/40 text-primary' :
+                    finalRating === 'marginal'        ? 'bg-yellow-500/10 border-yellow-500/40 text-yellow-400' :
+                    'bg-destructive/10 border-destructive/40 text-destructive'
+                  }`}>
+                    <div className="flex items-center gap-3 flex-1">
+                      {finalRating === 'not_profitable'
+                        ? <AlertTriangle className="h-7 w-7 shrink-0" />
+                        : <TrendingUp className="h-7 w-7 shrink-0" />}
+                      <div>
+                        <div className="font-bold text-lg uppercase tracking-wider leading-tight">
+                          {{
+                            very_profitable: 'Bardzo opłacalne',
+                            profitable: 'Opłacalne',
+                            marginal: 'Marginalna opłacalność',
+                            not_profitable: 'Nieopłacalne',
+                          }[finalRating] ?? finalRating}
+                        </div>
+                        <div className="text-sm opacity-80 mt-0.5">{result.profitabilityNote}</div>
+                      </div>
                     </div>
-                    <div className="text-sm opacity-80 mt-0.5">{result.profitabilityNote}</div>
+                    <div className="flex items-center gap-6 shrink-0 pl-1 sm:pl-4 border-t sm:border-t-0 sm:border-l border-current/20 pt-3 sm:pt-0 sm:pl-6">
+                      <div className="text-center">
+                        <div className="text-xs opacity-60 uppercase mb-0.5">Przychód</div>
+                        <div className="font-mono font-bold text-base">{formatCurrency(result.totalRevenuePln)}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs opacity-60 uppercase mb-0.5">Koszty</div>
+                        <div className="font-mono font-bold text-base">-{formatCurrency(result.totalChemistryCostPln + result.electricityCostPln + purchaseCost)}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs opacity-60 uppercase mb-0.5 font-bold">{hasPurchaseCost ? 'Zysk po zakupie' : 'Zysk netto'}</div>
+                        <div className="font-mono font-bold text-xl">{formatCurrency(finalProfit)}</div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-6 shrink-0 pl-1 sm:pl-4 border-t sm:border-t-0 sm:border-l border-current/20 pt-3 sm:pt-0 sm:pl-6">
-                  <div className="text-center">
-                    <div className="text-xs opacity-60 uppercase mb-0.5">Przychód</div>
-                    <div className="font-mono font-bold text-base">{formatCurrency(result.totalRevenuePln)}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs opacity-60 uppercase mb-0.5">Koszty</div>
-                    <div className="font-mono font-bold text-base">-{formatCurrency(result.totalChemistryCostPln + result.electricityCostPln)}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs opacity-60 uppercase mb-0.5 font-bold">Zysk netto</div>
-                    <div className="font-mono font-bold text-xl">{formatCurrency(result.netProfitPln)}</div>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* ── Podsumowanie wsadu ────────────────────────────────────── */}
               <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
@@ -942,11 +978,25 @@ export function CalculatorPage() {
                         <div className="text-xs text-muted-foreground uppercase mb-1">Koszty Energii</div>
                         <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(result.electricityCostPln)}</div>
                       </div>
-                      <div className="bg-primary/10 p-3 rounded-lg border border-primary/30">
-                        <div className="text-xs text-primary uppercase mb-1 font-bold">Zysk Netto</div>
-                        <div className="font-mono font-bold text-primary text-xl">{formatCurrency(result.netProfitPln)}</div>
+                      <div className={purchaseCost > 0 ? "bg-muted/30 p-3 rounded-lg border border-border" : "bg-primary/10 p-3 rounded-lg border border-primary/30"}>
+                        <div className={`text-xs uppercase mb-1 font-bold ${purchaseCost > 0 ? "text-muted-foreground" : "text-primary"}`}>Zysk Netto (chemia)</div>
+                        <div className={`font-mono font-bold text-xl ${purchaseCost > 0 ? "text-foreground" : "text-primary"}`}>{formatCurrency(result.netProfitPln)}</div>
                       </div>
                     </div>
+                    {purchaseCost > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border grid grid-cols-2 gap-4">
+                        <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                          <div className="text-xs text-muted-foreground uppercase mb-1">Wkład własny</div>
+                          <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(purchaseCost)}</div>
+                        </div>
+                        <div className="bg-primary/10 p-3 rounded-lg border border-primary/30">
+                          <div className="text-xs text-primary uppercase mb-1 font-bold">Zysk po zakupie</div>
+                          <div className={`font-mono font-bold text-xl ${result.netProfitPln - purchaseCost >= 0 ? "text-primary" : "text-destructive"}`}>
+                            {formatCurrency(result.netProfitPln - purchaseCost)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
