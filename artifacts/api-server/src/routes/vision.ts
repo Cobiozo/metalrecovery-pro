@@ -130,11 +130,18 @@ router.post(
     const rawCatalog = req.body?.materialCatalog;
     if (typeof rawCatalog === "string" && rawCatalog.trim()) {
       try {
-        const catalog: Array<{ id: string; name: string; nameEn?: string }> =
+        const catalog: Array<{ id: string; name: string; nameEn?: string; catalogHint?: string }> =
           JSON.parse(rawCatalog);
         if (Array.isArray(catalog) && catalog.length > 0) {
           const lines = catalog
-            .map((m) => `  - "${m.name}"${m.nameEn ? ` (${m.nameEn})` : ""}`)
+            .map((m) => {
+              let line = `  - "${m.name}"`;
+              const extra: string[] = [];
+              if (m.nameEn) extra.push(m.nameEn);
+              if (m.catalogHint) extra.push(`VISUAL: ${m.catalogHint}`);
+              if (extra.length) line += ` (${extra.join(" — ")})`;
+              return line;
+            })
             .join("\n");
           catalogSection =
             `Choose "materialType" from this EXACT catalog — use the EXACT Polish name as written:\n${lines}\n` +

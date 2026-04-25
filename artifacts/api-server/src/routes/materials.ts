@@ -177,6 +177,7 @@ export const electronicMaterials = [
       Pt: { min: 0.0, max: 0.02, typical: 0.008 },
       Pd: { min: 0.008, max: 0.06, typical: 0.025 },
     },
+    catalogHint: "green/yellow circuit board from router, switch or modem — FR4 substrate with chips and SMD parts, NO dense arrays of gold pins",
     notes: "Płyty PCB z urządzeń telekomunikacyjnych (routery, switche, modemy ~300g/szt). Badania Holgersson 2018: Au 199 ppm, Ag 1213 ppm, Pd 19.5 ppm. Ag z lutowia SnAg i MLCC. Wyższe Au niż typowe PCB. UWAGA: NIE dla złączy/konektorów backplane z central telefonicznych — te mają osobną kategorię z ~10× wyższym Au.",
   },
   {
@@ -187,6 +188,7 @@ export const electronicMaterials = [
     unit: "kg",
     weightPerPiece: 0.80,
     requiresCleaning: false,
+    catalogHint: "DENSE ARRAY of hundreds of shiny gold-colored pins in a block/housing — connector assembly from telephone exchange, no green PCB substrate, looks like a golden comb or grid of pins",
     metalContentPerKg: {
       Au: { min: 1.0, max: 8.0, typical: 3.0 },
       Ag: { min: 0.5, max: 3.0, typical: 1.2 },
@@ -203,6 +205,7 @@ export const electronicMaterials = [
     unit: "kg",
     weightPerPiece: 0.50,
     requiresCleaning: false,
+    catalogHint: "electromechanical relay springs and contact points from old telephone crossbar switch — metallic springs with contact dots, mechanical matrix, no PCB substrate",
     metalContentPerKg: {
       Au: { min: 2.0, max: 10.0, typical: 5.0 },
       Ag: { min: 1.0, max: 8.0, typical: 4.0 },
@@ -220,6 +223,7 @@ export const electronicMaterials = [
     weightPerPiece: 0.25,
     requiresCleaning: true,
     cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
+    catalogHint: "PCB board with chips from telephone exchange cabinet — has edge connector or DIN connector on one end, green/yellow substrate with ICs and components",
     metalContentPerKg: {
       Au: { min: 0.30, max: 1.50, typical: 0.70 },
       Ag: { min: 0.80, max: 4.00, typical: 2.00 },
