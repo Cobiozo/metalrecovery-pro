@@ -72,6 +72,10 @@ CRITICAL VISUAL SHAPE GUIDE — read before identifying:
   Laptop motherboards: large complex PCB (200-300mm) with CPU socket or BGA site, multiple DIMM slots, PCIe slots, multiple connectors and chips.
   Desktop motherboards: even larger PCB (240-305mm ATX) with expansion slots, DIMM rows, large CPU socket, VRM heatsink mounts.
   ISA/PCI expansion cards: PCB with a bracket (metal L-bracket or card with notch). Usually 120-170mm × 100mm.
+  ZIF / IC test sockets: black or gold plastic socket (20-50mm long), two rows of gold-plated pins along the sides, optional lever mechanism — used for IC programming or chip testing — SMALL individual items usually 3-10g each.
+  SIMM memory slot connectors: gold L-shaped or C-shaped metal bracket (70-100mm long), narrow slot for inserting SIMM module, spring contacts inside — pulled from old motherboard — NOT a telecom block.
+  Standard DIP IC sockets: tiny black plastic socket (8-40 pins), two rows of silver/tin contact pins — very low gold content — common repair-shop items.
+  TELECOM backplane connectors (HIGH VALUE): ONLY from telephone exchange racks (AXE, EWSD, DMS) — massive blocks 150mm+ packed with hundreds of dense DIN/Metral pins — INDUSTRIAL TELECOM EQUIPMENT ONLY.
 
 STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above — do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".
@@ -111,7 +115,7 @@ STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 }
 
 ALL string values (color, thickness, notes, descriptions) MUST be in POLISH.
-Reference metal values: motherboards ~0.2–0.5 g Au/kg; ceramic CPUs ~3–10 g Au/kg; gold fingers ~2–15 g Au/kg; RAM (gold contacts, DIMM) ~0.6–1.5 g Au/kg; mini PCIe / M.2 WiFi cards ~0.4–0.8 g Au/kg; laptop sub-boards ~0.1–0.2 g Au/kg; CPU socket adapter boards ~0.5–1.5 g Au/kg; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg.`;
+Reference metal values: motherboards ~0.2–0.5 g Au/kg; ceramic CPUs ~3–10 g Au/kg; gold fingers ~2–15 g Au/kg; RAM (gold contacts, DIMM) ~0.6–1.5 g Au/kg; mini PCIe / M.2 WiFi cards ~0.4–0.8 g Au/kg; laptop sub-boards ~0.1–0.2 g Au/kg; CPU socket adapter boards ~0.5–1.5 g Au/kg; ZIF/test IC sockets (precision) ~1–4 g Au/kg; SIMM memory slot connectors ~0.8–2.5 g Au/kg; standard DIP IC sockets (cheap) ~0.1–0.5 g Au/kg; telecom backplane connectors (industrial) ~2–8 g Au/kg; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg.`;
 
 function handleUpload(req: Request, res: Response, next: NextFunction): void {
   upload.single("image")(req, res, (err: unknown) => {
