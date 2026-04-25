@@ -531,6 +531,7 @@ export const electronicMaterials = [
     category: "pamiec",
     unit: "kg",
     weightPerPiece: 0.030,
+    catalogHint: "DIMM memory stick — long thin rectangular board (133mm×30mm or 67mm×30mm), memory chips in a single row along the length, silver/tin edge contacts at the bottom, notch on bottom edge — NOT a small square card",
     metalContentPerKg: {
       Au: { min: 0.02, max: 0.12, typical: 0.06 },
       Ag: { min: 0.15, max: 1.20, typical: 0.55 },
@@ -546,6 +547,7 @@ export const electronicMaterials = [
     category: "pamiec",
     unit: "kg",
     weightPerPiece: 0.020,
+    catalogHint: "DIMM memory stick — long thin rectangular board (133mm×30mm), black or green memory chips in a single row along the length, shiny GOLD edge contacts at the bottom with a notch — NOT a small card, NOT square — distinctly elongated strip",
     metalContentPerKg: {
       Au: { min: 0.60, max: 3.00, typical: 1.30 },
       Ag: { min: 0.10, max: 0.80, typical: 0.40 },
@@ -561,6 +563,7 @@ export const electronicMaterials = [
     category: "pamiec",
     unit: "kg",
     weightPerPiece: 0.016,
+    catalogHint: "old SIMM memory module — thin rectangular strip (72-pin: 108mm×36mm or 30-pin: 89mm×19mm), individual memory chips soldered on both sides, gold edge contacts along the entire bottom edge",
     metalContentPerKg: {
       Au: { min: 0.25, max: 1.50, typical: 0.85 },
       Ag: { min: 0.10, max: 1.20, typical: 0.50 },
@@ -603,6 +606,56 @@ export const electronicMaterials = [
   },
 
   // ─── KARTY GRAFICZNE / DŹWIĘKOWE ─────────────────────────────────────────
+  // ─── KARTY ROZSZERZEŃ LAPTOPOWE / MINI-FORM-FACTOR ───────────────────────
+  {
+    id: "karta_mini_pcie",
+    name: "Karty mini PCIe / M.2 / half-mini (WiFi, WWAN, BT z laptopów)",
+    nameEn: "mini PCIe / M.2 / half-mini cards (laptop WiFi, WWAN, BT)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.010,
+    catalogHint: "TINY rectangular PCB card (30×26mm full-mini or 30×51mm, or 22×30mm M.2) — MUCH SMALLER than RAM sticks — single row of gold edge contacts at ONE end only, two small coaxial antenna connectors (MHF/IPEX), WiFi or cellular chip, FCC-ID label — laptop internal WiFi, Bluetooth or WWAN card",
+    metalContentPerKg: {
+      Au: { min: 0.30, max: 1.00, typical: 0.55 },
+      Ag: { min: 0.30, max: 1.20, typical: 0.65 },
+      Pt: { min: 0.0, max: 0.003, typical: 0.001 },
+      Pd: { min: 0.005, max: 0.04, typical: 0.018 },
+    },
+    notes: "Karty WiFi/BT/WWAN w formacie mini PCIe, half-mini PCIe lub M.2 2230/2242 (~10g/szt) — wyjęte z laptopów. Złocone styki krawędziowe (edge connector) jako główne źródło Au (~30 µin Au/Ni). Ag z lutowia SAC305. Pd z BME MLCC (Atheros, Intel, Qualcomm, Sierra Wireless). Skup: 60-120 zł/kg.",
+  },
+  {
+    id: "subboard_laptop",
+    name: "Płytki sub-board laptopowe (USB, audio, zasilanie, touchpad)",
+    nameEn: "Laptop sub-boards (USB, audio, power, touchpad PCBs)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.020,
+    catalogHint: "small laptop internal PCB — square or rectangular (40-120mm), dedicated to one function (USB ports, headphone jack, SD card reader, power button, touchpad), connector ribbon cable FFC/FPC, various sizes, NO large GPU or CPU die — sub-board from inside a laptop",
+    metalContentPerKg: {
+      Au: { min: 0.05, max: 0.25, typical: 0.12 },
+      Ag: { min: 0.3, max: 1.5, typical: 0.75 },
+      Pt: { min: 0.0, max: 0.003, typical: 0.001 },
+      Pd: { min: 0.005, max: 0.04, typical: 0.020 },
+    },
+    notes: "Małe wyspecjalizowane płytki z wnętrza laptopów (~20g/szt): płytki USB, audio, zasilania, touchpada, czytnika kart SD, kamer itp. Podobny skład do PCB klasy B, nieco wyższe Au ze złoconych złączy FPC/FFC i USB.",
+  },
+  {
+    id: "adapter_socket_cpu",
+    name: "Adaptery gniazda CPU / programatory BGA (kwadratowe płytki)",
+    nameEn: "CPU socket adapter / BGA programmer boards (square PCBs)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.060,
+    catalogHint: "SQUARE PCB (70-110mm × 70-110mm) with a large SQUARE OPENING or socket cavity in the center — dense gold contact pads or socket pins around the central opening, edge connector along one side — CPU socket adapter board, BGA programmer jig, LGA/rPGA socket extender — NOT a laptop motherboard",
+    metalContentPerKg: {
+      Au: { min: 0.30, max: 2.50, typical: 1.10 },
+      Ag: { min: 0.40, max: 2.00, typical: 0.90 },
+      Pt: { min: 0.0, max: 0.010, typical: 0.003 },
+      Pd: { min: 0.010, max: 0.10, typical: 0.040 },
+    },
+    notes: "Adaptery gniazda CPU i programatory BGA (~60g/szt) — kwadratowe PCB z otworem na CPU. Używane do przeprogramowywania BIOS/ME, reballing BGA lub jako adaptery LGA→rPGA. Gęste złocenie pinów/padów gniazda jako główne źródło Au. Wyższe Au niż typowe PCB klasy B ze względu na socket contacts.",
+  },
+
   {
     id: "karta_0bga",
     name: "Karty graficzne/dźwiękowe (0BGA)",

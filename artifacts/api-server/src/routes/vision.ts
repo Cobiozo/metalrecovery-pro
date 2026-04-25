@@ -64,7 +64,17 @@ IMPORTANT — the following ARE electronic waste (e-waste) with recoverable prec
 DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings, clothing, non-electronic mechanical parts are NOT e-waste.
 Non-e-waste → materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, quantity = 0.
 
+CRITICAL VISUAL SHAPE GUIDE — read before identifying:
+  RAM sticks (DIMM/SO-DIMM): LONG thin rectangular board (133mm×30mm desktop or 67mm×30mm laptop). Memory chips in ONE ROW along the LENGTH. A notch cut into the edge contacts. Never square. Never small.
+  mini PCIe / M.2 cards (laptop WiFi/BT/WWAN): TINY card, roughly SQUARE (30×26mm) or small rectangle (30×51mm). Gold contacts on ONE SHORT EDGE ONLY. Two tiny coaxial (MHF/IPEX) connectors. FCC-ID label. This is NOT RAM — it is 3-5× smaller than a RAM stick.
+  Laptop sub-boards (USB/audio/touchpad/power): small rectangular or square PCBs (40-120mm) with ribbon cable connectors, dedicated to a single laptop function. No large CPU/GPU die.
+  CPU socket adapter / BGA programmer boards: square PCB (70-110mm) with a large SQUARE OPENING or socket cavity in the CENTER. Dense gold contacts or pin array around the central hole. Edge connector on one side. THESE ARE NOT laptop motherboards.
+  Laptop motherboards: large complex PCB (200-300mm) with CPU socket or BGA site, multiple DIMM slots, PCIe slots, multiple connectors and chips.
+  Desktop motherboards: even larger PCB (240-305mm ATX) with expansion slots, DIMM rows, large CPU socket, VRM heatsink mounts.
+  ISA/PCI expansion cards: PCB with a bracket (metal L-bracket or card with notch). Usually 120-170mm × 100mm.
+
 STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
+IMPORTANT: Apply the shape guide from above — do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".
 
 STEP 3 — COUNT each type carefully.
 Scan the image systematically: left column top→bottom, then next column, etc.
@@ -101,7 +111,7 @@ STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 }
 
 ALL string values (color, thickness, notes, descriptions) MUST be in POLISH.
-Reference metal values: motherboards ~0.2–0.5 g Au/kg; ceramic CPUs ~3–10 g Au/kg; gold fingers ~2–15 g Au/kg; RAM ~0.5–1.5 g Au/kg; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg.`;
+Reference metal values: motherboards ~0.2–0.5 g Au/kg; ceramic CPUs ~3–10 g Au/kg; gold fingers ~2–15 g Au/kg; RAM (gold contacts, DIMM) ~0.6–1.5 g Au/kg; mini PCIe / M.2 WiFi cards ~0.4–0.8 g Au/kg; laptop sub-boards ~0.1–0.2 g Au/kg; CPU socket adapter boards ~0.5–1.5 g Au/kg; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg.`;
 
 function handleUpload(req: Request, res: Response, next: NextFunction): void {
   upload.single("image")(req, res, (err: unknown) => {
