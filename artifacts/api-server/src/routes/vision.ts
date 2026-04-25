@@ -84,7 +84,7 @@ router.post(
     let rawContent: string;
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-5.4",
         max_completion_tokens: 2048,
         messages: [
           {

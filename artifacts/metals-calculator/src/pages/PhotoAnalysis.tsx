@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useCustomMaterials } from "@/lib/useCustomMaterials";
 import { CustomMaterialModal } from "@/components/CustomMaterialModal";
 import { useToast } from "@/hooks/use-toast";
+import { useGetElectronicMaterials } from "@workspace/api-client-react";
 
 type Confidence = "low" | "medium" | "high";
 
@@ -228,10 +229,27 @@ function VisionResultCard({
   );
 }
 
+function findDbMaterial(
+  apiMaterials: Array<{ id: string; name: string; nameEn?: string }> | undefined,
+  materialType: string
+): string | null {
+  if (!apiMaterials || !materialType) return null;
+  const query = materialType.toLowerCase().trim();
+  for (const mat of apiMaterials) {
+    const name = mat.name.toLowerCase();
+    const nameEn = (mat.nameEn ?? "").toLowerCase();
+    if (name.includes(query) || query.includes(name) || nameEn.includes(query) || query.includes(nameEn)) {
+      return mat.id;
+    }
+  }
+  return null;
+}
+
 export function PhotoAnalysisPage() {
   const [, navigate] = useLocation();
   const { add } = useCustomMaterials();
   const { toast } = useToast();
+  const { data: apiMaterials } = useGetElectronicMaterials();
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -454,16 +472,23 @@ export function PhotoAnalysisPage() {
           result={result}
           onSaveProfile={() => setSaveModalOpen(true)}
           onCalculate={() => {
-            const mat = add({
-              name: result.materialType,
-              au: result.metalContent.Au.value_g_per_kg,
-              ag: result.metalContent.Ag.value_g_per_kg,
-              pt: result.metalContent.Pt.value_g_per_kg,
-              pd: result.metalContent.Pd.value_g_per_kg,
-              notes: `Analiza AI z dnia ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(result.metalContent.Au.confidence)}, Ag ${confidenceLabel(result.metalContent.Ag.confidence)}. ${result.caveats}`,
-            });
+            const dbId = findDbMaterial(apiMaterials, result.materialType);
+            let materialId: string;
+            if (dbId) {
+              materialId = dbId;
+            } else {
+              const mat = add({
+                name: result.materialType,
+                au: result.metalContent.Au.value_g_per_kg,
+                ag: result.metalContent.Ag.value_g_per_kg,
+                pt: result.metalContent.Pt.value_g_per_kg,
+                pd: result.metalContent.Pd.value_g_per_kg,
+                notes: `Analiza AI z dnia ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(result.metalContent.Au.confidence)}, Ag ${confidenceLabel(result.metalContent.Ag.confidence)}. ${result.caveats}`,
+              });
+              materialId = mat.id;
+            }
             try {
-              localStorage.setItem("metalrecovery_vision_new_material", mat.id);
+              localStorage.setItem("metalrecovery_vision_new_material", materialId);
             } catch {
               // private mode — silently ignore
             }

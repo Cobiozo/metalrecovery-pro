@@ -13,6 +13,6 @@ router.use(metalsRouter);
 router.use(materialsRouter);
 router.use(chemicalsRouter);
 router.use(calculatorRouter);
-router.use(visionRouter);
+router.use("/vision", visionRouter);
 
 export default router;
