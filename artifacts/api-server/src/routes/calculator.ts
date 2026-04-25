@@ -10,6 +10,8 @@ interface BatchItem {
   isCleaned?: boolean;
   /** Optional metal content override (g/kg typical) for custom / user-defined materials */
   inlineMetalContent?: { Au: number; Ag: number; Pt: number; Pd: number };
+  /** Optional multiplier applied to Au content — used to pass vision plating-quality adjustment (e.g. 0.65–1.40) */
+  auMultiplier?: number;
 }
 
 interface CalculationRequest {
@@ -446,10 +448,18 @@ function resolveItemMassKg(item: BatchItem): number {
 function resolveItemMetalContent(
   item: BatchItem,
 ): { Au: number; Ag: number; Pt: number; Pd: number } | null {
-  if (item.inlineMetalContent) return item.inlineMetalContent;
-  const mat = electronicMaterialsMap[item.materialId];
-  if (!mat) return null;
-  return getEffectiveMetalContent(mat, item.isCleaned === true);
+  const base = item.inlineMetalContent
+    ? item.inlineMetalContent
+    : (() => {
+        const mat = electronicMaterialsMap[item.materialId];
+        if (!mat) return null;
+        return getEffectiveMetalContent(mat, item.isCleaned === true);
+      })();
+  if (!base) return null;
+  if (item.auMultiplier && item.auMultiplier !== 1 && item.auMultiplier > 0) {
+    return { ...base, Au: base.Au * item.auMultiplier };
+  }
+  return base;
 }
 
 function computeCompareResult(

@@ -22,6 +22,8 @@ type BatchItemState = {
   quantity: number;
   unitOverride?: 'kg' | 'piece';
   isCleaned?: boolean;
+  /** Au multiplier from plating quality analysis (0.65–1.40), set by vision flow */
+  auMultiplier?: number;
 };
 
 type SavedSession = {
@@ -137,13 +139,14 @@ export function CalculatorPage() {
       const visionBatch = localStorage.getItem("metalrecovery_vision_batch");
       if (visionBatch) {
         localStorage.removeItem("metalrecovery_vision_batch");
-        const parsed: Array<{ materialId: string; quantity: number }> = JSON.parse(visionBatch);
+        const parsed: Array<{ materialId: string; quantity: number; auMultiplier?: number }> = JSON.parse(visionBatch);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setBatchItems(
             parsed.map((entry, i) => ({
               id: (Date.now() + i).toString(),
               materialId: entry.materialId,
               quantity: Math.max(1, entry.quantity || 1),
+              ...(entry.auMultiplier ? { auMultiplier: entry.auMultiplier } : {}),
             })),
           );
           return;
@@ -154,9 +157,17 @@ export function CalculatorPage() {
         localStorage.removeItem("metalrecovery_vision_new_material");
         const rawQty = localStorage.getItem("metalrecovery_vision_quantity");
         localStorage.removeItem("metalrecovery_vision_quantity");
+        const rawQuality = localStorage.getItem("metalrecovery_vision_plating_quality");
         localStorage.removeItem("metalrecovery_vision_plating_quality");
+        const QUALITY_MULT: Record<number, number> = { 1: 0.65, 2: 0.80, 3: 1.00, 4: 1.20, 5: 1.40 };
+        const auMultiplier = rawQuality ? (QUALITY_MULT[Number(rawQuality)] ?? undefined) : undefined;
         const qty = rawQty ? Math.max(1, parseInt(rawQty, 10) || 1) : 1;
-        setBatchItems([{ id: Date.now().toString(), materialId: visionMaterialId, quantity: qty }]);
+        setBatchItems([{
+          id: Date.now().toString(),
+          materialId: visionMaterialId,
+          quantity: qty,
+          ...(auMultiplier && auMultiplier !== 1.0 ? { auMultiplier } : {}),
+        }]);
       }
     } catch {
       // private mode — ignore
@@ -211,6 +222,7 @@ export function CalculatorPage() {
           quantity,
           isCleaned: item.isCleaned,
           ...(customMat ? { inlineMetalContent: getInlineContent(customMat) } : {}),
+          ...(item.auMultiplier && item.auMultiplier !== 1.0 ? { auMultiplier: item.auMultiplier } : {}),
         };
       });
 
@@ -543,6 +555,14 @@ export function CalculatorPage() {
                       </label>
                     </div>
                   )}
+                  {item.auMultiplier && item.auMultiplier !== 1.0 && (
+                    <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/25 rounded-md px-3 py-2">
+                      <span className="text-xs text-yellow-700 dark:text-yellow-400 font-medium flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 shrink-0" />
+                        Jakość złoceń z analizy AI: {item.auMultiplier > 1 ? "+" : ""}{Math.round((item.auMultiplier - 1) * 100)}% Au
+                      </span>
+                    </div>
+                  )}
                   </div>
                 );
               })}
@@ -578,7 +598,9 @@ export function CalculatorPage() {
                   disabled={!canGoToProcess}
                   className="flex-1 sm:flex-none"
                 >
-                  Dalej: Wybierz proces <ArrowRight className="ml-2 h-4 w-4" />
+                  <span className="sm:hidden">Dalej</span>
+                  <span className="hidden sm:inline">Dalej: Wybierz proces</span>
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </CardFooter>

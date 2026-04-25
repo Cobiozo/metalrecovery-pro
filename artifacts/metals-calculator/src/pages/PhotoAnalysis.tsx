@@ -409,10 +409,15 @@ export function PhotoAnalysisPage() {
         }
         localStorage.removeItem("metalrecovery_vision_batch");
       } else {
-        const batch = ewaste.map(({ item, qty }) => ({
-          materialId: resolveItemMaterial(item),
-          quantity: Math.max(1, qty),
-        }));
+        const batch = ewaste.map(({ item, qty }) => {
+          const quality = item.platingAnalysis.quality_1_to_5 ?? null;
+          const auMult = quality ? (QUALITY_AU_MULTIPLIER[quality] ?? 1.0) : undefined;
+          return {
+            materialId: resolveItemMaterial(item),
+            quantity: Math.max(1, qty),
+            ...(auMult !== undefined && auMult !== 1.0 ? { auMultiplier: auMult } : {}),
+          };
+        });
         localStorage.setItem("metalrecovery_vision_batch", JSON.stringify(batch));
         localStorage.removeItem("metalrecovery_vision_new_material");
         localStorage.removeItem("metalrecovery_vision_quantity");

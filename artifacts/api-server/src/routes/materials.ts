@@ -187,7 +187,8 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.80,
-    requiresCleaning: false,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.25, Ag: 1.15, Pt: 1.15, Pd: 1.20 },
     catalogHint: "DENSE ARRAY of hundreds of shiny gold-colored pins in a block/housing — connector assembly from telephone exchange, no green PCB substrate, looks like a golden comb or grid of pins",
     metalContentPerKg: {
       Au: { min: 1.0, max: 8.0, typical: 3.0 },
@@ -204,7 +205,8 @@ export const electronicMaterials = [
     category: "pcb",
     unit: "kg",
     weightPerPiece: 0.50,
-    requiresCleaning: false,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.10, Pd: 1.15 },
     catalogHint: "electromechanical relay springs and contact points from old telephone crossbar switch — metallic springs with contact dots, mechanical matrix, no PCB substrate",
     metalContentPerKg: {
       Au: { min: 2.0, max: 10.0, typical: 5.0 },
