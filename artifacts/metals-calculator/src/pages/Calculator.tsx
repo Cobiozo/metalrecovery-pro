@@ -4,10 +4,11 @@ import { useCustomMaterials, getInlineContent } from "@/lib/useCustomMaterials";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2, Sparkles, ArrowLeftRight } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2, Sparkles, ArrowLeftRight, ChevronsUpDown, Check } from "lucide-react";
 import { generateCalculationPdf } from "@/lib/generatePdf";
 import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -101,6 +102,90 @@ const CATEGORY_ORDER = [
   "plyty_glowne", "pcb", "procesor", "pamiec", "karta",
   "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "kondensator", "inne", "wlasne",
 ];
+
+type MaterialOption = { id: string; name: string; category: string };
+
+function MaterialCombobox({
+  value,
+  onValueChange,
+  options,
+  loading,
+}: {
+  value: string;
+  onValueChange: (v: string) => void;
+  options: MaterialOption[];
+  loading: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(m => m.id === value);
+
+  const grouped: Record<string, MaterialOption[]> = {};
+  options.forEach(m => {
+    if (!grouped[m.category]) grouped[m.category] = [];
+    grouped[m.category]!.push(m);
+  });
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between bg-background font-normal h-10 px-3 text-sm"
+        >
+          <span className={selected ? "text-foreground" : "text-muted-foreground"}>
+            {selected ? selected.name : "Wybierz materiał..."}
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="p-0 w-[var(--radix-popover-trigger-width)]"
+        align="start"
+        style={{ maxHeight: "340px" }}
+      >
+        <Command>
+          <CommandInput placeholder="Szukaj materiału..." className="h-9" />
+          <CommandList className="max-h-[280px]">
+            {loading ? (
+              <div className="p-3 text-sm text-muted-foreground">Ładowanie...</div>
+            ) : (
+              <>
+                <CommandEmpty>Brak wyników dla podanej frazy</CommandEmpty>
+                {CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
+                  <CommandGroup
+                    key={cat}
+                    heading={
+                      <span className={`text-xs font-bold uppercase tracking-wider ${cat === "wlasne" ? "text-primary" : "text-amber-500"}`}>
+                        {CATEGORY_LABELS[cat] ?? cat}
+                      </span>
+                    }
+                  >
+                    {grouped[cat]!.map(m => (
+                      <CommandItem
+                        key={m.id}
+                        value={`${m.name} ${m.category}`}
+                        onSelect={() => {
+                          onValueChange(m.id);
+                          setOpen(false);
+                        }}
+                        className="text-sm"
+                      >
+                        <Check className={`mr-2 h-3.5 w-3.5 shrink-0 ${value === m.id ? "opacity-100" : "opacity-0"}`} />
+                        {m.name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ))}
+              </>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function CalculatorPage() {
   const [activeTab, setActiveTab] = useState<string>("wsad");
@@ -479,37 +564,12 @@ export function CalculatorPage() {
                   <div className="flex flex-col sm:flex-row gap-4 items-start bg-muted/30 p-4 rounded-lg border border-border">
                     <div className="flex-1 w-full">
                       <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Materiał</label>
-                      <Select
+                      <MaterialCombobox
                         value={item.materialId}
                         onValueChange={(val) => handleBatchMaterialChange(item.id, val)}
-                      >
-                        <SelectTrigger className="bg-background">
-                          <SelectValue placeholder="Wybierz materiał..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {materialsLoading ? (
-                            <div className="p-2"><Skeleton className="h-4 w-full" /></div>
-                          ) : (() => {
-                            const grouped: Record<string, typeof materials> = {};
-                            materials?.forEach(m => {
-                              if (!grouped[m.category]) grouped[m.category] = [];
-                              grouped[m.category]!.push(m);
-                            });
-                            return CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
-                              <SelectGroup key={cat}>
-                                <SelectLabel className={`text-xs font-bold uppercase tracking-wider px-2 pt-2 ${cat === "wlasne" ? "text-primary" : "text-amber-500"}`}>
-                                  {CATEGORY_LABELS[cat] ?? cat}
-                                </SelectLabel>
-                                {grouped[cat]!.map(m => (
-                                  <SelectItem key={m.id} value={m.id}>
-                                    {m.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            ));
-                          })()}
-                        </SelectContent>
-                      </Select>
+                        options={(materials ?? []).map(m => ({ id: m.id, name: m.name, category: m.category }))}
+                        loading={materialsLoading}
+                      />
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto items-end">
                       <div className="flex-1 sm:w-28">
