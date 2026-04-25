@@ -114,15 +114,18 @@ function StarRating({ value }: { value: number }) {
 function VisionResultCard({
   result,
   onSaveProfile,
-  onCalculate,
-  onSkup,
+  onQuantityChange,
 }: {
   result: VisionItem;
   onSaveProfile: () => void;
-  onCalculate: (qty: number) => void;
-  onSkup: (qty: number) => void;
+  onQuantityChange: (qty: number) => void;
 }) {
   const [qty, setQty] = useState<number>(result.quantity > 0 ? result.quantity : 0);
+
+  const updateQty = (next: number) => {
+    setQty(next);
+    onQuantityChange(next);
+  };
 
   const metals = [
     { key: "Au" as const, label: "Złoto (Au)", color: "text-yellow-400" },
@@ -170,7 +173,7 @@ function VisionResultCard({
               <button
                 type="button"
                 className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40"
-                onClick={() => setQty((q) => Math.max(0, q - 1))}
+                onClick={() => updateQty(Math.max(0, qty - 1))}
                 disabled={qty <= 0}
                 aria-label="Zmniejsz ilość"
               >
@@ -182,14 +185,14 @@ function VisionResultCard({
                 value={qty}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 0) setQty(v);
+                  if (!isNaN(v) && v >= 0) updateQty(v);
                 }}
                 className="w-14 h-7 text-center text-sm font-mono bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <button
                 type="button"
                 className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors"
-                onClick={() => setQty((q) => q + 1)}
+                onClick={() => updateQty(qty + 1)}
                 aria-label="Zwiększ ilość"
               >
                 +
@@ -314,22 +317,12 @@ function VisionResultCard({
             <div className="flex items-center gap-2 bg-yellow-500/5 border border-yellow-500/20 rounded-md px-3 py-2">
               <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
               <p className="text-xs text-yellow-400/90 leading-snug">
-                Jakość złoceń {result.platingAnalysis.quality_1_to_5}/5 wpływa na szacowany odzysk Au
+                Jakość złoceń {result.platingAnalysis.quality_1_to_5}/5 uwzględniona w wycenie Au
                 {" "}({result.platingAnalysis.quality_1_to_5 >= 4 ? "+" : result.platingAnalysis.quality_1_to_5 <= 2 ? "" : "±"}
                 {Math.round((QUALITY_AU_MULTIPLIER[result.platingAnalysis.quality_1_to_5] - 1) * 100)}% Au)
               </p>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2">
-            <Button className="gap-2 text-sm" onClick={() => onCalculate(qty)}>
-              <FlaskConical className="w-4 h-4" />
-              Kalkulator
-            </Button>
-            <Button variant="outline" className="gap-2 text-sm" onClick={() => onSkup(qty)}>
-              <ShoppingCart className="w-4 h-4" />
-              Skup
-            </Button>
-          </div>
           <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground text-xs" onClick={onSaveProfile}>
             <FlaskConical className="w-3.5 h-3.5" />
             Zapisz jako własny profil materiału
@@ -387,42 +380,44 @@ export function PhotoAnalysisPage() {
     return mat.id;
   }
 
-  function navigateWithVision(item: VisionItem, dest: string) {
-    const quality = item.platingAnalysis.quality_1_to_5 ?? null;
-    const materialId = resolveItemMaterial(item);
+  function navigateAll(
+    items: VisionItem[],
+    quantities: number[],
+    dest: string,
+  ) {
+    const ewaste = items
+      .map((item, i) => ({ item, qty: quantities[i] ?? Math.max(1, item.quantity || 1) }))
+      .filter(({ item }) => !item.materialType.toLowerCase().startsWith("nieelektroniczne"));
+
+    if (ewaste.length === 0) return;
+
     try {
-      localStorage.setItem("metalrecovery_vision_new_material", materialId);
-      if (item.quantity > 0) {
-        localStorage.setItem("metalrecovery_vision_quantity", String(item.quantity));
+      if (ewaste.length === 1) {
+        const { item, qty } = ewaste[0];
+        const quality = item.platingAnalysis.quality_1_to_5 ?? null;
+        const materialId = resolveItemMaterial(item);
+        localStorage.setItem("metalrecovery_vision_new_material", materialId);
+        if (qty > 0) {
+          localStorage.setItem("metalrecovery_vision_quantity", String(qty));
+        } else {
+          localStorage.removeItem("metalrecovery_vision_quantity");
+        }
+        if (quality) {
+          localStorage.setItem("metalrecovery_vision_plating_quality", String(quality));
+        } else {
+          localStorage.removeItem("metalrecovery_vision_plating_quality");
+        }
+        localStorage.removeItem("metalrecovery_vision_batch");
       } else {
+        const batch = ewaste.map(({ item, qty }) => ({
+          materialId: resolveItemMaterial(item),
+          quantity: Math.max(1, qty),
+        }));
+        localStorage.setItem("metalrecovery_vision_batch", JSON.stringify(batch));
+        localStorage.removeItem("metalrecovery_vision_new_material");
         localStorage.removeItem("metalrecovery_vision_quantity");
-      }
-      if (quality) {
-        localStorage.setItem("metalrecovery_vision_plating_quality", String(quality));
-      } else {
         localStorage.removeItem("metalrecovery_vision_plating_quality");
       }
-      localStorage.removeItem("metalrecovery_vision_batch");
-    } catch {
-      // private mode
-    }
-    navigate(dest);
-  }
-
-  function navigateAllToCalculator(resultSet: VisionResultSet, dest: string) {
-    const ewaste = resultSet.items.filter(
-      (i) => !i.materialType.toLowerCase().startsWith("nieelektroniczne"),
-    );
-    if (ewaste.length === 0) return;
-    const batch = ewaste.map((item) => ({
-      materialId: resolveItemMaterial(item),
-      quantity: Math.max(1, item.quantity || 1),
-    }));
-    try {
-      localStorage.setItem("metalrecovery_vision_batch", JSON.stringify(batch));
-      localStorage.removeItem("metalrecovery_vision_new_material");
-      localStorage.removeItem("metalrecovery_vision_quantity");
-      localStorage.removeItem("metalrecovery_vision_plating_quality");
     } catch {
       // private mode
     }
@@ -433,6 +428,7 @@ export function PhotoAnalysisPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<VisionResultSet | null>(null);
+  const [editedQuantities, setEditedQuantities] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saveItem, setSaveItem] = useState<VisionItem | null>(null);
 
@@ -483,7 +479,9 @@ export function PhotoAnalysisPage() {
         throw new Error(data.error ?? `Błąd serwera (${response.status})`);
       }
 
-      setResult(data as VisionResultSet);
+      const parsed = data as VisionResultSet;
+      setResult(parsed);
+      setEditedQuantities(parsed.items.map((i: VisionItem) => Math.max(0, i.quantity || 0)));
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Nieznany błąd";
       setError(msg);
@@ -497,6 +495,7 @@ export function PhotoAnalysisPage() {
     setFile(null);
     setPreview(null);
     setResult(null);
+    setEditedQuantities([]);
     setError(null);
     setSaveItem(null);
   };
@@ -656,35 +655,18 @@ export function PhotoAnalysisPage() {
 
       {result && !loading && (
         <div className="space-y-4">
-          {ewasteItems.length > 1 && (
-            <div className="flex flex-col sm:flex-row gap-2 p-3 bg-primary/5 border border-primary/20 rounded-md">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">
-                  Wykryto {result.items.length}{" "}
-                  {result.items.length === 2 ? "typy materiałów" : result.items.length < 5 ? "typy materiałów" : "typów materiałów"}
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Dodaj wszystkie materiały e-waste ({ewasteItems.length}) do kalkulatora wsadowego jednym kliknięciem
-                </p>
-              </div>
-              <Button
-                size="sm"
-                className="shrink-0"
-                onClick={() => navigateAllToCalculator(result, "/")}
-              >
-                <Calculator className="w-4 h-4 mr-1.5" />
-                Dodaj wszystkie do kalkulatora
-              </Button>
-            </div>
-          )}
-
           {result.items.map((item, idx) => (
             <VisionResultCard
               key={idx}
               result={item}
               onSaveProfile={() => setSaveItem(item)}
-              onCalculate={(qty) => navigateWithVision({ ...item, quantity: qty }, "/")}
-              onSkup={(qty) => navigateWithVision({ ...item, quantity: qty }, "/skup")}
+              onQuantityChange={(qty) =>
+                setEditedQuantities((prev) => {
+                  const next = [...prev];
+                  next[idx] = qty;
+                  return next;
+                })
+              }
             />
           ))}
 
@@ -695,6 +677,37 @@ export function PhotoAnalysisPage() {
                 {result.caveats}
               </p>
             </div>
+          )}
+
+          {ewasteItems.length > 0 && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="py-4 space-y-3">
+                {result.items.length > 1 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    {ewasteItems.length}{" "}
+                    {ewasteItems.length === 1 ? "typ materiału" : ewasteItems.length < 5 ? "typy materiałów" : "typów materiałów"}
+                    {" "}· jakość złoceń uwzględniona dla każdego osobno
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    className="gap-2"
+                    onClick={() => navigateAll(result.items, editedQuantities, "/")}
+                  >
+                    <Calculator className="w-4 h-4" />
+                    Kalkulator
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2"
+                    onClick={() => navigateAll(result.items, editedQuantities, "/skup")}
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Skup
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
