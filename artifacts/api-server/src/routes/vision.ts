@@ -1,7 +1,20 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import OpenAI from "openai";
 import { z } from "zod";
+
+function getOpenAIClient(): OpenAI {
+  const apiKey =
+    process.env.AI_INTEGRATIONS_OPENAI_API_KEY ||
+    process.env.OPENAI_API_KEY;
+  const baseURL =
+    process.env.AI_INTEGRATIONS_OPENAI_BASE_URL ||
+    process.env.OPENAI_BASE_URL;
+  if (!apiKey) {
+    throw new Error("Brak klucza API OpenAI. Ustaw OPENAI_API_KEY w zmiennych środowiskowych.");
+  }
+  return new OpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) });
+}
 
 const router: IRouter = Router();
 
@@ -208,6 +221,7 @@ router.post(
 
     let rawContent: string;
     try {
+      const openai = getOpenAIClient();
       const response = await openai.chat.completions.create({
         model: "gpt-5.4",
         max_completion_tokens: 4096,
