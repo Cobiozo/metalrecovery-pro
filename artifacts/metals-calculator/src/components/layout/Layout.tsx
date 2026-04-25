@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Beaker, Calculator, Coins, Activity, Info, WifiOff, RefreshCw, Download, ShoppingCart, ScanLine } from "lucide-react";
+import { Beaker, Calculator, Coins, Activity, Info, WifiOff, RefreshCw, Download, ShoppingCart, ScanLine, Coffee } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePWA } from "@/hooks/usePWA";
 
@@ -71,6 +71,15 @@ export function Layout({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="p-4 border-t border-border mt-auto space-y-3">
+          <a
+            href="https://buycoffee.to/mobilneit"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-amber-500 hover:bg-amber-400 text-amber-950 text-sm font-semibold transition-colors shadow-sm"
+          >
+            <Coffee className="w-4 h-4" />
+            Wesprzyj projekt ☕
+          </a>
           {canInstall && (
             <button
               onClick={installApp}
@@ -104,6 +113,16 @@ export function Layout({ children }: { children: ReactNode }) {
           <span className="font-bold text-base leading-tight tracking-tight">MetalRecovery</span>
           <span className="text-xs text-primary font-mono font-medium ml-2">PRO</span>
         </div>
+        <a
+          href="https://buycoffee.to/mobilneit"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 hover:bg-amber-400 text-amber-950 text-xs font-semibold transition-colors shrink-0"
+          title="Wesprzyj projekt"
+        >
+          <Coffee className="w-3.5 h-3.5" />
+          <span className="hidden xs:inline">Wesprzyj</span>
+        </a>
         {canInstall && (
           <button
             onClick={installApp}
