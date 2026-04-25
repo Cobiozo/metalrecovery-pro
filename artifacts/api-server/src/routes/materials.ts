@@ -515,6 +515,38 @@ export const electronicMaterials = [
     notes: "Stare pamięci SIMM/EDO/FPM (30-pin/72-pin, ~40g/szt, przed ~1998). Grubsze złocenie styków niż DDR (~30-50 µin) ALE mniej kontaktów (30-72 vs 168-240 pinów) → per-kg Au NIŻSZE niż DDR1/DDR2. Phoenix Refining / GRF: EDO/FPM SIMM 0.3-0.6 g/kg; 30-pin SIMM (grubsze złocenie) do 1.2 g/kg. Wyższe Pd niż DDR — starsze PME-MLCC miały elektrody Pd-Ag. Lutowie Pb-Sn → brak Ag z lutowia.",
   },
 
+  // ─── PAMIĘCI RAM ECC SERWEROWE ────────────────────────────────────────────
+  {
+    id: "ram_ecc_stare",
+    name: "Pamięci RAM ECC (stare, DDR1/DDR2 serwerowe)",
+    nameEn: "Server ECC RAM (old, DDR1/DDR2)",
+    category: "pamiec",
+    unit: "kg",
+    weightPerPiece: 0.045,
+    metalContentPerKg: {
+      Au: { min: 1.50, max: 5.00, typical: 2.50 },
+      Ag: { min: 0.10, max: 0.80, typical: 0.40 },
+      Pt: { min: 0.0, max: 0.005, typical: 0.002 },
+      Pd: { min: 0.02, max: 0.25, typical: 0.10 },
+    },
+    notes: "Serwer ECC DIMM DDR1/DDR2 (~45g/szt, Registered/Fully Buffered ECC). Znacznie więcej złotych styków niż desktopowe RAM — więcej pinów i grubsze złocenie dla niezawodności serwerowej. Phoenix Refining/GRF: server DDR1 ECC 2.0-4.5 g/kg Au, DDR2 ECC reg. 1.5-3.0 g/kg. Lutowie Pb-Sn (pre-RoHS) → niskie Ag. Pd z PME-MLCC. Skup: 250-500 zł/kg.",
+  },
+  {
+    id: "ram_ecc_nowe",
+    name: "Pamięci RAM ECC (nowe, DDR3/DDR4 serwerowe)",
+    nameEn: "Server ECC RAM (new, DDR3/DDR4)",
+    category: "pamiec",
+    unit: "kg",
+    weightPerPiece: 0.060,
+    metalContentPerKg: {
+      Au: { min: 0.50, max: 2.00, typical: 1.00 },
+      Ag: { min: 0.30, max: 1.50, typical: 0.80 },
+      Pt: { min: 0.0, max: 0.003, typical: 0.001 },
+      Pd: { min: 0.005, max: 0.04, typical: 0.015 },
+    },
+    notes: "Serwer ECC DIMM DDR3/DDR4 (~60g/szt, Registered/LR-DIMM). Styki BME z cienkim złoceniem (6-10 µin) — niższe Au niż stare ECC DDR1/DDR2. Ag z lutowia RoHS SAC305 (3% Ag) i MLCC. Pd z BME-MLCC (niskie). Skup: 100-200 zł/kg.",
+  },
+
   // ─── KARTY GRAFICZNE / DŹWIĘKOWE ─────────────────────────────────────────
   {
     id: "karta_0bga",
@@ -545,6 +577,22 @@ export const electronicMaterials = [
       Pd: { min: 0.008, max: 0.07, typical: 0.035 },
     },
     notes: "Karty graficzne z jednym układem BGA (GPU) (~400g/szt) — bez śledzia, aluminium, wiatraków.",
+  },
+
+  {
+    id: "karta_sieciowa",
+    name: "Karty sieciowe / rozszerzeń (NIC, storage, modem)",
+    nameEn: "Network / expansion cards (NIC, storage, modem)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.12,
+    metalContentPerKg: {
+      Au: { min: 0.03, max: 0.15, typical: 0.07 },
+      Ag: { min: 0.4, max: 1.8, typical: 1.0 },
+      Pt: { min: 0.0, max: 0.004, typical: 0.002 },
+      Pd: { min: 0.005, max: 0.045, typical: 0.022 },
+    },
+    notes: "Karty sieciowe (NIC), kontrolery RAID, karty SCSI, modemy PCI (~120g/szt) — bez śledzia. Mniejsze od kart graficznych, podobny skład do PCB klasy B. metalContentPerKg zbliżony do kart 0BGA z mniejszą ilością złoconych gniazd PCI/PCIe edge.",
   },
 
   // ─── DYSKI I NAPĘDY ───────────────────────────────────────────────────────

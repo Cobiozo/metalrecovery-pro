@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2, Sparkles } from "lucide-react";
+import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2, Sparkles, ArrowLeftRight } from "lucide-react";
 import { generateCalculationPdf } from "@/lib/generatePdf";
 import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -434,7 +434,7 @@ export function CalculatorPage() {
                                 </SelectLabel>
                                 {grouped[cat]!.map(m => (
                                   <SelectItem key={m.id} value={m.id}>
-                                    {m.name} <span className="text-muted-foreground ml-1">({m.unit === 'piece' ? 'szt.' : 'kg'})</span>
+                                    {m.name}
                                   </SelectItem>
                                 ))}
                               </SelectGroup>
@@ -444,35 +444,35 @@ export function CalculatorPage() {
                       </Select>
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto items-end">
-                      <div className="flex-1 sm:w-32">
+                      <div className="flex-1 sm:w-28">
                         <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Ilość</label>
-                        <div className="flex gap-1">
-                          <div className="relative flex-1">
-                            <Input
-                              type="number"
-                              min="0.001"
-                              step={getEffectiveUnit(item) === 'piece' ? "1" : "0.01"}
-                              value={item.quantity}
-                              onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
-                              className="bg-background font-mono"
-                            />
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleBatchUnitToggle(item.id)}
-                            disabled={!item.materialId}
-                            className="shrink-0 w-12 text-xs font-bold px-1"
-                            title="Kliknij aby przełączyć między kg i szt."
-                          >
-                            {getEffectiveUnit(item) === 'piece' ? 'szt.' : 'kg'}
-                          </Button>
-                        </div>
+                        <Input
+                          type="number"
+                          min="0.001"
+                          step={getEffectiveUnit(item) === 'piece' ? "1" : "0.01"}
+                          value={item.quantity}
+                          onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
+                          className="bg-background font-mono"
+                        />
                         {item.materialId && getEffectiveUnit(item) === 'piece' && (
                           <p className="text-xs text-muted-foreground mt-1">
                             ≈ {(item.quantity * getWeightPerPiece(item)).toFixed(2)} kg
                           </p>
                         )}
+                      </div>
+                      <div>
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Jednostka</label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleBatchUnitToggle(item.id)}
+                          disabled={!item.materialId}
+                          className="shrink-0 h-9 px-3 text-xs font-bold gap-1.5"
+                          title="Kliknij aby przełączyć między kg i szt."
+                        >
+                          <ArrowLeftRight className="h-3 w-3 opacity-60" />
+                          {getEffectiveUnit(item) === 'piece' ? 'szt.' : 'kg'}
+                        </Button>
                       </div>
                       <div className="pb-0.5">
                         <Button
