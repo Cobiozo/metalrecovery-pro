@@ -39,7 +39,7 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       )}
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col shrink-0">
+      <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="p-6 flex items-center gap-3 border-b border-border">
           <div className="bg-primary/10 p-2 rounded-md">
             <Activity className="w-6 h-6 text-primary" />
