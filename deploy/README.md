@@ -41,7 +41,7 @@ package.json       → zależności produkcyjne
 |---|---|---|
 | `/api/healthz` | GET | Status serwera |
 | `/api/metals/prices` | GET | Aktualne ceny metali (NBP) |
-| `/api/materials/electronics` | GET | Lista 61 materiałów (Au/Ag/Pt/Pd) |
+| `/api/materials/electronics` | GET | Lista 62 materiałów (Au/Ag/Pt/Pd) |
 | `/api/chemicals/processes` | GET | Lista 9 procesów hydrometalurgicznych |
 | `/api/calculator/estimate` | POST | Kalkulacja odzysku i opłacalności |
 
