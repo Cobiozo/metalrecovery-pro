@@ -31,6 +31,7 @@ import type {
   PurchasePriceBatchResult,
   PurchasePriceRequest,
   PurchasePriceResult,
+  VisionAnalysisResult,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -711,6 +712,88 @@ export const useCalculatePurchasePriceBatch = <
   TContext
 > => {
   return useMutation(getCalculatePurchasePriceBatchMutationOptions(options));
+};
+
+/**
+ * Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality. Use FormData on the client — this endpoint is not compatible with JSON body.
+ * @summary Analyze an image of electronic scrap for precious metal content
+ */
+export const getAnalyzeImageUrl = () => {
+  return `/api/vision/analyze`;
+};
+
+export const analyzeImage = async (
+  options?: RequestInit,
+): Promise<VisionAnalysisResult> => {
+  return customFetch<VisionAnalysisResult>(getAnalyzeImageUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAnalyzeImageMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeImage>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyzeImage>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["analyzeImage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyzeImage>>,
+    void
+  > = () => {
+    return analyzeImage(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyzeImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyzeImage>>
+>;
+
+export type AnalyzeImageMutationError = ErrorType<void>;
+
+/**
+ * @summary Analyze an image of electronic scrap for precious metal content
+ */
+export const useAnalyzeImage = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeImage>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyzeImage>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAnalyzeImageMutationOptions(options));
 };
 
 /**

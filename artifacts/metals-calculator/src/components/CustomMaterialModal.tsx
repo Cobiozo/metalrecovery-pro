@@ -53,9 +53,17 @@ type Props = {
   onSave: (data: Omit<CustomMaterial, "id" | "createdAt">) => void;
   onDelete?: () => void;
   existing?: CustomMaterial | null;
+  prefill?: {
+    name?: string;
+    au?: number;
+    ag?: number;
+    pt?: number;
+    pd?: number;
+    notes?: string;
+  } | null;
 };
 
-export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, existing }: Props) {
+export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, existing, prefill }: Props) {
   const isEdit = Boolean(existing);
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<FormValues>>({});
@@ -63,11 +71,24 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
 
   useEffect(() => {
     if (open) {
-      setForm(existing ? toForm(existing) : EMPTY_FORM);
+      if (existing) {
+        setForm(toForm(existing));
+      } else if (prefill) {
+        setForm({
+          name: prefill.name ?? "",
+          au: prefill.au?.toString() ?? "",
+          ag: prefill.ag?.toString() ?? "",
+          pt: prefill.pt?.toString() ?? "",
+          pd: prefill.pd?.toString() ?? "",
+          notes: prefill.notes ?? "",
+        });
+      } else {
+        setForm(EMPTY_FORM);
+      }
       setErrors({});
       setConfirmDelete(false);
     }
-  }, [open, existing]);
+  }, [open, existing, prefill]);
 
   const set = (field: keyof FormValues) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));

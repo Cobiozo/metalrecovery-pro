@@ -426,6 +426,67 @@ export const CalculatePurchasePriceBatchResponse = zod.object({
 });
 
 /**
+ * Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality. Use FormData on the client — this endpoint is not compatible with JSON body.
+ * @summary Analyze an image of electronic scrap for precious metal content
+ */
+export const analyzeImageResponsePlatingAnalysisQuality1To5Min = 0;
+export const analyzeImageResponsePlatingAnalysisQuality1To5Max = 5;
+
+export const AnalyzeImageResponse = zod.object({
+  materialType: zod
+    .string()
+    .describe("Polish name of the detected material type"),
+  description: zod
+    .string()
+    .describe(
+      "Polish description of the material and its precious metal characteristics",
+    ),
+  metalContent: zod.object({
+    Au: zod.object({
+      value_g_per_kg: zod
+        .number()
+        .describe("Estimated metal content in grams per kg"),
+      confidence: zod.enum(["low", "medium", "high"]),
+    }),
+    Ag: zod.object({
+      value_g_per_kg: zod
+        .number()
+        .describe("Estimated metal content in grams per kg"),
+      confidence: zod.enum(["low", "medium", "high"]),
+    }),
+    Pt: zod.object({
+      value_g_per_kg: zod
+        .number()
+        .describe("Estimated metal content in grams per kg"),
+      confidence: zod.enum(["low", "medium", "high"]),
+    }),
+    Pd: zod.object({
+      value_g_per_kg: zod
+        .number()
+        .describe("Estimated metal content in grams per kg"),
+      confidence: zod.enum(["low", "medium", "high"]),
+    }),
+  }),
+  platingAnalysis: zod.object({
+    detected: zod.boolean(),
+    color: zod.string().optional(),
+    thickness: zod.string().optional(),
+    quality_1_to_5: zod
+      .number()
+      .min(analyzeImageResponsePlatingAnalysisQuality1To5Min)
+      .max(analyzeImageResponsePlatingAnalysisQuality1To5Max)
+      .optional(),
+    notes: zod.string().optional(),
+  }),
+  recommendedProcess: zod
+    .string()
+    .describe("Polish name of the recommended recovery process"),
+  caveats: zod
+    .string()
+    .describe("Polish description of limitations and what to verify in a lab"),
+});
+
+/**
  * Runs the recovery estimate for all available processes using default parameters and returns a ranked summary table
  * @summary Compare all chemical processes for a given batch
  */

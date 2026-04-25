@@ -383,6 +383,53 @@ export interface PurchasePriceResult {
   isProfitable: boolean;
 }
 
+export type VisionMetalEstimateConfidence =
+  (typeof VisionMetalEstimateConfidence)[keyof typeof VisionMetalEstimateConfidence];
+
+export const VisionMetalEstimateConfidence = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+} as const;
+
+export interface VisionMetalEstimate {
+  /** Estimated metal content in grams per kg */
+  value_g_per_kg: number;
+  confidence: VisionMetalEstimateConfidence;
+}
+
+export interface VisionPlatingAnalysis {
+  detected: boolean;
+  color?: string;
+  thickness?: string;
+  /**
+   * @minimum 0
+   * @maximum 5
+   */
+  quality_1_to_5?: number;
+  notes?: string;
+}
+
+export type VisionAnalysisResultMetalContent = {
+  Au: VisionMetalEstimate;
+  Ag: VisionMetalEstimate;
+  Pt: VisionMetalEstimate;
+  Pd: VisionMetalEstimate;
+};
+
+export interface VisionAnalysisResult {
+  /** Polish name of the detected material type */
+  materialType: string;
+  /** Polish description of the material and its precious metal characteristics */
+  description: string;
+  metalContent: VisionAnalysisResultMetalContent;
+  platingAnalysis: VisionPlatingAnalysis;
+  /** Polish name of the recommended recovery process */
+  recommendedProcess: string;
+  /** Polish description of limitations and what to verify in a lab */
+  caveats: string;
+}
+
 export type ProcessCompareResultProfitabilityRating =
   (typeof ProcessCompareResultProfitabilityRating)[keyof typeof ProcessCompareResultProfitabilityRating];
 

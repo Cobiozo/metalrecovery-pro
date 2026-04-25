@@ -38,6 +38,8 @@ Full-stack precious metals recovery calculator for e-waste professionals. Fronte
 **API additions:**
 - `POST /api/calculator/estimate` now accepts `reagentPriceOverrides: Record<string, number>` — map of reagent name to custom price in PLN/L
 
+- **Feature C — AI Vision module** (`/analiza`): upload or photograph PCBs/connectors/e-waste; GPT-4o vision analyzes metal content (Au/Ag/Pt/Pd g/kg) with confidence levels, gold plating quality (1–5 scale), recommended process, and caveats. Results can prefill the Custom Material modal for direct use in calculations.
+
 **Key API routes (in `artifacts/api-server`):**
 - `GET /api/metals/prices` — live Au/Ag/Pt/Pd prices in PLN/g from NBP
 - `GET /api/materials/electronics` — 65 electronic material types with metal content
@@ -45,6 +47,7 @@ Full-stack precious metals recovery calculator for e-waste professionals. Fronte
 - `POST /api/calculator/estimate` — full calculation from batch + process to profitability; accepts optional `inlineMetalContent` per BatchItem for custom materials
 - `POST /api/calculator/purchase-price` — single-material max purchase price; accepts optional `inlineMetalContent`
 - `POST /api/calculator/purchase-price-batch` — multi-material lot; returns weighted-average price + per-material breakdown; accepts `inlineMetalContent` per item
+- `POST /api/vision/analyze` — multipart image upload; returns VisionAnalysisResult with metal estimates + plating analysis from GPT-4o vision
 
 ## Stack
 

@@ -42,3 +42,8 @@ export * from "./purchasePriceResult";
 export * from "./reagent";
 export * from "./recoveredMetal";
 export * from "./recoveredMetalMetal";
+export * from "./visionAnalysisResult";
+export * from "./visionAnalysisResultMetalContent";
+export * from "./visionMetalEstimate";
+export * from "./visionMetalEstimateConfidence";
+export * from "./visionPlatingAnalysis";

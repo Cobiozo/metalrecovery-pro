@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Beaker, Calculator, Coins, Activity, Info, WifiOff, RefreshCw, Download, ShoppingCart } from "lucide-react";
+import { Beaker, Calculator, Coins, Activity, Info, WifiOff, RefreshCw, Download, ShoppingCart, ScanLine } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePWA } from "@/hooks/usePWA";
 
@@ -11,6 +11,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const navItems = [
     { href: "/", label: "Kalkulator", labelFull: "Kalkulator Metali", icon: Calculator },
     { href: "/skup", label: "Skup", labelFull: "Kalkulator skupu", icon: ShoppingCart },
+    { href: "/analiza", label: "Analiza", labelFull: "Analiza zdjęcia", icon: ScanLine },
     { href: "/kursy", label: "Kursy", labelFull: "Kursy Metali", icon: Coins },
     { href: "/procesy", label: "Procesy", labelFull: "Procesy Chemiczne", icon: Beaker },
   ];

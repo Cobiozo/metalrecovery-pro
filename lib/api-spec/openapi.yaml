@@ -18,6 +18,8 @@ tags:
     description: Chemical processes for metal extraction
   - name: calculator
     description: Metal recovery calculation operations
+  - name: vision
+    description: AI image analysis for precious metal estimation
 paths:
   /healthz:
     get:
@@ -162,6 +164,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PurchasePriceBatchResult"
+
+  /vision/analyze:
+    post:
+      operationId: analyzeImage
+      tags: [vision]
+      summary: Analyze an image of electronic scrap for precious metal content
+      description: Accepts a multipart/form-data image upload (field name "image", max 10 MB) and uses AI vision to estimate Au/Ag/Pt/Pd content and assess gold plating quality. Use FormData on the client — this endpoint is not compatible with JSON body.
+      responses:
+        "200":
+          description: Vision analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VisionAnalysisResult"
+        "400":
+          description: Missing or invalid image file
+        "502":
+          description: AI model error or invalid response
 
   /calculator/compare:
     post:
@@ -781,6 +801,65 @@ components:
         - grossProfitPerKgPln
         - isBreakEven
         - isProfitable
+
+    VisionMetalEstimate:
+      type: object
+      properties:
+        value_g_per_kg:
+          type: number
+          description: Estimated metal content in grams per kg
+        confidence:
+          type: string
+          enum: [low, medium, high]
+      required: [value_g_per_kg, confidence]
+
+    VisionPlatingAnalysis:
+      type: object
+      properties:
+        detected:
+          type: boolean
+        color:
+          type: string
+        thickness:
+          type: string
+        quality_1_to_5:
+          type: number
+          minimum: 0
+          maximum: 5
+        notes:
+          type: string
+      required: [detected]
+
+    VisionAnalysisResult:
+      type: object
+      properties:
+        materialType:
+          type: string
+          description: Polish name of the detected material type
+        description:
+          type: string
+          description: Polish description of the material and its precious metal characteristics
+        metalContent:
+          type: object
+          properties:
+            Au:
+              $ref: "#/components/schemas/VisionMetalEstimate"
+            Ag:
+              $ref: "#/components/schemas/VisionMetalEstimate"
+            Pt:
+              $ref: "#/components/schemas/VisionMetalEstimate"
+            Pd:
+              $ref: "#/components/schemas/VisionMetalEstimate"
+          required: [Au, Ag, Pt, Pd]
+        platingAnalysis:
+          $ref: "#/components/schemas/VisionPlatingAnalysis"
+        recommendedProcess:
+          type: string
+          description: Polish name of the recommended recovery process
+        caveats:
+          type: string
+          description: Polish description of limitations and what to verify in a lab
+      required: [materialType, description, metalContent, platingAnalysis, recommendedProcess, caveats]
 
     ProcessCompareResult:
       type: object
