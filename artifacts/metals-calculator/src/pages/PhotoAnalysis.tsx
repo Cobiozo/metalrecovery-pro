@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -523,6 +523,7 @@ export function PhotoAnalysisPage() {
     navigate(dest);
   }
 
+  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -530,6 +531,13 @@ export function PhotoAnalysisPage() {
   const [editedQuantities, setEditedQuantities] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saveItem, setSaveItem] = useState<VisionItem | null>(null);
+
+  useEffect(() => {
+    fetch(`${getApiBase()}/vision/status`)
+      .then((r) => r.json())
+      .then((d: { available: boolean }) => setAiAvailable(d.available))
+      .catch(() => setAiAvailable(false));
+  }, []);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -605,6 +613,35 @@ export function PhotoAnalysisPage() {
   const ewasteItems = result?.items.filter(
     (i) => !i.materialType.toLowerCase().startsWith("nieelektroniczne"),
   ) ?? [];
+
+  if (aiAvailable === false) {
+    return (
+      <div className="space-y-6 max-w-2xl mx-auto">
+        <div>
+          <h1 className="text-2xl font-bold font-sans tracking-tight flex items-center gap-2">
+            <ScanLine className="h-6 w-6 text-primary" />
+            Analiza zdjęcia
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Rozpoznawanie metali ze zdjęcia przy pomocy AI
+          </p>
+        </div>
+        <Card className="border-border">
+          <CardContent className="py-12 flex flex-col items-center gap-4 text-center">
+            <div className="bg-muted p-4 rounded-full">
+              <Sparkles className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold text-base">Funkcja AI niedostępna na tym serwerze</p>
+              <p className="text-muted-foreground text-sm mt-2 max-w-sm">
+                Analiza zdjęć wymaga klucza API OpenAI. Skontaktuj się z administratorem serwisu.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">

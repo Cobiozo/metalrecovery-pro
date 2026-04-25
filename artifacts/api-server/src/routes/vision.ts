@@ -176,6 +176,13 @@ function handleUpload(req: Request, res: Response, next: NextFunction): void {
   });
 }
 
+router.get("/status", (_req, res) => {
+  const hasKey = Boolean(
+    process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY
+  );
+  res.json({ available: hasKey });
+});
+
 router.post(
   "/analyze",
   handleUpload,

@@ -69152,6 +69152,12 @@ function handleUpload(req, res, next) {
     next();
   });
 }
+router6.get("/status", (_req, res) => {
+  const hasKey = Boolean(
+    process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY
+  );
+  res.json({ available: hasKey });
+});
 router6.post(
   "/analyze",
   handleUpload,
