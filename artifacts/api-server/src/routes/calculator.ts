@@ -741,15 +741,14 @@ router.post("/calculator/estimate", async (req, res) => {
   });
 
   const totalChemistryCostPln =
-    chemistryCosts.reduce((sum, c) => sum + c.totalCostPln, 0) +
-    electricityCostPln;
+    chemistryCosts.reduce((sum, c) => sum + c.totalCostPln, 0);
 
   const totalRevenuePln = recoveredMetals.reduce(
     (sum, m) => sum + m.totalValuePln,
     0,
   );
-  const totalCostPln = totalChemistryCostPln;
-  const netProfitPln = totalRevenuePln - totalCostPln;
+  const totalCostPln = Math.round((totalChemistryCostPln + electricityCostPln) * 100) / 100;
+  const netProfitPln = Math.round((totalRevenuePln - totalCostPln) * 100) / 100;
 
   const profitMargin = totalRevenuePln > 0 ? netProfitPln / totalRevenuePln : -1;
   let profitabilityRating: string;
