@@ -253,6 +253,38 @@ export interface CalculationResult {
   metalPricesSnapshot: MetalPrices;
 }
 
+export interface CompareRequest {
+  /** @minItems 1 */
+  batch: BatchItem[];
+  /** Electricity price in PLN per kWh (default 0.80) */
+  electricityPricePerKwh?: number;
+}
+
+export type ProcessCompareResultProfitabilityRating =
+  (typeof ProcessCompareResultProfitabilityRating)[keyof typeof ProcessCompareResultProfitabilityRating];
+
+export const ProcessCompareResultProfitabilityRating = {
+  very_profitable: "very_profitable",
+  profitable: "profitable",
+  marginal: "marginal",
+  not_profitable: "not_profitable",
+} as const;
+
+export interface ProcessCompareResult {
+  processId: string;
+  processName: string;
+  totalInputMassKg: number;
+  netProfitPln: number;
+  totalRevenuePln: number;
+  totalCostPln: number;
+  estimatedTimeHours: number;
+  profitabilityRating: ProcessCompareResultProfitabilityRating;
+  /** Recovered gold mass in grams */
+  auMassGrams: number;
+  /** Recovered silver mass in grams */
+  agMassGrams: number;
+}
+
 export type GetMetalPricesHistoryParams = {
   range?: GetMetalPricesHistoryRange;
 };

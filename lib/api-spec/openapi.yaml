@@ -123,6 +123,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/CalculationResult"
 
+  /calculator/compare:
+    post:
+      operationId: compareProcesses
+      tags: [calculator]
+      summary: Compare all chemical processes for a given batch
+      description: Runs the recovery estimate for all available processes using default parameters and returns a ranked summary table
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompareRequest"
+      responses:
+        "200":
+          description: List of process comparison results sorted by net profit descending
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProcessCompareResult"
+
 components:
   schemas:
     HealthStatus:
@@ -470,3 +492,54 @@ components:
         - profitabilityRating
         - profitabilityNote
         - metalPricesSnapshot
+
+    CompareRequest:
+      type: object
+      properties:
+        batch:
+          type: array
+          items:
+            $ref: "#/components/schemas/BatchItem"
+          minItems: 1
+        electricityPricePerKwh:
+          type: number
+          description: Electricity price in PLN per kWh (default 0.80)
+      required: [batch]
+
+    ProcessCompareResult:
+      type: object
+      properties:
+        processId:
+          type: string
+        processName:
+          type: string
+        totalInputMassKg:
+          type: number
+        netProfitPln:
+          type: number
+        totalRevenuePln:
+          type: number
+        totalCostPln:
+          type: number
+        estimatedTimeHours:
+          type: number
+        profitabilityRating:
+          type: string
+          enum: [very_profitable, profitable, marginal, not_profitable]
+        auMassGrams:
+          type: number
+          description: Recovered gold mass in grams
+        agMassGrams:
+          type: number
+          description: Recovered silver mass in grams
+      required:
+        - processId
+        - processName
+        - totalInputMassKg
+        - netProfitPln
+        - totalRevenuePln
+        - totalCostPln
+        - estimatedTimeHours
+        - profitabilityRating
+        - auMassGrams
+        - agMassGrams

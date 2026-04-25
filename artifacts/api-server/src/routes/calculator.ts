@@ -390,6 +390,115 @@ function computeParameterYieldMultiplier(
   return Math.min(99.5, Math.max(0, adjusted));
 }
 
+function computeCompareResult(
+  batch: BatchItem[],
+  processId: string,
+  metalPrices: { Au: number; Ag: number; Pt: number; Pd: number },
+  electricityPricePerKwh = 0.8,
+) {
+  const process = chemicalProcessesMap[processId]!;
+
+  let totalMassKg = 0;
+  const totalMetalsG = { Au: 0, Ag: 0, Pt: 0, Pd: 0 };
+
+  for (const item of batch) {
+    const mat = electronicMaterialsMap[item.materialId]!;
+    const massKg =
+      mat.unit === "piece"
+        ? item.quantity * (mat.weightPerPiece ?? 0.1)
+        : item.quantity;
+    totalMassKg += massKg;
+    totalMetalsG.Au += mat.metalContentPerKg.Au.typical * massKg;
+    totalMetalsG.Ag += mat.metalContentPerKg.Ag.typical * massKg;
+    totalMetalsG.Pt += mat.metalContentPerKg.Pt.typical * massKg;
+    totalMetalsG.Pd += mat.metalContentPerKg.Pd.typical * massKg;
+  }
+
+  const metals = ["Au", "Ag", "Pt", "Pd"] as const;
+  let totalRevenuePln = 0;
+  let auMassGrams = 0;
+  let agMassGrams = 0;
+
+  for (const metal of metals) {
+    const recovered = totalMetalsG[metal] * (process.yieldPercent[metal] / 100);
+    totalRevenuePln += recovered * metalPrices[metal];
+    if (metal === "Au") auMassGrams = Math.round(recovered * 1000) / 1000;
+    if (metal === "Ag") agMassGrams = Math.round(recovered * 1000) / 1000;
+  }
+
+  totalRevenuePln = Math.round(totalRevenuePln * 100) / 100;
+
+  const chemistryCost = process.reagents.reduce(
+    (sum, r) => sum + r.amountPerKg * totalMassKg * r.pricePerLiter,
+    0,
+  );
+  const electricityCost = process.electricityKwhPerKg * totalMassKg * electricityPricePerKwh;
+  const totalCostPln = Math.round((chemistryCost + electricityCost) * 100) / 100;
+  const netProfitPln = Math.round((totalRevenuePln - totalCostPln) * 100) / 100;
+
+  const profitMargin = totalRevenuePln > 0 ? netProfitPln / totalRevenuePln : -1;
+  const profitabilityRating =
+    profitMargin > 0.5
+      ? "very_profitable"
+      : profitMargin > 0.2
+        ? "profitable"
+        : profitMargin > 0
+          ? "marginal"
+          : "not_profitable";
+
+  const avgTimePerKg = (process.timePerKgMin + process.timePerKgMax) / 2;
+  const estimatedTimeHours = Math.round(avgTimePerKg * totalMassKg * 10) / 10;
+
+  return {
+    processId,
+    processName: process.name,
+    totalInputMassKg: Math.round(totalMassKg * 1000) / 1000,
+    netProfitPln,
+    totalRevenuePln,
+    totalCostPln,
+    estimatedTimeHours,
+    profitabilityRating,
+    auMassGrams,
+    agMassGrams,
+  };
+}
+
+router.post("/calculator/compare", async (req, res) => {
+  const body = req.body as { batch: BatchItem[]; electricityPricePerKwh?: number };
+
+  if (!body.batch || !Array.isArray(body.batch) || body.batch.length === 0) {
+    res.status(400).json({ error: "Invalid request: batch required" });
+    return;
+  }
+  if (body.batch.length > 50) {
+    res.status(400).json({ error: "Batch too large: maximum 50 items allowed" });
+    return;
+  }
+  const unknownMaterials = body.batch
+    .filter((item) => !electronicMaterialsMap[item.materialId])
+    .map((item) => item.materialId);
+  if (unknownMaterials.length > 0) {
+    res.status(400).json({ error: `Unknown material IDs: ${unknownMaterials.join(", ")}` });
+    return;
+  }
+  const invalidQuantities = body.batch.filter(
+    (item) => typeof item.quantity !== "number" || item.quantity <= 0,
+  );
+  if (invalidQuantities.length > 0) {
+    res.status(400).json({ error: "All batch quantities must be positive numbers" });
+    return;
+  }
+
+  const metalPrices = await getOrFetchPrices();
+  const elPrice = body.electricityPricePerKwh ?? 0.8;
+
+  const results = Object.keys(chemicalProcessesMap)
+    .map((pid) => computeCompareResult(body.batch, pid, metalPrices, elPrice))
+    .sort((a, b) => b.netProfitPln - a.netProfitPln);
+
+  res.json(results);
+});
+
 router.post("/calculator/estimate", async (req, res) => {
   const body = req.body as CalculationRequest;
 

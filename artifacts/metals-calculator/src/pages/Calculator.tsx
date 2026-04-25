@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useCalculateRecovery, CalculationResult } from "@workspace/api-client-react";
+import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useCalculateRecovery, useCompareProcesses, CalculationResult, ProcessCompareResult } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown } from "lucide-react";
+import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2 } from "lucide-react";
 import { generateCalculationPdf } from "@/lib/generatePdf";
 import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { ProcessCompareTable } from "@/components/ProcessCompareTable";
 
 type BatchItemState = {
   id: string;
@@ -110,6 +111,8 @@ export function CalculatorPage() {
   const [showHistory, setShowHistory] = useState(false);
   const [sessionName, setSessionName] = useState("");
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
+  const [compareData, setCompareData] = useState<ProcessCompareResult[] | null>(null);
 
   const { data: materials, isLoading: materialsLoading } = useGetElectronicMaterials({
     query: { queryKey: getGetElectronicMaterialsQueryKey() }
@@ -139,6 +142,52 @@ export function CalculatorPage() {
       }
     }
   });
+
+  const compareMutation = useCompareProcesses({
+    mutation: {
+      onSuccess: (data) => {
+        setCompareData(data);
+        setShowCompare(true);
+      }
+    }
+  });
+
+  const buildBatchForApi = () =>
+    batchItems.map((item) => {
+      const material = materials?.find((m) => m.id === item.materialId);
+      const nativeUnit = material?.unit === "piece" ? "piece" : "kg";
+      const effectiveUnit = getEffectiveUnit(item);
+      let quantity = item.quantity;
+      if (effectiveUnit === "piece" && nativeUnit === "kg") {
+        quantity = item.quantity * getWeightPerPiece(item);
+      } else if (effectiveUnit === "kg" && nativeUnit === "piece") {
+        const wpp = getWeightPerPiece(item);
+        quantity = wpp > 0 ? Math.round(item.quantity / wpp) : item.quantity;
+      }
+      return { materialId: item.materialId, quantity };
+    });
+
+  const handleCompare = () => {
+    if (!canGoToProcess) return;
+    compareMutation.mutate({
+      data: {
+        batch: buildBatchForApi(),
+        electricityPricePerKwh: processParams.electricityPricePerKwh,
+      },
+    });
+  };
+
+  const handleSelectFromCompare = (processId: string) => {
+    setSelectedProcessId(processId);
+    setShowCompare(false);
+    calculateMutation.mutate({
+      data: {
+        batch: buildBatchForApi(),
+        processId,
+        electricityPricePerKwh: processParams.electricityPricePerKwh,
+      },
+    });
+  };
 
   const handleAddBatchItem = () => {
     setBatchItems([...batchItems, { id: Math.random().toString(), materialId: '', quantity: 1 }]);
@@ -178,19 +227,7 @@ export function CalculatorPage() {
     if (!selectedProcessId || batchItems.some(i => !i.materialId || i.quantity <= 0)) return;
 
     const requestData: Parameters<typeof calculateMutation.mutate>[0]['data'] = {
-      batch: batchItems.map(item => {
-        const material = materials?.find(m => m.id === item.materialId);
-        const nativeUnit = material?.unit === 'piece' ? 'piece' : 'kg';
-        const effectiveUnit = getEffectiveUnit(item);
-        let quantity = item.quantity;
-        if (effectiveUnit === 'piece' && nativeUnit === 'kg') {
-          quantity = item.quantity * getWeightPerPiece(item);
-        } else if (effectiveUnit === 'kg' && nativeUnit === 'piece') {
-          const wpp = getWeightPerPiece(item);
-          quantity = wpp > 0 ? Math.round(item.quantity / wpp) : item.quantity;
-        }
-        return { materialId: item.materialId, quantity };
-      }),
+      batch: buildBatchForApi(),
       processId: selectedProcessId,
       electricityPricePerKwh: processParams.electricityPricePerKwh,
     };
@@ -443,19 +480,67 @@ export function CalculatorPage() {
                 <Plus className="mr-2 h-4 w-4" /> Dodaj kolejny materiał
               </Button>
             </CardContent>
-            <CardFooter className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
+            <CardFooter className="bg-muted/30 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 py-4">
               <div className="text-sm">
                 <span className="text-muted-foreground">Szacowana masa całkowita:</span>
                 <span className="font-mono font-bold ml-2 text-lg">{formatMass(totalMass, 'kg')}</span>
               </div>
-              <Button
-                onClick={() => setActiveTab("proces")}
-                disabled={!canGoToProcess}
-              >
-                Dalej: Wybierz proces <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  onClick={handleCompare}
+                  disabled={!canGoToProcess || compareMutation.isPending}
+                  title={canGoToProcess ? "Porównaj wszystkie 9 procesów dla tego wsadu" : "Dodaj materiały do wsadu"}
+                  className="flex-1 sm:flex-none"
+                >
+                  {compareMutation.isPending ? (
+                    "Porównuję..."
+                  ) : (
+                    <>
+                      <BarChart2 className="h-4 w-4 mr-2" />
+                      Porównaj procesy
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={() => setActiveTab("proces")}
+                  disabled={!canGoToProcess}
+                  className="flex-1 sm:flex-none"
+                >
+                  Dalej: Wybierz proces <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
             </CardFooter>
           </Card>
+
+          {showCompare && compareData && (
+            <Card className="border-primary/30 bg-card">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <BarChart2 className="h-5 w-5 text-primary" />
+                      Porównanie wszystkich procesów
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Ranking opłacalności dla podanego wsadu ({formatMass(totalMass, 'kg')})
+                    </CardDescription>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setShowCompare(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ProcessCompareTable
+                  data={compareData}
+                  onSelectProcess={handleSelectFromCompare}
+                  isSelecting={calculateMutation.isPending}
+                  selectedProcessId={selectedProcessId}
+                />
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="proces" className="space-y-6">

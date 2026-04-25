@@ -20,11 +20,13 @@ import type {
   CalculationRequest,
   CalculationResult,
   ChemicalProcess,
+  CompareRequest,
   ElectronicMaterial,
   GetMetalPricesHistoryParams,
   HealthStatus,
   MetalHistoryPoint,
   MetalPrices,
+  ProcessCompareResult,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -527,4 +529,91 @@ export const useCalculateRecovery = <
   TContext
 > => {
   return useMutation(getCalculateRecoveryMutationOptions(options));
+};
+
+/**
+ * Runs the recovery estimate for all available processes using default parameters and returns a ranked summary table
+ * @summary Compare all chemical processes for a given batch
+ */
+export const getCompareProcessesUrl = () => {
+  return `/api/calculator/compare`;
+};
+
+export const compareProcesses = async (
+  compareRequest: CompareRequest,
+  options?: RequestInit,
+): Promise<ProcessCompareResult[]> => {
+  return customFetch<ProcessCompareResult[]>(getCompareProcessesUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(compareRequest),
+  });
+};
+
+export const getCompareProcessesMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof compareProcesses>>,
+    TError,
+    { data: BodyType<CompareRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof compareProcesses>>,
+  TError,
+  { data: BodyType<CompareRequest> },
+  TContext
+> => {
+  const mutationKey = ["compareProcesses"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof compareProcesses>>,
+    { data: BodyType<CompareRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return compareProcesses(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CompareProcessesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof compareProcesses>>
+>;
+export type CompareProcessesMutationBody = BodyType<CompareRequest>;
+export type CompareProcessesMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Compare all chemical processes for a given batch
+ */
+export const useCompareProcesses = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof compareProcesses>>,
+    TError,
+    { data: BodyType<CompareRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof compareProcesses>>,
+  TError,
+  { data: BodyType<CompareRequest> },
+  TContext
+> => {
+  return useMutation(getCompareProcessesMutationOptions(options));
 };

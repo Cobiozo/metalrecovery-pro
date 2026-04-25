@@ -246,3 +246,44 @@ export const CalculateRecoveryResponse = zod.object({
     source: zod.string().describe("Data source name"),
   }),
 });
+
+/**
+ * Runs the recovery estimate for all available processes using default parameters and returns a ranked summary table
+ * @summary Compare all chemical processes for a given batch
+ */
+
+export const CompareProcessesBody = zod.object({
+  batch: zod
+    .array(
+      zod.object({
+        materialId: zod.string(),
+        quantity: zod
+          .number()
+          .describe("Amount in kg or pieces (depending on unit)"),
+      }),
+    )
+    .min(1),
+  electricityPricePerKwh: zod
+    .number()
+    .optional()
+    .describe("Electricity price in PLN per kWh (default 0.80)"),
+});
+
+export const CompareProcessesResponseItem = zod.object({
+  processId: zod.string(),
+  processName: zod.string(),
+  totalInputMassKg: zod.number(),
+  netProfitPln: zod.number(),
+  totalRevenuePln: zod.number(),
+  totalCostPln: zod.number(),
+  estimatedTimeHours: zod.number(),
+  profitabilityRating: zod.enum([
+    "very_profitable",
+    "profitable",
+    "marginal",
+    "not_profitable",
+  ]),
+  auMassGrams: zod.number().describe("Recovered gold mass in grams"),
+  agMassGrams: zod.number().describe("Recovered silver mass in grams"),
+});
+export const CompareProcessesResponse = zod.array(CompareProcessesResponseItem);
