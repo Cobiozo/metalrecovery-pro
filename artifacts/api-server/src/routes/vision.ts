@@ -55,7 +55,13 @@ Analyze the uploaded photo and return a JSON object following these steps:
 
 STEP 1 — IDENTIFY distinct material types.
 Are there different component types (e.g. motherboards AND CPUs AND RAM)? Each distinct type → separate item in "items".
-DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings are NOT e-waste.
+IMPORTANT — the following ARE electronic waste (e-waste) with recoverable precious metals:
+  • Cameras and camcorders (VHS, Video8, Hi8, Super 8, digital, analog) — contain PCBs, gold-plated connectors, ICs
+  • Printers (inkjet, laser) — contain PCBs and gold contacts
+  • Game consoles (Atari, Nintendo, Sega, PlayStation, Xbox) — contain rich PCBs
+  • Audio/video equipment (tape decks, CD/DVD players, amplifiers)
+  • Any device with a circuit board, connectors or microchips
+DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings, clothing, non-electronic mechanical parts are NOT e-waste.
 Non-e-waste → materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, quantity = 0.
 
 STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
@@ -95,7 +101,7 @@ STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 }
 
 ALL string values (color, thickness, notes, descriptions) MUST be in POLISH.
-Reference metal values: motherboards ~0.2–0.5 g Au/kg; ceramic CPUs ~3–10 g Au/kg; gold fingers ~2–15 g Au/kg; RAM ~0.5–1.5 g Au/kg.`;
+Reference metal values: motherboards ~0.2–0.5 g Au/kg; ceramic CPUs ~3–10 g Au/kg; gold fingers ~2–15 g Au/kg; RAM ~0.5–1.5 g Au/kg; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg.`;
 
 function handleUpload(req: Request, res: Response, next: NextFunction): void {
   upload.single("image")(req, res, (err: unknown) => {

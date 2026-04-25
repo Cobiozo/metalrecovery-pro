@@ -125,6 +125,8 @@ export interface ElectronicMaterial {
   /** True if this material can be cleaned (plastic/housing removed) to increase effective metal content per kg */
   requiresCleaning?: boolean;
   cleanedMultiplier?: CleanedMultiplier;
+  /** Short English visual description to help AI/vision models match photos to this material type */
+  catalogHint?: string;
 }
 
 export interface Reagent {

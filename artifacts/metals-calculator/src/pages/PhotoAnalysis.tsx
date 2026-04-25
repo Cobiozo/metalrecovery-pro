@@ -342,7 +342,7 @@ function VisionResultCard({
 }
 
 function findDbMaterial(
-  apiMaterials: Array<{ id: string; name: string; nameEn?: string }> | undefined,
+  apiMaterials: Array<{ id: string; name: string; nameEn?: string; catalogHint?: string }> | undefined,
   materialType: string
 ): string | null {
   if (!apiMaterials || !materialType) return null;
@@ -498,7 +498,7 @@ export function PhotoAnalysisPage() {
       if (apiMaterials && apiMaterials.length > 0) {
         formData.append(
           "materialCatalog",
-          JSON.stringify(apiMaterials.map((m) => ({ id: m.id, name: m.name, nameEn: m.nameEn }))),
+          JSON.stringify(apiMaterials.map((m) => ({ id: m.id, name: m.name, nameEn: m.nameEn, catalogHint: m.catalogHint }))),
         );
       }
 

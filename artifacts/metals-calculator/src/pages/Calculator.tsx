@@ -145,7 +145,10 @@ function MaterialCombobox({
         align="start"
         style={{ maxHeight: "340px" }}
       >
-        <Command>
+        <Command filter={(itemValue, search) => {
+          if (!search) return 1;
+          return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+        }}>
           <CommandInput placeholder="Szukaj materiału..." className="h-9" />
           <CommandList className="max-h-[280px]">
             {loading ? (
@@ -165,7 +168,7 @@ function MaterialCombobox({
                     {grouped[cat]!.map(m => (
                       <CommandItem
                         key={m.id}
-                        value={`${m.name} ${m.category}`}
+                        value={m.name}
                         onSelect={() => {
                           onValueChange(m.id);
                           setOpen(false);
