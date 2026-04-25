@@ -5,6 +5,7 @@
  * API specification for Precious Metals Recovery Calculator
  * OpenAPI spec version: 0.1.0
  */
+import type { InlineMetalContent } from "./inlineMetalContent";
 
 export interface PurchasePriceRequest {
   /** ID of the electronic material */
@@ -17,4 +18,5 @@ export interface PurchasePriceRequest {
   electricityPricePerKwh?: number;
   /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
   isCleaned?: boolean;
+  inlineMetalContent?: InlineMetalContent;
 }

@@ -204,6 +204,17 @@ export const CalculateRecoveryBody = zod.object({
           .describe(
             "If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation",
           ),
+        inlineMetalContent: zod
+          .object({
+            Au: zod.number().describe("Gold content in g\/kg"),
+            Ag: zod.number().describe("Silver content in g\/kg"),
+            Pt: zod.number().describe("Platinum content in g\/kg"),
+            Pd: zod.number().describe("Palladium content in g\/kg"),
+          })
+          .optional()
+          .describe(
+            "Custom metal content override in g\/kg (for user-defined materials not in the standard list)",
+          ),
       }),
     )
     .min(1),
@@ -290,6 +301,17 @@ export const CalculatePurchasePriceBody = zod.object({
     .describe(
       "If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation",
     ),
+  inlineMetalContent: zod
+    .object({
+      Au: zod.number().describe("Gold content in g\/kg"),
+      Ag: zod.number().describe("Silver content in g\/kg"),
+      Pt: zod.number().describe("Platinum content in g\/kg"),
+      Pd: zod.number().describe("Palladium content in g\/kg"),
+    })
+    .optional()
+    .describe(
+      "Custom metal content override in g\/kg (for user-defined materials not in the standard list)",
+    ),
 });
 
 export const CalculatePurchasePriceResponse = zod.object({
@@ -327,6 +349,83 @@ export const CalculatePurchasePriceResponse = zod.object({
 });
 
 /**
+ * Calculates weighted-average max purchase price for a batch of multiple materials with individual quantities
+ * @summary Calculate maximum purchase price for a mixed material lot
+ */
+export const calculatePurchasePriceBatchBodyBatchMax = 30;
+
+export const CalculatePurchasePriceBatchBody = zod.object({
+  batch: zod
+    .array(
+      zod.object({
+        materialId: zod.string(),
+        quantityKg: zod.number().describe("Mass in kg"),
+        isCleaned: zod.boolean().optional(),
+        name: zod
+          .string()
+          .optional()
+          .describe(
+            "Optional display name override (used for custom materials)",
+          ),
+        inlineMetalContent: zod
+          .object({
+            Au: zod.number().describe("Gold content in g\/kg"),
+            Ag: zod.number().describe("Silver content in g\/kg"),
+            Pt: zod.number().describe("Platinum content in g\/kg"),
+            Pd: zod.number().describe("Palladium content in g\/kg"),
+          })
+          .optional()
+          .describe(
+            "Custom metal content override in g\/kg (for user-defined materials not in the standard list)",
+          ),
+      }),
+    )
+    .min(1)
+    .max(calculatePurchasePriceBatchBodyBatchMax),
+  processId: zod.string(),
+  targetMarginPercent: zod
+    .number()
+    .describe("Target profit margin in percent (0-90)"),
+  electricityPricePerKwh: zod
+    .number()
+    .optional()
+    .describe("Electricity price in PLN per kWh (default 0.80)"),
+});
+
+export const CalculatePurchasePriceBatchResponse = zod.object({
+  processId: zod.string(),
+  processName: zod.string(),
+  targetMarginPercent: zod.number(),
+  totalQuantityKg: zod.number(),
+  maxPurchasePricePerKgPln: zod
+    .number()
+    .describe("Weighted-average max purchase price per kg of mixed lot"),
+  maxPurchasePriceTotalPln: zod
+    .number()
+    .describe("Total max purchase price for the whole lot"),
+  revenuePerKgPln: zod.number().describe("Weighted-average revenue per kg"),
+  processCostPerKgPln: zod.number(),
+  chemistryCostPerKgPln: zod.number(),
+  electricityCostPerKgPln: zod.number(),
+  grossProfitPerKgPln: zod.number(),
+  isBreakEven: zod.boolean(),
+  isProfitable: zod.boolean(),
+  breakdown: zod.array(
+    zod.object({
+      materialId: zod.string(),
+      materialName: zod.string(),
+      quantityKg: zod.number(),
+      revenuePerKgPln: zod.number(),
+      processCostPerKgPln: zod.number(),
+      grossProfitPerKgPln: zod.number(),
+      maxPurchasePricePerKgPln: zod.number(),
+      maxPurchasePriceTotalPln: zod.number(),
+      isCleaned: zod.boolean(),
+    }),
+  ),
+});
+
+/**
  * Runs the recovery estimate for all available processes using default parameters and returns a ranked summary table
  * @summary Compare all chemical processes for a given batch
  */
@@ -344,6 +443,17 @@ export const CompareProcessesBody = zod.object({
           .optional()
           .describe(
             "If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation",
+          ),
+        inlineMetalContent: zod
+          .object({
+            Au: zod.number().describe("Gold content in g\/kg"),
+            Ag: zod.number().describe("Silver content in g\/kg"),
+            Pt: zod.number().describe("Platinum content in g\/kg"),
+            Pd: zod.number().describe("Palladium content in g\/kg"),
+          })
+          .optional()
+          .describe(
+            "Custom metal content override in g\/kg (for user-defined materials not in the standard list)",
           ),
       }),
     )

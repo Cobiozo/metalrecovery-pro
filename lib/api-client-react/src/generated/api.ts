@@ -27,6 +27,8 @@ import type {
   MetalHistoryPoint,
   MetalPrices,
   ProcessCompareResult,
+  PurchasePriceBatchRequest,
+  PurchasePriceBatchResult,
   PurchasePriceRequest,
   PurchasePriceResult,
 } from "./api.schemas";
@@ -618,6 +620,97 @@ export const useCalculatePurchasePrice = <
   TContext
 > => {
   return useMutation(getCalculatePurchasePriceMutationOptions(options));
+};
+
+/**
+ * Calculates weighted-average max purchase price for a batch of multiple materials with individual quantities
+ * @summary Calculate maximum purchase price for a mixed material lot
+ */
+export const getCalculatePurchasePriceBatchUrl = () => {
+  return `/api/calculator/purchase-price-batch`;
+};
+
+export const calculatePurchasePriceBatch = async (
+  purchasePriceBatchRequest: PurchasePriceBatchRequest,
+  options?: RequestInit,
+): Promise<PurchasePriceBatchResult> => {
+  return customFetch<PurchasePriceBatchResult>(
+    getCalculatePurchasePriceBatchUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(purchasePriceBatchRequest),
+    },
+  );
+};
+
+export const getCalculatePurchasePriceBatchMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calculatePurchasePriceBatch>>,
+    TError,
+    { data: BodyType<PurchasePriceBatchRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof calculatePurchasePriceBatch>>,
+  TError,
+  { data: BodyType<PurchasePriceBatchRequest> },
+  TContext
+> => {
+  const mutationKey = ["calculatePurchasePriceBatch"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof calculatePurchasePriceBatch>>,
+    { data: BodyType<PurchasePriceBatchRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return calculatePurchasePriceBatch(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CalculatePurchasePriceBatchMutationResult = NonNullable<
+  Awaited<ReturnType<typeof calculatePurchasePriceBatch>>
+>;
+export type CalculatePurchasePriceBatchMutationBody =
+  BodyType<PurchasePriceBatchRequest>;
+export type CalculatePurchasePriceBatchMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Calculate maximum purchase price for a mixed material lot
+ */
+export const useCalculatePurchasePriceBatch = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof calculatePurchasePriceBatch>>,
+    TError,
+    { data: BodyType<PurchasePriceBatchRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof calculatePurchasePriceBatch>>,
+  TError,
+  { data: BodyType<PurchasePriceBatchRequest> },
+  TContext
+> => {
+  return useMutation(getCalculatePurchasePriceBatchMutationOptions(options));
 };
 
 /**

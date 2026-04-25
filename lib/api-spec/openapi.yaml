@@ -143,6 +143,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/PurchasePriceResult"
 
+  /calculator/purchase-price-batch:
+    post:
+      operationId: calculatePurchasePriceBatch
+      tags: [calculator]
+      summary: Calculate maximum purchase price for a mixed material lot
+      description: Calculates weighted-average max purchase price for a batch of multiple materials with individual quantities
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PurchasePriceBatchRequest"
+      responses:
+        "200":
+          description: Batch purchase price result with per-material breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PurchasePriceBatchResult"
+
   /calculator/compare:
     post:
       operationId: compareProcesses
@@ -410,6 +430,24 @@ components:
         - safetyNotes
         - steps
 
+    InlineMetalContent:
+      type: object
+      description: Custom metal content override in g/kg (for user-defined materials not in the standard list)
+      properties:
+        Au:
+          type: number
+          description: Gold content in g/kg
+        Ag:
+          type: number
+          description: Silver content in g/kg
+        Pt:
+          type: number
+          description: Platinum content in g/kg
+        Pd:
+          type: number
+          description: Palladium content in g/kg
+      required: [Au, Ag, Pt, Pd]
+
     BatchItem:
       type: object
       properties:
@@ -421,7 +459,129 @@ components:
         isCleaned:
           type: boolean
           description: If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation
+        inlineMetalContent:
+          $ref: "#/components/schemas/InlineMetalContent"
       required: [materialId, quantity]
+
+    PurchasePriceBatchItem:
+      type: object
+      properties:
+        materialId:
+          type: string
+        quantityKg:
+          type: number
+          description: Mass in kg
+        isCleaned:
+          type: boolean
+        name:
+          type: string
+          description: Optional display name override (used for custom materials)
+        inlineMetalContent:
+          $ref: "#/components/schemas/InlineMetalContent"
+      required: [materialId, quantityKg]
+
+    PurchasePriceBatchRequest:
+      type: object
+      properties:
+        batch:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchasePriceBatchItem"
+          minItems: 1
+          maxItems: 30
+        processId:
+          type: string
+        targetMarginPercent:
+          type: number
+          description: Target profit margin in percent (0-90)
+        electricityPricePerKwh:
+          type: number
+          description: Electricity price in PLN per kWh (default 0.80)
+      required: [batch, processId, targetMarginPercent]
+
+    PurchasePriceBatchBreakdownItem:
+      type: object
+      properties:
+        materialId:
+          type: string
+        materialName:
+          type: string
+        quantityKg:
+          type: number
+        revenuePerKgPln:
+          type: number
+        processCostPerKgPln:
+          type: number
+        grossProfitPerKgPln:
+          type: number
+        maxPurchasePricePerKgPln:
+          type: number
+        maxPurchasePriceTotalPln:
+          type: number
+        isCleaned:
+          type: boolean
+      required:
+        - materialId
+        - materialName
+        - quantityKg
+        - revenuePerKgPln
+        - processCostPerKgPln
+        - grossProfitPerKgPln
+        - maxPurchasePricePerKgPln
+        - maxPurchasePriceTotalPln
+        - isCleaned
+
+    PurchasePriceBatchResult:
+      type: object
+      properties:
+        processId:
+          type: string
+        processName:
+          type: string
+        targetMarginPercent:
+          type: number
+        totalQuantityKg:
+          type: number
+        maxPurchasePricePerKgPln:
+          type: number
+          description: Weighted-average max purchase price per kg of mixed lot
+        maxPurchasePriceTotalPln:
+          type: number
+          description: Total max purchase price for the whole lot
+        revenuePerKgPln:
+          type: number
+          description: Weighted-average revenue per kg
+        processCostPerKgPln:
+          type: number
+        chemistryCostPerKgPln:
+          type: number
+        electricityCostPerKgPln:
+          type: number
+        grossProfitPerKgPln:
+          type: number
+        isBreakEven:
+          type: boolean
+        isProfitable:
+          type: boolean
+        breakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/PurchasePriceBatchBreakdownItem"
+      required:
+        - processId
+        - processName
+        - targetMarginPercent
+        - totalQuantityKg
+        - maxPurchasePricePerKgPln
+        - maxPurchasePriceTotalPln
+        - revenuePerKgPln
+        - processCostPerKgPln
+        - chemistryCostPerKgPln
+        - electricityCostPerKgPln
+        - grossProfitPerKgPln
+        - isBreakEven
+        - isProfitable
+        - breakdown
 
     CalculationRequest:
       type: object
@@ -566,6 +726,8 @@ components:
         isCleaned:
           type: boolean
           description: If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation
+        inlineMetalContent:
+          $ref: "#/components/schemas/InlineMetalContent"
       required: [materialId, processId, targetMarginPercent]
 
     PurchasePriceResult:

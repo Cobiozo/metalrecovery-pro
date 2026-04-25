@@ -184,12 +184,82 @@ export interface ChemicalProcess {
   steps: string[];
 }
 
+/**
+ * Custom metal content override in g/kg (for user-defined materials not in the standard list)
+ */
+export interface InlineMetalContent {
+  /** Gold content in g/kg */
+  Au: number;
+  /** Silver content in g/kg */
+  Ag: number;
+  /** Platinum content in g/kg */
+  Pt: number;
+  /** Palladium content in g/kg */
+  Pd: number;
+}
+
 export interface BatchItem {
   materialId: string;
   /** Amount in kg or pieces (depending on unit) */
   quantity: number;
   /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
   isCleaned?: boolean;
+  inlineMetalContent?: InlineMetalContent;
+}
+
+export interface PurchasePriceBatchItem {
+  materialId: string;
+  /** Mass in kg */
+  quantityKg: number;
+  isCleaned?: boolean;
+  /** Optional display name override (used for custom materials) */
+  name?: string;
+  inlineMetalContent?: InlineMetalContent;
+}
+
+export interface PurchasePriceBatchRequest {
+  /**
+   * @minItems 1
+   * @maxItems 30
+   */
+  batch: PurchasePriceBatchItem[];
+  processId: string;
+  /** Target profit margin in percent (0-90) */
+  targetMarginPercent: number;
+  /** Electricity price in PLN per kWh (default 0.80) */
+  electricityPricePerKwh?: number;
+}
+
+export interface PurchasePriceBatchBreakdownItem {
+  materialId: string;
+  materialName: string;
+  quantityKg: number;
+  revenuePerKgPln: number;
+  processCostPerKgPln: number;
+  grossProfitPerKgPln: number;
+  maxPurchasePricePerKgPln: number;
+  maxPurchasePriceTotalPln: number;
+  isCleaned: boolean;
+}
+
+export interface PurchasePriceBatchResult {
+  processId: string;
+  processName: string;
+  targetMarginPercent: number;
+  totalQuantityKg: number;
+  /** Weighted-average max purchase price per kg of mixed lot */
+  maxPurchasePricePerKgPln: number;
+  /** Total max purchase price for the whole lot */
+  maxPurchasePriceTotalPln: number;
+  /** Weighted-average revenue per kg */
+  revenuePerKgPln: number;
+  processCostPerKgPln: number;
+  chemistryCostPerKgPln: number;
+  electricityCostPerKgPln: number;
+  grossProfitPerKgPln: number;
+  isBreakEven: boolean;
+  isProfitable: boolean;
+  breakdown: PurchasePriceBatchBreakdownItem[];
 }
 
 /**
@@ -286,6 +356,7 @@ export interface PurchasePriceRequest {
   electricityPricePerKwh?: number;
   /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
   isCleaned?: boolean;
+  inlineMetalContent?: InlineMetalContent;
 }
 
 export interface PurchasePriceResult {

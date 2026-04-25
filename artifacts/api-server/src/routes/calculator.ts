@@ -8,6 +8,8 @@ interface BatchItem {
   materialId: string;
   quantity: number;
   isCleaned?: boolean;
+  /** Optional metal content override (g/kg typical) for custom / user-defined materials */
+  inlineMetalContent?: { Au: number; Ag: number; Pt: number; Pd: number };
 }
 
 interface CalculationRequest {
@@ -432,6 +434,24 @@ function getEffectiveMetalContent(
   return base;
 }
 
+/** Resolve mass in kg for a batch item (handles piece-unit materials and custom inline items). */
+function resolveItemMassKg(item: BatchItem): number {
+  if (item.inlineMetalContent) return item.quantity; // custom materials are always in kg
+  const mat = electronicMaterialsMap[item.materialId];
+  if (!mat) return item.quantity;
+  return mat.unit === "piece" ? item.quantity * (mat.weightPerPiece ?? 0.1) : item.quantity;
+}
+
+/** Resolve effective metal content (g/kg) for a batch item. Returns null for unknown IDs without inline content. */
+function resolveItemMetalContent(
+  item: BatchItem,
+): { Au: number; Ag: number; Pt: number; Pd: number } | null {
+  if (item.inlineMetalContent) return item.inlineMetalContent;
+  const mat = electronicMaterialsMap[item.materialId];
+  if (!mat) return null;
+  return getEffectiveMetalContent(mat, item.isCleaned === true);
+}
+
 function computeCompareResult(
   batch: BatchItem[],
   processId: string,
@@ -444,13 +464,10 @@ function computeCompareResult(
   const totalMetalsG = { Au: 0, Ag: 0, Pt: 0, Pd: 0 };
 
   for (const item of batch) {
-    const mat = electronicMaterialsMap[item.materialId]!;
-    const massKg =
-      mat.unit === "piece"
-        ? item.quantity * (mat.weightPerPiece ?? 0.1)
-        : item.quantity;
+    const massKg = resolveItemMassKg(item);
+    const content = resolveItemMetalContent(item);
+    if (!content) continue;
     totalMassKg += massKg;
-    const content = getEffectiveMetalContent(mat, item.isCleaned === true);
     totalMetalsG.Au += content.Au * massKg;
     totalMetalsG.Ag += content.Ag * massKg;
     totalMetalsG.Pt += content.Pt * massKg;
@@ -518,7 +535,7 @@ router.post("/calculator/compare", async (req, res) => {
     return;
   }
   const unknownMaterials = body.batch
-    .filter((item) => !electronicMaterialsMap[item.materialId])
+    .filter((item) => !electronicMaterialsMap[item.materialId] && !item.inlineMetalContent)
     .map((item) => item.materialId);
   if (unknownMaterials.length > 0) {
     res.status(400).json({ error: `Unknown material IDs: ${unknownMaterials.join(", ")}` });
@@ -600,7 +617,7 @@ router.post("/calculator/estimate", async (req, res) => {
   }
 
   const unknownMaterials = body.batch
-    .filter((item) => !electronicMaterialsMap[item.materialId])
+    .filter((item) => !electronicMaterialsMap[item.materialId] && !item.inlineMetalContent)
     .map((item) => item.materialId);
 
   if (unknownMaterials.length > 0) {
@@ -642,19 +659,10 @@ router.post("/calculator/estimate", async (req, res) => {
   const totalMetalsGPerKg = { Au: 0, Ag: 0, Pt: 0, Pd: 0 };
 
   for (const item of body.batch) {
-    const material = electronicMaterialsMap[item.materialId]!;
-
-    let massKg: number;
-    if (material.unit === "piece") {
-      const weightPerPiece = material.weightPerPiece ?? 0.1;
-      massKg = item.quantity * weightPerPiece;
-    } else {
-      massKg = item.quantity;
-    }
-
+    const massKg = resolveItemMassKg(item);
+    const content = resolveItemMetalContent(item);
+    if (!content) continue;
     totalMassKg += massKg;
-
-    const content = getEffectiveMetalContent(material, item.isCleaned === true);
     totalMetalsGPerKg.Au += content.Au * massKg;
     totalMetalsGPerKg.Ag += content.Ag * massKg;
     totalMetalsGPerKg.Pt += content.Pt * massKg;
@@ -799,6 +807,7 @@ router.post("/calculator/purchase-price", async (req, res) => {
     targetMarginPercent: number;
     electricityPricePerKwh?: number;
     isCleaned?: boolean;
+    inlineMetalContent?: { Au: number; Ag: number; Pt: number; Pd: number };
   };
 
   if (!body.materialId || !body.processId) {
@@ -828,7 +837,7 @@ router.post("/calculator/purchase-price", async (req, res) => {
   }
 
   const material = electronicMaterialsMap[body.materialId];
-  if (!material) {
+  if (!material && !body.inlineMetalContent) {
     res.status(400).json({ error: `Unknown materialId: ${body.materialId}` });
     return;
   }
@@ -844,7 +853,9 @@ router.post("/calculator/purchase-price", async (req, res) => {
 
   const metals = ["Au", "Ag", "Pt", "Pd"] as const;
   let revenuePerKg = 0;
-  const effectiveContent = getEffectiveMetalContent(material, body.isCleaned === true);
+  const effectiveContent = body.inlineMetalContent
+    ? body.inlineMetalContent
+    : getEffectiveMetalContent(material!, body.isCleaned === true);
   for (const metal of metals) {
     const gramsInOnKg = effectiveContent[metal];
     const recovered = gramsInOnKg * (process.yieldPercent[metal] / 100);
@@ -878,6 +889,146 @@ router.post("/calculator/purchase-price", async (req, res) => {
     grossProfitPerKgPln: Math.round(grossProfitPerKg * 100) / 100,
     isBreakEven: body.targetMarginPercent === 0,
     isProfitable: grossProfitPerKg > 0,
+  });
+});
+
+router.post("/calculator/purchase-price-batch", async (req, res) => {
+  const body = req.body as {
+    batch: Array<{
+      materialId: string;
+      quantityKg: number;
+      isCleaned?: boolean;
+      inlineMetalContent?: { Au: number; Ag: number; Pt: number; Pd: number };
+      name?: string;
+    }>;
+    processId: string;
+    targetMarginPercent: number;
+    electricityPricePerKwh?: number;
+  };
+
+  if (!Array.isArray(body.batch) || body.batch.length === 0) {
+    res.status(400).json({ error: "batch must be a non-empty array" });
+    return;
+  }
+  if (body.batch.length > 30) {
+    res.status(400).json({ error: "Batch too large: maximum 30 items" });
+    return;
+  }
+
+  if (
+    typeof body.targetMarginPercent !== "number" ||
+    !isFinite(body.targetMarginPercent) ||
+    body.targetMarginPercent < 0 ||
+    body.targetMarginPercent > 90
+  ) {
+    res.status(400).json({ error: "targetMarginPercent must be between 0 and 90" });
+    return;
+  }
+
+  if (
+    body.electricityPricePerKwh !== undefined &&
+    (typeof body.electricityPricePerKwh !== "number" ||
+      !isFinite(body.electricityPricePerKwh) ||
+      body.electricityPricePerKwh < 0 ||
+      body.electricityPricePerKwh > 10000)
+  ) {
+    res.status(400).json({ error: "electricityPricePerKwh must be between 0 and 10000" });
+    return;
+  }
+
+  const process = chemicalProcessesMap[body.processId];
+  if (!process) {
+    res.status(400).json({ error: `Unknown processId: ${body.processId}` });
+    return;
+  }
+
+  const unknownItems = body.batch.filter(
+    (item) => !electronicMaterialsMap[item.materialId] && !item.inlineMetalContent,
+  );
+  if (unknownItems.length > 0) {
+    res.status(400).json({
+      error: `Unknown materialIds (provide inlineMetalContent for custom materials): ${unknownItems.map((i) => i.materialId).join(", ")}`,
+    });
+    return;
+  }
+
+  const invalidQty = body.batch.filter(
+    (item) => typeof item.quantityKg !== "number" || item.quantityKg <= 0,
+  );
+  if (invalidQty.length > 0) {
+    res.status(400).json({ error: "All quantityKg values must be positive numbers" });
+    return;
+  }
+
+  const metalPrices = await getOrFetchPrices();
+  const elPrice = body.electricityPricePerKwh ?? 0.8;
+  const metals = ["Au", "Ag", "Pt", "Pd"] as const;
+
+  const chemistryCostPerKg = process.reagents.reduce(
+    (sum, r) => sum + r.amountPerKg * r.pricePerLiter,
+    0,
+  );
+  const electricityCostPerKg = process.electricityKwhPerKg * elPrice;
+  const processCostPerKg = chemistryCostPerKg + electricityCostPerKg;
+
+  let totalQuantityKg = 0;
+  let totalRevenueFromAllKg = 0;
+
+  const breakdown = body.batch.map((item) => {
+    const qty = item.quantityKg;
+    totalQuantityKg += qty;
+
+    const content = item.inlineMetalContent
+      ? item.inlineMetalContent
+      : getEffectiveMetalContent(electronicMaterialsMap[item.materialId]!, item.isCleaned === true);
+
+    let revenuePerKg = 0;
+    for (const metal of metals) {
+      const recovered = content[metal] * (process.yieldPercent[metal] / 100);
+      revenuePerKg += recovered * metalPrices[metal];
+    }
+    totalRevenueFromAllKg += revenuePerKg * qty;
+
+    const grossProfit = revenuePerKg - processCostPerKg;
+    const maxPricePerKg = grossProfit * (1 - body.targetMarginPercent / 100);
+
+    const matName = item.name
+      ?? electronicMaterials.find((m) => m.id === item.materialId)?.name
+      ?? item.materialId;
+
+    return {
+      materialId: item.materialId,
+      materialName: matName,
+      quantityKg: Math.round(qty * 1000) / 1000,
+      revenuePerKgPln: Math.round(revenuePerKg * 100) / 100,
+      processCostPerKgPln: Math.round(processCostPerKg * 100) / 100,
+      grossProfitPerKgPln: Math.round(grossProfit * 100) / 100,
+      maxPurchasePricePerKgPln: Math.round(maxPricePerKg * 100) / 100,
+      maxPurchasePriceTotalPln: Math.round(maxPricePerKg * qty * 100) / 100,
+      isCleaned: item.isCleaned === true,
+    };
+  });
+
+  const weightedAvgRevenuePerKg = totalQuantityKg > 0 ? totalRevenueFromAllKg / totalQuantityKg : 0;
+  const grossProfitPerKg = weightedAvgRevenuePerKg - processCostPerKg;
+  const maxPurchasePricePerKg = grossProfitPerKg * (1 - body.targetMarginPercent / 100);
+  const maxPurchasePriceTotalPln = maxPurchasePricePerKg * totalQuantityKg;
+
+  res.json({
+    processId: body.processId,
+    processName: process.name,
+    targetMarginPercent: body.targetMarginPercent,
+    totalQuantityKg: Math.round(totalQuantityKg * 1000) / 1000,
+    maxPurchasePricePerKgPln: Math.round(maxPurchasePricePerKg * 100) / 100,
+    maxPurchasePriceTotalPln: Math.round(maxPurchasePriceTotalPln * 100) / 100,
+    revenuePerKgPln: Math.round(weightedAvgRevenuePerKg * 100) / 100,
+    processCostPerKgPln: Math.round(processCostPerKg * 100) / 100,
+    chemistryCostPerKgPln: Math.round(chemistryCostPerKg * 100) / 100,
+    electricityCostPerKgPln: Math.round(electricityCostPerKg * 100) / 100,
+    grossProfitPerKgPln: Math.round(grossProfitPerKg * 100) / 100,
+    isBreakEven: body.targetMarginPercent === 0,
+    isProfitable: grossProfitPerKg > 0,
+    breakdown,
   });
 });
 

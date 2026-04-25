@@ -10,7 +10,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 Full-stack precious metals recovery calculator for e-waste professionals. Frontend at `/`, API at `/api`.
 
 **Features:**
-- Batch input: 61 types of electronic scrap in 7 categories; material selector also available in Processes page for yield estimation
+- Batch input: 65 types of electronic scrap in 12 categories; material selector also available in Processes page for yield estimation
 - 9 wet chemistry processes: aqua regia (includes pre-trawienie HNO3 step), HNO3 dilute/concentrated, HCl+H2O2, nitrate boat, electrolysis, Wohlwill, Miller, zinc cementation
 - Process simulation: reagent amounts with **adjustable concentration selectors** (auto-recalculates volume/price), temperatures, times, costs per kg
 - Live metal prices (Au, Ag, Pt, Pd) from NBP API with 24h cache, fallback values
@@ -20,6 +20,8 @@ Full-stack precious metals recovery calculator for e-waste professionals. Fronte
 - **Material selector in Processes page**: pick material, see estimated grams recovered per metal (metalContent × processYield × batchKg)
 - **Mobile-responsive**: bottom navigation bar on mobile, stacked batch rows, short tab labels
 - **Editable reagent prices**: in calculator step 2 each reagent has an editable zł/L price field; changes apply to calculation and persist in localStorage
+- **Feature A — Mixed lot purchase calculator**: toggle between single-material and "Partia mieszana" (batch) mode; calculates weighted-average max purchase price + per-material breakdown for up to 30 materials
+- **Feature B — Custom material profiles**: create lab-assay profiles with Au/Ag/Pt/Pd content (g/kg), stored in localStorage; available in both calculators; sent to backend via `inlineMetalContent` so all existing endpoints work transparently
 - **Comprehensively audited data** (Apr 2025): 8 materials corrected against GRF assay data, academic studies (Holgersson 2018, JSDEWES, Huang 2022) and Phoenix Refining:
   - `ram_srebrne` Ag: 3.80 → **0.55 g/kg** (major correction — DDR3/4 Ag only from SnAg solder + MLCC, NOT 3-5 g/kg)
   - `ram_simm` Au: 1.50 → **0.85 g/kg** (SIMM has thick plating but fewer contacts than SDRAM/DDR)
@@ -38,9 +40,11 @@ Full-stack precious metals recovery calculator for e-waste professionals. Fronte
 
 **Key API routes (in `artifacts/api-server`):**
 - `GET /api/metals/prices` — live Au/Ag/Pt/Pd prices in PLN/g from NBP
-- `GET /api/materials/electronics` — 21 electronic material types with metal content
+- `GET /api/materials/electronics` — 65 electronic material types with metal content
 - `GET /api/chemicals/processes` — 9 chemical extraction processes with full specs
-- `POST /api/calculator/estimate` — full calculation from batch + process to profitability
+- `POST /api/calculator/estimate` — full calculation from batch + process to profitability; accepts optional `inlineMetalContent` per BatchItem for custom materials
+- `POST /api/calculator/purchase-price` — single-material max purchase price; accepts optional `inlineMetalContent`
+- `POST /api/calculator/purchase-price-batch` — multi-material lot; returns weighted-average price + per-material breakdown; accepts `inlineMetalContent` per item
 
 ## Stack
 

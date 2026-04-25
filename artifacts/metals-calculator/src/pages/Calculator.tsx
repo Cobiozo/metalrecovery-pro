@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useCalculateRecovery, useCompareProcesses, CalculationResult, ProcessCompareResult } from "@workspace/api-client-react";
+import { useCustomMaterials, getInlineContent } from "@/lib/useCustomMaterials";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,11 +92,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   zlacza: "Złącza",
   kondensator: "Kondensatory",
   inne: "Inne",
+  wlasne: "Własne profile",
 };
 
 const CATEGORY_ORDER = [
   "plyty_glowne", "pcb", "procesor", "pamiec", "karta",
-  "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "kondensator", "inne",
+  "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "kondensator", "inne", "wlasne",
 ];
 
 export function CalculatorPage() {
@@ -116,9 +118,13 @@ export function CalculatorPage() {
   const [showCompare, setShowCompare] = useState(false);
   const [compareData, setCompareData] = useState<ProcessCompareResult[] | null>(null);
 
-  const { data: materials, isLoading: materialsLoading } = useGetElectronicMaterials({
+  const { data: apiMaterials, isLoading: materialsLoading } = useGetElectronicMaterials({
     query: { queryKey: getGetElectronicMaterialsQueryKey() }
   });
+  const { materials: customMats, asApiMaterials: customApiMats } = useCustomMaterials();
+  const materials = [...(apiMaterials ?? []), ...customApiMats];
+  const isCustomId = (id: string) => id.startsWith("custom_");
+  const getCustomMat = (id: string) => customMats.find((m) => m.id === id) ?? null;
 
   const { data: processes, isLoading: processesLoading } = useGetChemicalProcesses({
     query: { queryKey: getGetChemicalProcessesQueryKey() }
@@ -168,7 +174,13 @@ export function CalculatorPage() {
           const wpp = getWeightPerPiece(item);
           quantity = wpp > 0 ? Math.round(item.quantity / wpp) : item.quantity;
         }
-        return { materialId: item.materialId, quantity, isCleaned: item.isCleaned };
+        const customMat = isCustomId(item.materialId) ? getCustomMat(item.materialId) : null;
+        return {
+          materialId: item.materialId,
+          quantity,
+          isCleaned: item.isCleaned,
+          ...(customMat ? { inlineMetalContent: getInlineContent(customMat) } : {}),
+        };
       });
 
   const handleCompare = () => {
@@ -429,7 +441,7 @@ export function CalculatorPage() {
                             });
                             return CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
                               <SelectGroup key={cat}>
-                                <SelectLabel className="text-xs font-bold uppercase tracking-wider text-amber-500 px-2 pt-2">
+                                <SelectLabel className={`text-xs font-bold uppercase tracking-wider px-2 pt-2 ${cat === "wlasne" ? "text-primary" : "text-amber-500"}`}>
                                   {CATEGORY_LABELS[cat] ?? cat}
                                 </SelectLabel>
                                 {grouped[cat]!.map(m => (

@@ -7,11 +7,12 @@
  */
 import type { InlineMetalContent } from "./inlineMetalContent";
 
-export interface BatchItem {
+export interface PurchasePriceBatchItem {
   materialId: string;
-  /** Amount in kg or pieces (depending on unit) */
-  quantity: number;
-  /** If true and the material has requiresCleaning=true, metal content is multiplied by cleanedMultiplier before calculation */
+  /** Mass in kg */
+  quantityKg: number;
   isCleaned?: boolean;
+  /** Optional display name override (used for custom materials) */
+  name?: string;
   inlineMetalContent?: InlineMetalContent;
 }
