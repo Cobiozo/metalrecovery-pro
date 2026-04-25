@@ -60633,8 +60633,8 @@ var chemicalProcesses = [
     steps: [
       ...PREP_STEPS_ELECTRONIC,
       "BHP: wyci\u0105g, r\u0119kawice kwasoodporne, gogle ochronne",
-      "Przygotuj HNO3 25% w naczyniu kwasoodpornym",
-      "Dodaj wsad elektroniczny porcjami \u2014 obserwuj intensywno\u015B\u0107 reakcji (opary NO2)",
+      "Przygotuj HNO3 25% w naczyniu kwasoodpornym (~1200 ml/kg wsadu aktywnego \u2014 ilo\u015B\u0107 krytyczna dla pe\u0142nego rozpuszczenia Cu/Ag/Ni)",
+      "Dodaj wsad elektroniczny porcjami \u2014 obserwuj intensywno\u015B\u0107 reakcji (brunatne opary NO2)",
       "Mieszaj i podgrzewaj do 40\xB0C przez 2-4h \u2014 Cu, Ag, Ni, Pb przechodz\u0105 do roztworu",
       "Ods\u0105cz osad (Au, Pt, ceramika) \u2014 cenny wsad do dalszego procesu wody kr\xF3lewskiej",
       "Wytr\u0105canie Ag: do filtratu dodaj NaCl \u2014 wytr\u0105ca si\u0119 AgCl (bia\u0142y osad)",
