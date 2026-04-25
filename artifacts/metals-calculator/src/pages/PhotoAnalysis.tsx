@@ -93,13 +93,27 @@ function VisionResultCard({
     { key: "Pd" as const, label: "Pallad (Pd)", color: "text-purple-400" },
   ];
 
+  const isNonEwaste = result.materialType.toLowerCase().startsWith("nieelektroniczne");
+
   return (
     <div className="space-y-4">
-      <Card className="border-primary/30 bg-primary/5">
+      {isNonEwaste && (
+        <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
+          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-red-400">To nie jest złom elektroniczny</p>
+            <p className="text-xs text-red-400/80 mt-0.5 leading-relaxed">
+              Zdjęcie nie przedstawia komponentu elektronicznego. Szacunki zawartości metali nie mają zastosowania.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <Card className={cn("border-primary/30", isNonEwaste ? "bg-muted/30" : "bg-primary/5")}>
         <CardHeader className="pb-3">
           <div className="flex items-start gap-3">
-            <div className="bg-primary/10 p-2 rounded-md mt-0.5">
-              <ScanLine className="w-5 h-5 text-primary" />
+            <div className={cn("p-2 rounded-md mt-0.5", isNonEwaste ? "bg-muted" : "bg-primary/10")}>
+              <ScanLine className={cn("w-5 h-5", isNonEwaste ? "text-muted-foreground" : "text-primary")} />
             </div>
             <div className="flex-1 min-w-0">
               <CardTitle className="text-base">{result.materialType}</CardTitle>
@@ -211,14 +225,18 @@ function VisionResultCard({
       </Card>
 
       <div className="flex flex-col sm:flex-row gap-2">
-        <Button className="flex-1 gap-2" onClick={onSaveProfile}>
-          <FlaskConical className="w-4 h-4" />
-          Zapisz jako własny profil
-        </Button>
-        <Button variant="outline" className="flex-1 gap-2" onClick={onCalculate}>
-          Przelicz w kalkulatorze
-          <ChevronRight className="w-4 h-4" />
-        </Button>
+        {!isNonEwaste && (
+          <Button className="flex-1 gap-2" onClick={onSaveProfile}>
+            <FlaskConical className="w-4 h-4" />
+            Zapisz jako własny profil
+          </Button>
+        )}
+        {!isNonEwaste && (
+          <Button variant="outline" className="flex-1 gap-2" onClick={onCalculate}>
+            Przelicz w kalkulatorze
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
       <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2.5">
