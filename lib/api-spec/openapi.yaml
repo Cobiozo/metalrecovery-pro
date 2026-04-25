@@ -832,14 +832,18 @@ components:
           type: boolean
         color:
           type: string
+          nullable: true
         thickness:
           type: string
+          nullable: true
         quality_1_to_5:
-          type: number
-          minimum: 0
+          type: integer
+          minimum: 1
           maximum: 5
+          nullable: true
         notes:
           type: string
+          nullable: true
       required: [detected]
 
     VisionAnalysisResult:

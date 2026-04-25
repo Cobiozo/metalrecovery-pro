@@ -1,4 +1,4 @@
-import { Router, type IRouter, type Request, type Response } from "express";
+import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import multer from "multer";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { z } from "zod";
@@ -33,10 +33,10 @@ const VisionResultSchema = z.object({
   }),
   platingAnalysis: z.object({
     detected: z.boolean(),
-    color: z.string().optional(),
-    thickness: z.string().optional(),
-    quality_1_to_5: z.number().min(0).max(5).optional(),
-    notes: z.string().optional(),
+    color: z.string().nullable().optional(),
+    thickness: z.string().nullable().optional(),
+    quality_1_to_5: z.number().int().min(1).max(5).nullable().optional(),
+    notes: z.string().nullable().optional(),
   }),
   recommendedProcess: z.string(),
   caveats: z.string(),
@@ -69,9 +69,27 @@ JSON structure required:
 Use realistic values based on typical e-waste literature (e.g. PCB motherboards ~0.2-0.5 g Au/kg, ceramic CPUs ~3-10 g Au/kg, gold fingers/edge connectors ~2-15 g Au/kg).
 Be conservative — underestimating is safer than overestimating for business decisions.`;
 
+function handleUpload(req: Request, res: Response, next: NextFunction): void {
+  upload.single("image")(req, res, (err: unknown) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        res.status(400).json({ error: "Plik jest za duży. Maksymalny rozmiar to 10 MB." });
+      } else {
+        res.status(400).json({ error: `Błąd przesyłania pliku: ${err.message}` });
+      }
+      return;
+    }
+    if (err instanceof Error) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    next();
+  });
+}
+
 router.post(
   "/analyze",
-  upload.single("image"),
+  handleUpload,
   async (req: Request, res: Response) => {
     if (!req.file) {
       res.status(400).json({ error: "Brak pliku zdjęcia. Prześlij obraz w polu 'image'." });
