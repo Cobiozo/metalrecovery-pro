@@ -69252,9 +69252,17 @@ router7.use("/vision", vision_default);
 var routes_default = router7;
 
 // src/passenger.ts
+var SOCIAL_BOT_RE = /facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot/i;
 var app = (0, import_express8.default)();
 app.disable("x-powered-by");
-app.use(function(_req, res, next) {
+app.use(function(req, res, next) {
+  const ua = req.headers["user-agent"] || "";
+  if (SOCIAL_BOT_RE.test(ua)) {
+    res.setHeader("X-LiteSpeed-Cache-Control", "public,max-age=3600");
+    res.setHeader("X-LiteSpeed-Vary", "");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.setHeader("Vary", "Accept-Encoding");
+  }
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("X-XSS-Protection", "1; mode=block");

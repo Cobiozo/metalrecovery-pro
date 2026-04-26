@@ -90,6 +90,14 @@ sshpass -p "$SSH_PASS" scp $SCP_OPTS -r \
   "$SSH_USER@$SSH_HOST:$REMOTE_DIR/public/"
 echo "  ✓ public/ zsynchronizowany"
 
+echo "  → Synchronizacja public_html/ (wszystkie pliki statyczne bezpośrednio przez LiteSpeed) ..."
+sshpass -p "$SSH_PASS" ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
+  "rm -rf ~/domains/metalrecovery.online/public_html/assets ~/domains/metalrecovery.online/public_html/icons"
+sshpass -p "$SSH_PASS" scp $SCP_OPTS -r \
+  "$ROOT_DIR/deploy/public/." \
+  "$SSH_USER@$SSH_HOST:~/domains/metalrecovery.online/public_html/"
+echo "  ✓ public_html/ zsynchronizowany (LiteSpeed serwuje statycznie, bez Passenger)"
+
 echo "  → Restart serwera (Passenger restart.txt) ..."
 sshpass -p "$SSH_PASS" ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
   "mkdir -p $REMOTE_DIR/tmp && date > $REMOTE_DIR/tmp/restart.txt"
