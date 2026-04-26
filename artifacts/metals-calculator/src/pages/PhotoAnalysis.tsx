@@ -434,111 +434,88 @@ function findDbMaterial(
   return null;
 }
 
-const SCAN_HINTS = [
-  { x: 8,  y: 14, w: 32, h: 20 },
-  { x: 56, y: 21, w: 24, h: 16 },
-  { x: 40, y: 42, w: 28, h: 18 },
-  { x: 7,  y: 60, w: 30, h: 22 },
-  { x: 62, y: 57, w: 26, h: 20 },
-];
-
 function ScanningAnimation({ photoUrl }: { photoUrl: string }) {
-  const [visCount, setVisCount] = useState(0);
-
-  useEffect(() => {
-    setVisCount(0);
-    let i = 0;
-    let tid: ReturnType<typeof setTimeout>;
-    const schedule = () => {
-      if (i >= SCAN_HINTS.length) return;
-      const delay = 550 + Math.random() * 700;
-      tid = setTimeout(() => {
-        i++;
-        setVisCount(i);
-        schedule();
-      }, delay);
-    };
-    const init = setTimeout(schedule, 1100);
-    return () => { clearTimeout(init); clearTimeout(tid); };
-  }, [photoUrl]);
-
   return (
     <Card className="border-border overflow-hidden">
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: "4/3" }}>
-        <img src={photoUrl} alt="Analizowane zdjęcie" className="w-full h-full object-cover select-none pointer-events-none" draggable={false} />
-        <div className="absolute inset-0 bg-black/40" />
+      <div className="relative w-full">
+        {/* Image shows at full natural proportions — no cropping */}
+        <img
+          src={photoUrl}
+          alt="Analizowane zdjęcie"
+          className="block w-full h-auto select-none pointer-events-none"
+          style={{ maxHeight: "70vh", objectFit: "contain", background: "#0a0a0a" }}
+          draggable={false}
+        />
 
-        <div className="scan-beam-line" />
+        {/* Subtle dark overlay */}
+        <div className="absolute inset-0 bg-black/30 pointer-events-none" />
 
-        {SCAN_HINTS.slice(0, visCount).map((h, i) => (
-          <div
-            key={i}
-            className="absolute scan-hint-box"
-            style={{ left: `${h.x}%`, top: `${h.y}%`, width: `${h.w}%`, height: `${h.h}%` }}
-          >
-            <span className="scan-hint-corner scan-hint-tl" />
-            <span className="scan-hint-corner scan-hint-tr" />
-            <span className="scan-hint-corner scan-hint-bl" />
-            <span className="scan-hint-corner scan-hint-br" />
-          </div>
-        ))}
+        {/* Scanned-area tint that grows with the beam */}
+        <div className="scan-tint pointer-events-none" />
 
+        {/* Scan beam line */}
+        <div className="scan-beam pointer-events-none" />
+
+        {/* Status bar pinned to bottom of image */}
         <div
           className="absolute bottom-0 left-0 right-0 flex items-center gap-2 px-3 py-2"
-          style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }}
         >
-          <span className="scan-status-dot" />
-          <span className="text-xs font-mono text-emerald-300 flex-1">AI skanuje obraz...</span>
-          {visCount > 0 && (
-            <span className="text-xs font-mono text-zinc-400">{visCount} el.</span>
-          )}
+          <span className="scan-dot" />
+          <span className="text-xs font-mono text-emerald-300">AI skanuje obraz…</span>
         </div>
       </div>
-      <CardContent className="py-3 text-center">
-        <p className="text-sm text-muted-foreground">Rozpoznawanie materiałów i szacowanie zawartości metali szlachetnych…</p>
-      </CardContent>
+
       <style>{`
-        .scan-beam-line {
+        /* Beam sweeps top → bottom, loops */
+        .scan-beam {
           position: absolute;
           left: 0; right: 0;
           height: 3px;
-          background: linear-gradient(90deg, transparent 0%, #00ffaa 20%, #00ffee 50%, #00ffaa 80%, transparent 100%);
-          box-shadow: 0 0 14px 5px rgba(0,255,170,0.45);
-          animation: scanBeamMove 2.6s ease-in-out infinite;
-          pointer-events: none;
+          background: linear-gradient(
+            90deg,
+            transparent  0%,
+            #00ffaa 18%,
+            #00ffee 50%,
+            #00ffaa 82%,
+            transparent 100%
+          );
+          box-shadow: 0 0 16px 6px rgba(0,255,170,0.4);
+          animation: scanBeam 2.4s linear infinite;
         }
-        @keyframes scanBeamMove {
+        @keyframes scanBeam {
           0%   { top: -1%; }
           100% { top: 101%; }
         }
-        .scan-hint-box {
-          animation: scanHintIn 0.28s cubic-bezier(.17,.67,.35,1.2) both;
-        }
-        @keyframes scanHintIn {
-          from { opacity: 0; transform: scale(1.08); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        .scan-hint-corner {
+
+        /* Green shimmer follows the beam */
+        .scan-tint {
           position: absolute;
-          width: 20%;
-          height: 25%;
-          border-color: rgba(0,255,170,0.85);
-          border-style: solid;
+          left: 0; right: 0; top: 0;
+          background: linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(0,255,170,0.06) 100%
+          );
+          animation: scanTint 2.4s linear infinite;
         }
-        .scan-hint-tl { top: 0; left: 0;     border-width: 2px 0 0 2px; border-radius: 2px 0 0 0; }
-        .scan-hint-tr { top: 0; right: 0;    border-width: 2px 2px 0 0; border-radius: 0 2px 0 0; }
-        .scan-hint-bl { bottom: 0; left: 0;  border-width: 0 0 2px 2px; border-radius: 0 0 0 2px; }
-        .scan-hint-br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 2px 0; }
-        .scan-status-dot {
+        @keyframes scanTint {
+          0%   { height: 0%; }
+          100% { height: 100%; }
+        }
+
+        /* Blinking status dot */
+        .scan-dot {
+          display: inline-block;
           width: 7px; height: 7px;
           border-radius: 50%;
           background: #34d399;
           flex-shrink: 0;
-          animation: scanDotBlink 0.9s ease-in-out infinite;
+          animation: scanDot 1s ease-in-out infinite;
         }
-        @keyframes scanDotBlink {
+        @keyframes scanDot {
           0%, 100% { opacity: 1; }
-          50%       { opacity: 0.25; }
+          50%       { opacity: 0.2; }
         }
       `}</style>
     </Card>
