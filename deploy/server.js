@@ -60474,6 +60474,7 @@ var electronicMaterials = [
     nameEn: "Mixed PCB \u2014 Unknown/Mixed Electronics",
     category: "inne",
     unit: "kg",
+    catalogHint: "pile or bag of MIXED various small PCBs that CANNOT be separated into one clean type \u2014 combination of phone sub-boards, router boards, tablet boards, communication modules, laptop sub-boards, assorted green/yellow PCBs of different sizes thrown together \u2014 no single dominant type \u2014 use this when the scrap is too mixed to classify specifically as any one category",
     metalContentPerKg: {
       Au: { min: 0.03, max: 0.15, typical: 0.07 },
       Ag: { min: 0.3, max: 1.5, typical: 0.8 },
@@ -69088,6 +69089,7 @@ CRITICAL VISUAL SHAPE GUIDE \u2014 read before identifying:
 
 STEP 2 \u2014 For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above \u2014 do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".
+IMPORTANT: Do NOT use "UFO" as a materialType name \u2014 ever. For mixed/unidentified electronics use the catalog entry "Mix PCB \u2014 Elektronika Mieszana".
 
 STEP 3 \u2014 Determine quantities.
 A) COUNT each type carefully: scan systematically left\u2192right, top\u2192bottom. Count EVERY visible unit including partially visible ones at edges.

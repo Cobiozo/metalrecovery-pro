@@ -1419,6 +1419,7 @@ export const electronicMaterials = [
     nameEn: "Mixed PCB — Unknown/Mixed Electronics",
     category: "inne",
     unit: "kg",
+    catalogHint: "pile or bag of MIXED various small PCBs that CANNOT be separated into one clean type — combination of phone sub-boards, router boards, tablet boards, communication modules, laptop sub-boards, assorted green/yellow PCBs of different sizes thrown together — no single dominant type — use this when the scrap is too mixed to classify specifically as any one category",
     metalContentPerKg: {
       Au: { min: 0.03, max: 0.15, typical: 0.07 },
       Ag: { min: 0.3, max: 1.5, typical: 0.8 },

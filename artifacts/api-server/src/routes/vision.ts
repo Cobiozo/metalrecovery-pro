@@ -108,6 +108,7 @@ CRITICAL VISUAL SHAPE GUIDE — read before identifying:
 
 STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above — do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".
+IMPORTANT: Do NOT use "UFO" as a materialType name — ever. For mixed/unidentified electronics use the catalog entry "Mix PCB — Elektronika Mieszana".
 
 STEP 3 — Determine quantities.
 A) COUNT each type carefully: scan systematically left→right, top→bottom. Count EVERY visible unit including partially visible ones at edges.
