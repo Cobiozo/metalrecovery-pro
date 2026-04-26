@@ -430,6 +430,34 @@ function EditUserForm({
   );
 }
 
+const LOGS_PAGE_SIZE = 15;
+
+function PageControls({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
+  const pages = Math.ceil(total / LOGS_PAGE_SIZE);
+  if (pages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-3 border-t border-border/50 mt-2">
+      <button
+        onClick={() => onChange(page - 1)}
+        disabled={page === 0}
+        className="px-3 py-1 text-xs rounded-md bg-muted hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
+      >
+        ← Poprzednia
+      </button>
+      <span className="text-xs text-muted-foreground">
+        Strona {page + 1} / {pages}
+      </span>
+      <button
+        onClick={() => onChange(page + 1)}
+        disabled={page >= pages - 1}
+        className="px-3 py-1 text-xs rounded-md bg-muted hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
+      >
+        Następna →
+      </button>
+    </div>
+  );
+}
+
 function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }) {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -437,6 +465,8 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
   const [logsLoading, setLogsLoading] = useState(true);
   const [visitLogs, setVisitLogs] = useState<VisitLogRow[]>([]);
   const [visitLogsLoading, setVisitLogsLoading] = useState(true);
+  const [aiLogsPage, setAiLogsPage] = useState(0);
+  const [visitLogsPage, setVisitLogsPage] = useState(0);
 
   useEffect(() => {
     fetch(`${getApiBase()}/admin/stats`, { headers: authHeaders() })
@@ -516,50 +546,61 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
         <div className="flex items-center gap-2 mb-4">
           <List className="w-4 h-4 text-purple-400" />
           <h3 className="text-sm font-semibold">Logi analiz AI</h3>
-          <span className="ml-auto text-xs text-muted-foreground">ostatnie 100</span>
+          <span className="ml-auto text-xs text-muted-foreground">
+            {aiLogs.length > 0 ? `${aiLogs.length} wpisów` : "ostatnie 100"}
+          </span>
         </div>
         {logsLoading ? (
           <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
         ) : aiLogs.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-4">Brak zapisanych analiz.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left pb-2 pr-3 font-medium">Data / Czas</th>
-                  <th className="text-left pb-2 pr-3 font-medium">IP</th>
-                  <th className="text-left pb-2 pr-3 font-medium">Konto</th>
-                  <th className="text-left pb-2 pr-3 font-medium">Wykryte materiały</th>
-                  <th className="text-right pb-2 font-medium">Elem.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {aiLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                    <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
-                      {new Date(log.createdAt).toLocaleString("pl-PL", {
-                        day: "2-digit", month: "2-digit", year: "2-digit",
-                        hour: "2-digit", minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="py-1.5 pr-3 font-mono text-muted-foreground whitespace-nowrap">{log.ip}</td>
-                    <td className="py-1.5 pr-3">
-                      {log.userEmail ? (
-                        <span className="text-purple-400">{log.userEmail}</span>
-                      ) : (
-                        <span className="text-muted-foreground/50">anonim</span>
-                      )}
-                    </td>
-                    <td className="py-1.5 pr-3 text-foreground/80" style={{ maxWidth: "260px", wordBreak: "break-word" }}>
-                      {log.materialsDetected || <span className="text-muted-foreground/50">—</span>}
-                    </td>
-                    <td className="py-1.5 text-right text-muted-foreground">{log.itemCount}</td>
+          <>
+            <div className="overflow-x-auto -mx-1 px-1">
+              <table className="text-xs" style={{ minWidth: "520px", width: "100%" }}>
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">Data / Czas</th>
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">IP</th>
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">Konto</th>
+                    <th className="text-left pb-2 pr-3 font-medium">Wykryte materiały</th>
+                    <th className="text-right pb-2 font-medium whitespace-nowrap">Szt.</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {aiLogs
+                    .slice(aiLogsPage * LOGS_PAGE_SIZE, (aiLogsPage + 1) * LOGS_PAGE_SIZE)
+                    .map((log) => (
+                      <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
+                          {new Date(log.createdAt).toLocaleString("pl-PL", {
+                            day: "2-digit", month: "2-digit", year: "2-digit",
+                            hour: "2-digit", minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="py-1.5 pr-3 font-mono text-muted-foreground whitespace-nowrap">{log.ip}</td>
+                        <td className="py-1.5 pr-3 whitespace-nowrap">
+                          {log.userEmail ? (
+                            <span className="text-purple-400">{log.userEmail}</span>
+                          ) : (
+                            <span className="text-muted-foreground/50">anonim</span>
+                          )}
+                        </td>
+                        <td
+                          className="py-1.5 pr-3 text-foreground/80 max-w-[180px] overflow-hidden"
+                          style={{ textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                          title={log.materialsDetected ?? undefined}
+                        >
+                          {log.materialsDetected || <span className="text-muted-foreground/50">—</span>}
+                        </td>
+                        <td className="py-1.5 text-right text-muted-foreground">{log.itemCount}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            <PageControls page={aiLogsPage} total={aiLogs.length} onChange={setAiLogsPage} />
+          </>
         )}
       </div>
 
@@ -568,36 +609,43 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
         <div className="flex items-center gap-2 mb-4">
           <Globe className="w-4 h-4 text-cyan-400" />
           <h3 className="text-sm font-semibold">Logi wizyt</h3>
-          <span className="ml-auto text-xs text-muted-foreground">ostatnie 200 unikalnych</span>
+          <span className="ml-auto text-xs text-muted-foreground">
+            {visitLogs.length > 0 ? `${visitLogs.length} wpisów` : "ostatnie 200"}
+          </span>
         </div>
         {visitLogsLoading ? (
           <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
         ) : visitLogs.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-4">Brak zapisanych wizyt.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-border text-muted-foreground">
-                  <th className="text-left pb-2 pr-3 font-medium">Data / Czas</th>
-                  <th className="text-left pb-2 font-medium">IP</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visitLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                    <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
-                      {new Date(log.createdAt).toLocaleString("pl-PL", {
-                        day: "2-digit", month: "2-digit", year: "2-digit",
-                        hour: "2-digit", minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="py-1.5 font-mono text-cyan-400/80">{log.ip}</td>
+          <>
+            <div className="overflow-x-auto -mx-1 px-1">
+              <table className="text-xs" style={{ minWidth: "300px", width: "100%" }}>
+                <thead>
+                  <tr className="border-b border-border text-muted-foreground">
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">Data / Czas</th>
+                    <th className="text-left pb-2 font-medium whitespace-nowrap">IP</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {visitLogs
+                    .slice(visitLogsPage * LOGS_PAGE_SIZE, (visitLogsPage + 1) * LOGS_PAGE_SIZE)
+                    .map((log) => (
+                      <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                        <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
+                          {new Date(log.createdAt).toLocaleString("pl-PL", {
+                            day: "2-digit", month: "2-digit", year: "2-digit",
+                            hour: "2-digit", minute: "2-digit",
+                          })}
+                        </td>
+                        <td className="py-1.5 font-mono text-cyan-400/80">{log.ip}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            <PageControls page={visitLogsPage} total={visitLogs.length} onChange={setVisitLogsPage} />
+          </>
         )}
       </div>
     </div>
