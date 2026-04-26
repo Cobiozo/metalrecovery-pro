@@ -1,12 +1,12 @@
-import { db } from "@workspace/db";
-import { systemStatsTable, STAT_METRICS } from "@workspace/db/schema";
-import { sql } from "drizzle-orm";
+import { STAT_METRICS } from "@workspace/db/schema";
 
 function todayDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
 export async function incrementStat(metric: string, amount = 1): Promise<void> {
+  const { db, systemStatsTable } = await import("@workspace/db");
+  const { sql } = await import("drizzle-orm");
   const date = todayDate();
   await db
     .insert(systemStatsTable)
@@ -18,6 +18,8 @@ export async function incrementStat(metric: string, amount = 1): Promise<void> {
 }
 
 export async function getStatsLastDays(days = 30): Promise<Record<string, Record<string, number>>> {
+  const { db, systemStatsTable } = await import("@workspace/db");
+  const { sql } = await import("drizzle-orm");
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().slice(0, 10);
