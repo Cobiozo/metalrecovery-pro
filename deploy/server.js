@@ -73935,7 +73935,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 10,
     temperatureOptimal: 70,
     yieldPercent: { Au: 95, Ag: 80, Pt: 85, Pd: 80 },
-    electricityKwhPerKg: 0.6
+    // Grzałka laboratoryjna 500W utrzymująca 70°C (~150–250W śr.) przez ~7h/kg
+    electricityKwhPerKg: 1.5
   },
   hno3_dilute: {
     name: "Kwas azotowy rozcie\u0144czony (HNO3 25-30%)",
@@ -73969,7 +73970,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 6,
     temperatureOptimal: 40,
     yieldPercent: { Au: 0, Ag: 85, Pt: 5, Pd: 10 },
-    electricityKwhPerKg: 0.2
+    // Niska temperatura 40°C, ~100–150W śr. przez 4h/kg
+    electricityKwhPerKg: 0.6
   },
   hno3_concentrated: {
     name: "Kwas azotowy st\u0119\u017Cony (HNO3 65%)",
@@ -74003,7 +74005,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 4,
     temperatureOptimal: 35,
     yieldPercent: { Au: 0, Ag: 90, Pt: 0, Pd: 70 },
-    electricityKwhPerKg: 0.15
+    // Blisko temperatura otoczenia, ~100W śr. przez 2.5h/kg
+    electricityKwhPerKg: 0.5
   },
   hcl_h2o2: {
     name: "HCl + H2O2 (etching kwasowy)",
@@ -74037,7 +74040,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 16,
     temperatureOptimal: 45,
     yieldPercent: { Au: 90, Ag: 15, Pt: 60, Pd: 75 },
-    electricityKwhPerKg: 0.3
+    // Umiarkowana temperatura 45°C, ~150W śr. przez 11h/kg (długi czas trawienia)
+    electricityKwhPerKg: 1.5
   },
   nitrate_boat: {
     name: "\u0141\xF3d\u017A azotanowa (NaNO3 + H2SO4)",
@@ -74071,7 +74075,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 8,
     temperatureOptimal: 90,
     yieldPercent: { Au: 85, Ag: 90, Pt: 30, Pd: 40 },
-    electricityKwhPerKg: 0.8
+    // Wysoka temperatura 90°C, grzałka ~400W śr. przez 5.5h/kg
+    electricityKwhPerKg: 2.5
   },
   electrolysis: {
     name: "Elektroliza (rafinacja elektrolityczna)",
@@ -74099,7 +74104,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 24,
     temperatureOptimal: 30,
     yieldPercent: { Au: 99, Ag: 95, Pt: 60, Pd: 50 },
-    electricityKwhPerKg: 2.5
+    // Zasilacz DC 100–300W + pomocnicze ogrzewanie przez 16h/kg śr.
+    electricityKwhPerKg: 4
   },
   wohlwill_process: {
     name: "Proces W\xF6hlwilla (rafinacja z\u0142ota 999.9)",
@@ -74127,7 +74133,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 48,
     temperatureOptimal: 70,
     yieldPercent: { Au: 99.5, Ag: 0, Pt: 30, Pd: 20 },
-    electricityKwhPerKg: 3
+    // Elektroliza + ogrzewanie kąpieli 70°C przez 36h/kg śr., ~200W
+    electricityKwhPerKg: 6
   },
   miller_process: {
     name: "Proces Millera (chloracja pirometalurgiczna)",
@@ -74155,6 +74162,7 @@ var chemicalProcessesMap = {
     timePerKgMax: 2,
     temperatureOptimal: 1100,
     yieldPercent: { Au: 98, Ag: 0, Pt: 20, Pd: 10 },
+    // Piec indukcyjny/oporowy 1100°C, ~4000W przez 1.25h/kg
     electricityKwhPerKg: 5
   },
   cementation_zinc: {
@@ -74183,7 +74191,8 @@ var chemicalProcessesMap = {
     timePerKgMax: 6,
     temperatureOptimal: 25,
     yieldPercent: { Au: 80, Ag: 75, Pt: 20, Pd: 30 },
-    electricityKwhPerKg: 0.1
+    // Temperatura pokojowa, tylko mieszanie ~50–80W przez 4.5h/kg
+    electricityKwhPerKg: 0.4
   }
 };
 function computeParameterYieldMultiplier(processId, baseYield, acidConcentrationOverride, temperatureOverride, processOptimalTemp, processDefaultConc) {
