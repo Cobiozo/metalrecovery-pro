@@ -40,6 +40,12 @@ type AiLogRow = {
   itemCount: number;
 };
 
+type VisitLogRow = {
+  id: number;
+  createdAt: string;
+  ip: string;
+};
+
 const ROLE_LABELS: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   admin: { label: "Administrator", icon: Shield, color: "text-red-400" },
   vip: { label: "VIP", icon: Star, color: "text-yellow-400" },
@@ -424,6 +430,8 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
   const [loading, setLoading] = useState(true);
   const [aiLogs, setAiLogs] = useState<AiLogRow[]>([]);
   const [logsLoading, setLogsLoading] = useState(true);
+  const [visitLogs, setVisitLogs] = useState<VisitLogRow[]>([]);
+  const [visitLogsLoading, setVisitLogsLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${getApiBase()}/admin/stats`, { headers: authHeaders() })
@@ -434,6 +442,10 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
       .then((r) => r.json())
       .then((data) => Array.isArray(data) ? setAiLogs(data) : setAiLogs([]))
       .finally(() => setLogsLoading(false));
+    fetch(`${getApiBase()}/admin/visit-logs`, { headers: authHeaders() })
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) ? setVisitLogs(data) : setVisitLogs([]))
+      .finally(() => setVisitLogsLoading(false));
   }, [authHeaders]);
 
   if (loading) return <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
@@ -538,6 +550,44 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
                       {log.materialsDetected || <span className="text-muted-foreground/50">—</span>}
                     </td>
                     <td className="py-1.5 text-right text-muted-foreground">{log.itemCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Visit Logs */}
+      <div className="bg-card border border-border rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Globe className="w-4 h-4 text-cyan-400" />
+          <h3 className="text-sm font-semibold">Logi wizyt</h3>
+          <span className="ml-auto text-xs text-muted-foreground">ostatnie 200 unikalnych</span>
+        </div>
+        {visitLogsLoading ? (
+          <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
+        ) : visitLogs.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-4">Brak zapisanych wizyt.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left pb-2 pr-3 font-medium">Data / Czas</th>
+                  <th className="text-left pb-2 font-medium">IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visitLogs.map((log) => (
+                  <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
+                      {new Date(log.createdAt).toLocaleString("pl-PL", {
+                        day: "2-digit", month: "2-digit", year: "2-digit",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="py-1.5 font-mono text-cyan-400/80">{log.ip}</td>
                   </tr>
                 ))}
               </tbody>

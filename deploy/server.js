@@ -50610,6 +50610,20 @@ var init_aiAnalysisLogs = __esm({
   }
 });
 
+// ../../lib/db/src/schema/visitLogs.ts
+var visitLogsTable;
+var init_visitLogs = __esm({
+  "../../lib/db/src/schema/visitLogs.ts"() {
+    "use strict";
+    init_pg_core();
+    visitLogsTable = pgTable("visit_logs", {
+      id: serial("id").primaryKey(),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      ip: text("ip").notNull()
+    });
+  }
+});
+
 // ../../lib/db/src/schema/index.ts
 var schema_exports = {};
 __export(schema_exports, {
@@ -50622,7 +50636,8 @@ __export(schema_exports, {
   sessionsTable: () => sessionsTable,
   systemSettingsTable: () => systemSettingsTable,
   systemStatsTable: () => systemStatsTable,
-  usersTable: () => usersTable
+  usersTable: () => usersTable,
+  visitLogsTable: () => visitLogsTable
 });
 var init_schema2 = __esm({
   "../../lib/db/src/schema/index.ts"() {
@@ -50634,6 +50649,7 @@ var init_schema2 = __esm({
     init_systemStats();
     init_emailVerifications();
     init_aiAnalysisLogs();
+    init_visitLogs();
   }
 });
 
@@ -50651,7 +50667,8 @@ __export(src_exports, {
   sessionsTable: () => sessionsTable,
   systemSettingsTable: () => systemSettingsTable,
   systemStatsTable: () => systemStatsTable,
-  usersTable: () => usersTable
+  usersTable: () => usersTable,
+  visitLogsTable: () => visitLogsTable
 });
 var Pool3, DATABASE_URL, pool, db;
 var init_src = __esm({
@@ -50716,6 +50733,9 @@ async function trackUniqueVisit(ip) {
   if (seen.has(ip)) return;
   seen.add(ip);
   await incrementStat(STAT_METRICS.PAGE_VISITS);
+  const { db: db2, visitLogsTable: visitLogsTable2 } = await Promise.resolve().then(() => (init_src(), src_exports));
+  db2.insert(visitLogsTable2).values({ ip }).catch(() => {
+  });
 }
 var seenToday;
 var init_stats = __esm({
@@ -67177,6 +67197,10 @@ var init_admin = __esm({
     });
     router8.get("/ai-logs", adminOnly, async (_req, res) => {
       const logs = await db.select().from(aiAnalysisLogsTable).orderBy(desc(aiAnalysisLogsTable.createdAt)).limit(100);
+      res.json(logs);
+    });
+    router8.get("/visit-logs", adminOnly, async (_req, res) => {
+      const logs = await db.select().from(visitLogsTable).orderBy(desc(visitLogsTable.createdAt)).limit(200);
       res.json(logs);
     });
     router8.get("/settings", adminOnly, async (_req, res) => {

@@ -55,6 +55,9 @@ export async function trackUniqueVisit(ip: string): Promise<void> {
   if (seen.has(ip)) return; // already counted today
   seen.add(ip);
   await incrementStat(STAT_METRICS.PAGE_VISITS);
+  // Log the visit with IP to the database
+  const { db, visitLogsTable } = await import("@workspace/db");
+  db.insert(visitLogsTable).values({ ip }).catch(() => {});
 }
 
 export { STAT_METRICS, todayDate };

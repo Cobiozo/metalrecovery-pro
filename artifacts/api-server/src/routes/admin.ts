@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { db } from "@workspace/db";
 import {
   usersTable, sessionsTable, systemSettingsTable, SETTINGS_KEYS,
-  systemStatsTable, STAT_METRICS, aiAnalysisLogsTable,
+  systemStatsTable, STAT_METRICS, aiAnalysisLogsTable, visitLogsTable,
 } from "@workspace/db/schema";
 import { eq, desc, ne, sql } from "drizzle-orm";
 import { requireRole, type AuthRequest } from "../middlewares/auth";
@@ -144,6 +144,15 @@ router.get("/ai-logs", adminOnly, async (_req: AuthRequest, res: Response) => {
     .from(aiAnalysisLogsTable)
     .orderBy(desc(aiAnalysisLogsTable.createdAt))
     .limit(100);
+  res.json(logs);
+});
+
+router.get("/visit-logs", adminOnly, async (_req: AuthRequest, res: Response) => {
+  const logs = await db
+    .select()
+    .from(visitLogsTable)
+    .orderBy(desc(visitLogsTable.createdAt))
+    .limit(200);
   res.json(logs);
 });
 
