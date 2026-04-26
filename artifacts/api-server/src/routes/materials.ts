@@ -258,6 +258,24 @@ export const electronicMaterials = [
   },
 
   {
+    id: "connector_pins_gold",
+    name: "Piny/styki złącz elektronicznych (grubo złocone, bez plastiku)",
+    nameEn: "Gold-plated connector pins/contacts (thick plating, no plastic)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.001,
+    chemFraction: 1.0,
+    catalogHint: "loose pile of bare golden metallic pins, springs, or contact leads — thin bent or kinked metal wire-like pieces 5–30mm long with uniform golden color indicating thick Au plating — NO plastic housing — extracted / harvested from multi-pin connectors, IC packages, or electromechanical components — the entire surface looks gold, not just the tips",
+    metalContentPerKg: {
+      Au: { min: 1.5, max: 8.0, typical: 3.5 },
+      Ag: { min: 0.5, max: 3.0, typical: 1.2 },
+      Pt: { min: 0.0, max: 0.02, typical: 0.003 },
+      Pd: { min: 0.01, max: 0.20, typical: 0.06 },
+    },
+    notes: "Luzem wysypane piny / styki kontaktowe wyciągnięte ze złączy wielostykowych, IC, przekaźników lub innej elektroniki — w całości metaliczne (bez plastiku/ceramiki). Grube złocenie (>1 µm Au na podłożu Cu, mosiądz lub kowar). Typowe źródła: militarne/przemysłowe złącza ARINC/MIL-DTL/DIN, nóżki ceramicznych IC, styki DIN41612. chemFraction=1.0 — sam metal, zero plastiku w tym wsadzie.",
+  },
+
+  {
     id: "telecom_crossbar_contacts",
     name: "Releje / styki krzyżownicy (centrale elektromechaniczne)",
     nameEn: "Crossbar switch relay contacts (electromechanical exchanges)",
