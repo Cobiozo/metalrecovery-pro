@@ -72217,6 +72217,23 @@ var electronicMaterials = [
     notes: "Zwyk\u0142e podstawki DIP (standard grade, nie ZIF) do uk\u0142ad\xF3w CMOS/TTL/EPROM w monta\u017Cu PTH (~3g/szt). Ta\u0144sze z\u0142ocenie ni\u017C ZIF \u2014 cz\u0119sto tylko nikiel ze \u015Bladowym Au lub brak Au. chemFraction=0.50 \u2014 piny metalowe ~50%, gruby korpus plastikowy ~50%. Warto\u015B\u0107 odzysku niska \u2014 g\u0142\xF3wnie Cu i \u015Bladowe Au."
   },
   {
+    id: "connector_pins_gold",
+    name: "Piny/styki z\u0142\u0105cz elektronicznych (grubo z\u0142ocone, bez plastiku)",
+    nameEn: "Gold-plated connector pins/contacts (thick plating, no plastic)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 1e-3,
+    chemFraction: 1,
+    catalogHint: "loose pile of bare golden metallic pins, springs, or contact leads \u2014 thin bent or kinked metal wire-like pieces 5\u201330mm long with uniform golden color indicating thick Au plating \u2014 NO plastic housing \u2014 extracted / harvested from multi-pin connectors, IC packages, or electromechanical components \u2014 the entire surface looks gold, not just the tips",
+    metalContentPerKg: {
+      Au: { min: 1.5, max: 8, typical: 3.5 },
+      Ag: { min: 0.5, max: 3, typical: 1.2 },
+      Pt: { min: 0, max: 0.02, typical: 3e-3 },
+      Pd: { min: 0.01, max: 0.2, typical: 0.06 }
+    },
+    notes: "Luzem wysypane piny / styki kontaktowe wyci\u0105gni\u0119te ze z\u0142\u0105czy wielostykowych, IC, przeka\u017Anik\xF3w lub innej elektroniki \u2014 w ca\u0142o\u015Bci metaliczne (bez plastiku/ceramiki). Grube z\u0142ocenie (>1 \xB5m Au na pod\u0142o\u017Cu Cu, mosi\u0105dz lub kowar). Typowe \u017Ar\xF3d\u0142a: militarne/przemys\u0142owe z\u0142\u0105cza ARINC/MIL-DTL/DIN, n\xF3\u017Cki ceramicznych IC, styki DIN41612. chemFraction=1.0 \u2014 sam metal, zero plastiku w tym wsadzie."
+  },
+  {
     id: "telecom_crossbar_contacts",
     name: "Releje / styki krzy\u017Cownicy (centrale elektromechaniczne)",
     nameEn: "Crossbar switch relay contacts (electromechanical exchanges)",
@@ -82005,6 +82022,8 @@ CRITICAL VISUAL SHAPE GUIDE \u2014 read before identifying:
   SIMM memory slot connectors: gold L-shaped or C-shaped metal bracket (70-100mm long), narrow slot for inserting SIMM module, spring contacts inside \u2014 pulled from old motherboard \u2014 NOT a telecom block.
   Standard DIP IC sockets: tiny black plastic socket (8-40 pins), two rows of silver/tin contact pins \u2014 very low gold content \u2014 common repair-shop items.
   TELECOM backplane connectors (HIGH VALUE): ONLY from telephone exchange racks (AXE, EWSD, DMS) \u2014 massive blocks 150mm+ packed with hundreds of dense DIN/Metral pins \u2014 INDUSTRIAL TELECOM EQUIPMENT ONLY.
+  GOLD-PLATED CONNECTOR PINS / CONTACTS (HIGH VALUE \u2014 "grubo z\u0142ocone piny"): loose pile of bare metallic pins, springs, or bent contact leads with a UNIFORM GOLDEN SURFACE \u2014 thin wire-like or bent metallic pieces 5\u201330mm long \u2014 NO plastic housing visible \u2014 entire surface is golden (NOT just the tips) \u2014 extracted from multi-pin connectors, IC packages, or industrial components \u2014 when the whole piece looks gold (not silver/nickel), classify as "Piny/styki z\u0142\u0105cz elektronicznych (grubo z\u0142ocone, bez plastiku)" with Au 2\u20138 g/kg.
+  CROSSBAR RELAY CONTACTS (VERY HIGH VALUE \u2014 "styki krzy\u017Cownicy"): flat spring strips or contact assemblies specifically from old mechanical telephone exchange racks (Ericsson ARF/ARM, Siemens EMD, Strowger crossbar) \u2014 may appear similar to above but come from identifiable telecom mechanical relay matrix \u2014 Au 3\u201310 g/kg, Ag 1\u20138 g/kg, Pd 0.1\u20131.5 g/kg.
 
 STEP 2 \u2014 For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above \u2014 do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".
@@ -82081,7 +82100,7 @@ STEP 5 \u2014 Return ONLY this JSON (no markdown, no explanation):
 }
 
 ALL string values (color, thickness, notes, descriptions) MUST be in POLISH.
-Reference metal values: motherboards ~0.2\u20130.5 g Au/kg; ceramic CPUs ~3\u201310 g Au/kg; gold fingers ~2\u201315 g Au/kg; RAM (gold contacts, DIMM) ~0.6\u20131.5 g Au/kg; mini PCIe / M.2 WiFi cards ~0.4\u20130.8 g Au/kg; laptop sub-boards ~0.1\u20130.2 g Au/kg; CPU socket adapter boards ~0.5\u20131.5 g Au/kg; ZIF/test IC sockets (precision) ~1\u20134 g Au/kg; SIMM memory slot connectors ~0.8\u20132.5 g Au/kg; standard DIP IC sockets (cheap) ~0.1\u20130.5 g Au/kg; telecom backplane connectors (industrial) ~2\u20138 g Au/kg; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg.`;
+Reference metal values: motherboards ~0.2\u20130.5 g Au/kg; ceramic CPUs ~3\u201310 g Au/kg; gold fingers ~2\u201315 g Au/kg; RAM (gold contacts, DIMM) ~0.6\u20131.5 g Au/kg; mini PCIe / M.2 WiFi cards ~0.4\u20130.8 g Au/kg; laptop sub-boards ~0.1\u20130.2 g Au/kg; CPU socket adapter boards ~0.5\u20131.5 g Au/kg; ZIF/test IC sockets (precision) ~1\u20134 g Au/kg; SIMM memory slot connectors ~0.8\u20132.5 g Au/kg; standard DIP IC sockets (cheap) ~0.1\u20130.5 g Au/kg; telecom backplane connectors (industrial) ~2\u20138 g Au/kg; GOLD-PLATED CONNECTOR PINS bare (grubo z\u0142ocone piny/styki bez plastiku, uniform golden surface) ~2\u20138 g Au/kg, ~0.5\u20133 g Ag/kg \u2014 HIGH VALUE, do NOT estimate as 0.05; CROSSBAR RELAY CONTACTS (styki krzy\u017Cownicy, telecom exchanges) ~3\u201310 g Au/kg, ~1\u20138 g Ag/kg, ~0.1\u20131.5 g Pd/kg \u2014 VERY HIGH VALUE; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg.`;
 function handleUpload(req, res, next) {
   upload.single("image")(req, res, (err) => {
     if (err instanceof import_multer.default.MulterError) {
