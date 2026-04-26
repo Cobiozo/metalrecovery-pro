@@ -125,7 +125,7 @@ const chemicalProcessesMap: Record<
     timePerKgMin: 4,
     timePerKgMax: 10,
     temperatureOptimal: 70,
-    yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
+    yieldPercent: { Au: 95, Ag: 80, Pt: 85, Pd: 80 },
     electricityKwhPerKg: 0.6,
   },
   hno3_dilute: {

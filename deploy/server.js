@@ -60511,9 +60511,9 @@ var chemicalProcesses = [
     id: "aqua_regia",
     name: "Woda Kr\xF3lewska (HCl + HNO3)",
     nameEn: "Aqua Regia",
-    description: "Klasyczna metoda odzysku z\u0142ota i platynowc\xF3w. WA\u017BNE: Przed wod\u0105 kr\xF3lewsk\u0105 wsad nale\u017Cy najpierw przetrawi\u0107 w rozcie\u0144czonym HNO3 (25%), aby usun\u0105\u0107 mied\u017A, nikiel i inne metale nieszlachetne \u2014 dopiero oczyszczony osad poddaje si\u0119 wodzie kr\xF3lewskiej. Mieszanina HCl:HNO3 (3:1 obj.) rozpuszcza Au, Pt, Pd. Srebro wytr\u0105ca si\u0119 jako AgCl ju\u017C w trakcie trawienia.",
-    targetMetals: ["Au", "Pt", "Pd"],
-    outputPurityText: "Au: 95\u201399% (surowy proszek) \u2192 wymaga rafinacji elektrolitycznej do 999; Pt/Pd: 40\u201360% surowego str\u0105tu \u2014 wymagana dalsza separacja",
+    description: "Klasyczna metoda odzysku Au, Ag i platynowc\xF3w z e-odpad\xF3w. Proces dwuetapowy: (1) Pre-trawienie HNO3 25% \u2014 usuwa Cu, Ni, Pb, Sn i rozpuszcza Ag; filtrat HNO3 zachowa\u0107 do odzysku Ag (~80% uzysku) przez str\u0105cenie NaCl\u2192AgCl i redukcj\u0119. (2) Woda kr\xF3lewska HCl:HNO3 3:1 \u2014 rozpuszcza Au, Pt, Pd z oczyszczonego osadu. Pomini\u0119cie odzysku Ag z filtratu HNO3 to utrata ~80% ca\u0142ego Ag w wsadzie.",
+    targetMetals: ["Au", "Ag", "Pt", "Pd"],
+    outputPurityText: "Au: 95\u201399% (surowy proszek) \u2192 wymaga rafinacji elektrolitycznej do 999; Ag: ~80% odzysku \u2014 ze stepu pre-trawienia HNO3 (filtrat) + AgCl po etapie AR; Pt/Pd: 40\u201360% surowego str\u0105tu \u2014 wymagana dalsza separacja",
     reagents: [
       {
         name: "Kwas azotowy rozcie\u0144czony \u2014 pre-trawienie (HNO3 25%)",
@@ -60567,7 +60567,7 @@ var chemicalProcesses = [
     temperatureOptimal: 70,
     timePerKgMin: 4,
     timePerKgMax: 10,
-    yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
+    yieldPercent: { Au: 95, Ag: 80, Pt: 85, Pd: 80 },
     electricityKwhPerKg: 0.6,
     safetyNotes: "UWAGA: Wydziela truj\u0105ce opary NOx i HCl. Praca WY\u0141\u0104CZNIE pod sprawnym wyci\u0105giem z aktywnym w\u0119glem. Wyposa\u017Cenie: maska z filtrem ABEK P3, r\u0119kawice kwasoodporne (nitril/neopren), fartuch kwasoodporny, gogle ochronne. Nigdy nie wlewaj wody do st\u0119\u017Conego kwasu!",
     steps: [
@@ -61111,7 +61111,7 @@ var chemicalProcessesMap = {
     timePerKgMin: 4,
     timePerKgMax: 10,
     temperatureOptimal: 70,
-    yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
+    yieldPercent: { Au: 95, Ag: 80, Pt: 85, Pd: 80 },
     electricityKwhPerKg: 0.6
   },
   hno3_dilute: {

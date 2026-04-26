@@ -26,9 +26,9 @@ const chemicalProcesses = [
     name: "Woda Królewska (HCl + HNO3)",
     nameEn: "Aqua Regia",
     description:
-      "Klasyczna metoda odzysku złota i platynowców. WAŻNE: Przed wodą królewską wsad należy najpierw przetrawić w rozcieńczonym HNO3 (25%), aby usunąć miedź, nikiel i inne metale nieszlachetne — dopiero oczyszczony osad poddaje się wodzie królewskiej. Mieszanina HCl:HNO3 (3:1 obj.) rozpuszcza Au, Pt, Pd. Srebro wytrąca się jako AgCl już w trakcie trawienia.",
-    targetMetals: ["Au", "Pt", "Pd"],
-    outputPurityText: "Au: 95–99% (surowy proszek) → wymaga rafinacji elektrolitycznej do 999; Pt/Pd: 40–60% surowego strątu — wymagana dalsza separacja",
+      "Klasyczna metoda odzysku Au, Ag i platynowców z e-odpadów. Proces dwuetapowy: (1) Pre-trawienie HNO3 25% — usuwa Cu, Ni, Pb, Sn i rozpuszcza Ag; filtrat HNO3 zachować do odzysku Ag (~80% uzysku) przez strącenie NaCl→AgCl i redukcję. (2) Woda królewska HCl:HNO3 3:1 — rozpuszcza Au, Pt, Pd z oczyszczonego osadu. Pominięcie odzysku Ag z filtratu HNO3 to utrata ~80% całego Ag w wsadzie.",
+    targetMetals: ["Au", "Ag", "Pt", "Pd"],
+    outputPurityText: "Au: 95–99% (surowy proszek) → wymaga rafinacji elektrolitycznej do 999; Ag: ~80% odzysku — ze stepu pre-trawienia HNO3 (filtrat) + AgCl po etapie AR; Pt/Pd: 40–60% surowego strątu — wymagana dalsza separacja",
     reagents: [
       {
         name: "Kwas azotowy rozcieńczony — pre-trawienie (HNO3 25%)",
@@ -82,7 +82,7 @@ const chemicalProcesses = [
     temperatureOptimal: 70,
     timePerKgMin: 4,
     timePerKgMax: 10,
-    yieldPercent: { Au: 95, Ag: 20, Pt: 85, Pd: 80 },
+    yieldPercent: { Au: 95, Ag: 80, Pt: 85, Pd: 80 },
     electricityKwhPerKg: 0.6,
     safetyNotes:
       "UWAGA: Wydziela trujące opary NOx i HCl. Praca WYŁĄCZNIE pod sprawnym wyciągiem z aktywnym węglem. Wyposażenie: maska z filtrem ABEK P3, rękawice kwasoodporne (nitril/neopren), fartuch kwasoodporny, gogle ochronne. Nigdy nie wlewaj wody do stężonego kwasu!",
