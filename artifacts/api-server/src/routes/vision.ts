@@ -137,15 +137,17 @@ STEP 4 — Estimate metal content and plating for each type.
 STEP 4B — For each item mark the CENTER POINT of every individual physical piece in "individualBoxes".
 
   HOW TO MARK EACH PIECE:
-  1. Find the geometric center of the piece (center of the RAM PCB, center of the CPU die, etc.).
-  2. Record that single point as cx (horizontal %) and cy (vertical %).
-  3. One entry per physical piece. 18 RAM sticks → 18 entries. 40 CPUs → 40 entries.
-  4. Maximum 40 entries per item type.
+  1. Scan the image systematically: left→right, top→bottom. Do not stop early.
+  2. For EACH physical piece found, record its geometric center as cx (horizontal %) and cy (vertical %).
+  3. CRITICAL: The number of entries in individualBoxes MUST EQUAL the quantity from STEP 3.
+     If quantity=18, you MUST produce exactly 18 {cx,cy} points — no more, no fewer.
+     Count again before writing the JSON if unsure.
+  4. Maximum 40 entries per item type (if quantity > 40, mark only the first 40 and set quantity=40).
 
   COORDINATE SYSTEM (0–100, % of total image width/height):
-  - cx: horizontal center of the piece (0 = left edge, 100 = right edge)
-  - cy: vertical center of the piece   (0 = top edge,  100 = bottom edge)
-  HARD RULE: cx and cy must both be between 0 and 100.
+  - cx: horizontal center (0 = left edge, 100 = right edge)
+  - cy: vertical center   (0 = top edge,  100 = bottom edge)
+  HARD RULE: cx and cy must both be between 1 and 99.
 
 STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {
@@ -302,6 +304,14 @@ router.post(
         details: validated.error.message,
       });
       return;
+    }
+
+    // Reconcile: align quantity to actual marker count so UI stays consistent
+    for (const item of validated.data.items) {
+      const boxCount = item.individualBoxes?.length ?? 0;
+      if (boxCount > 0 && item.quantity !== boxCount) {
+        item.quantity = boxCount;
+      }
     }
 
     incrementStat(STAT_METRICS.AI_ANALYSES).catch(() => {});
