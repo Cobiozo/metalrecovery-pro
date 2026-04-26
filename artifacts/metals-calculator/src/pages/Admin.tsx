@@ -7,7 +7,7 @@ import {
   Users, BarChart2, Settings, Plus, Trash2, Edit2, Check, X,
   Shield, Star, User as UserIcon, RefreshCw, Send, Eye, EyeOff,
   Activity, Brain, Globe, ToggleLeft, ToggleRight, ChevronDown, ChevronUp,
-  Mail, Server
+  Mail, Server, List
 } from "lucide-react";
 
 type UserRow = {
@@ -29,6 +29,16 @@ type StatsData = {
 };
 
 type Settings = Record<string, string | null>;
+
+type AiLogRow = {
+  id: number;
+  createdAt: string;
+  ip: string;
+  userId: number | null;
+  userEmail: string | null;
+  materialsDetected: string | null;
+  itemCount: number;
+};
 
 const ROLE_LABELS: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   admin: { label: "Administrator", icon: Shield, color: "text-red-400" },
@@ -412,12 +422,18 @@ function EditUserForm({
 function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }) {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [aiLogs, setAiLogs] = useState<AiLogRow[]>([]);
+  const [logsLoading, setLogsLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${getApiBase()}/admin/stats`, { headers: authHeaders() })
       .then((r) => r.json())
       .then(setStats)
       .finally(() => setLoading(false));
+    fetch(`${getApiBase()}/admin/ai-logs`, { headers: authHeaders() })
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) ? setAiLogs(data) : setAiLogs([]))
+      .finally(() => setLogsLoading(false));
   }, [authHeaders]);
 
   if (loading) return <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
@@ -477,6 +493,58 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
           </div>
         </div>
       )}
+
+      {/* AI Analysis Logs */}
+      <div className="bg-card border border-border rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-4">
+          <List className="w-4 h-4 text-purple-400" />
+          <h3 className="text-sm font-semibold">Logi analiz AI</h3>
+          <span className="ml-auto text-xs text-muted-foreground">ostatnie 100</span>
+        </div>
+        {logsLoading ? (
+          <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
+        ) : aiLogs.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-4">Brak zapisanych analiz.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border text-muted-foreground">
+                  <th className="text-left pb-2 pr-3 font-medium">Data / Czas</th>
+                  <th className="text-left pb-2 pr-3 font-medium">IP</th>
+                  <th className="text-left pb-2 pr-3 font-medium">Konto</th>
+                  <th className="text-left pb-2 pr-3 font-medium">Wykryte materiały</th>
+                  <th className="text-right pb-2 font-medium">Elem.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aiLogs.map((log) => (
+                  <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
+                      {new Date(log.createdAt).toLocaleString("pl-PL", {
+                        day: "2-digit", month: "2-digit", year: "2-digit",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </td>
+                    <td className="py-1.5 pr-3 font-mono text-muted-foreground whitespace-nowrap">{log.ip}</td>
+                    <td className="py-1.5 pr-3">
+                      {log.userEmail ? (
+                        <span className="text-purple-400">{log.userEmail}</span>
+                      ) : (
+                        <span className="text-muted-foreground/50">anonim</span>
+                      )}
+                    </td>
+                    <td className="py-1.5 pr-3 text-foreground/80 max-w-xs truncate">
+                      {log.materialsDetected || <span className="text-muted-foreground/50">—</span>}
+                    </td>
+                    <td className="py-1.5 text-right text-muted-foreground">{log.itemCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

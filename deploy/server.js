@@ -50592,11 +50592,30 @@ var init_emailVerifications = __esm({
   }
 });
 
+// ../../lib/db/src/schema/aiAnalysisLogs.ts
+var aiAnalysisLogsTable;
+var init_aiAnalysisLogs = __esm({
+  "../../lib/db/src/schema/aiAnalysisLogs.ts"() {
+    "use strict";
+    init_pg_core();
+    aiAnalysisLogsTable = pgTable("ai_analysis_logs", {
+      id: serial("id").primaryKey(),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      ip: text("ip").notNull(),
+      userId: integer("user_id"),
+      userEmail: text("user_email"),
+      materialsDetected: text("materials_detected"),
+      itemCount: integer("item_count").notNull().default(0)
+    });
+  }
+});
+
 // ../../lib/db/src/schema/index.ts
 var schema_exports = {};
 __export(schema_exports, {
   SETTINGS_KEYS: () => SETTINGS_KEYS,
   STAT_METRICS: () => STAT_METRICS,
+  aiAnalysisLogsTable: () => aiAnalysisLogsTable,
   emailVerificationsTable: () => emailVerificationsTable,
   insertUserSchema: () => insertUserSchema,
   metalPriceHistoryTable: () => metalPriceHistoryTable,
@@ -50614,6 +50633,7 @@ var init_schema2 = __esm({
     init_systemSettings();
     init_systemStats();
     init_emailVerifications();
+    init_aiAnalysisLogs();
   }
 });
 
@@ -50622,6 +50642,7 @@ var src_exports = {};
 __export(src_exports, {
   SETTINGS_KEYS: () => SETTINGS_KEYS,
   STAT_METRICS: () => STAT_METRICS,
+  aiAnalysisLogsTable: () => aiAnalysisLogsTable,
   db: () => db,
   emailVerificationsTable: () => emailVerificationsTable,
   insertUserSchema: () => insertUserSchema,
@@ -67139,11 +67160,11 @@ var init_admin = __esm({
       const [
         dailyStats,
         totalUsers,
-        totalAiUsage
+        totalAiRows
       ] = await Promise.all([
         getStatsLastDays(30),
         db.select({ id: usersTable.id, role: usersTable.role }).from(usersTable),
-        db.select({ aiUsageCount: usersTable.aiUsageCount }).from(usersTable)
+        db.select({ total: sql`coalesce(sum(${systemStatsTable.value}), 0)` }).from(systemStatsTable).where(eq(systemStatsTable.metric, STAT_METRICS.AI_ANALYSES))
       ]);
       const userCounts = { admin: 0, user: 0, vip: 0, total: totalUsers.length };
       for (const u of totalUsers) {
@@ -67151,8 +67172,12 @@ var init_admin = __esm({
         else if (u.role === "vip") userCounts.vip++;
         else userCounts.user++;
       }
-      const totalAI = totalAiUsage.reduce((sum2, u) => sum2 + (u.aiUsageCount ?? 0), 0);
+      const totalAI = Number(totalAiRows[0]?.total ?? 0);
       res.json({ daily: dailyStats, users: userCounts, totalAiAnalyses: totalAI });
+    });
+    router8.get("/ai-logs", adminOnly, async (_req, res) => {
+      const logs = await db.select().from(aiAnalysisLogsTable).orderBy(desc(aiAnalysisLogsTable.createdAt)).limit(100);
+      res.json(logs);
     });
     router8.get("/settings", adminOnly, async (_req, res) => {
       const rows = await db.select().from(systemSettingsTable);
@@ -82081,6 +82106,16 @@ ${lines}
       db.update(usersTable).set({ aiUsageCount: sql`${usersTable.aiUsageCount} + 1` }).where(eq(usersTable.id, user.id)).catch(() => {
       });
     }
+    const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
+    const materialsDetected = validated.data.items.map((item) => item.materialType).join(", ");
+    db.insert(aiAnalysisLogsTable).values({
+      ip: clientIp,
+      userId: user?.id ?? null,
+      userEmail: user?.email ?? null,
+      materialsDetected: materialsDetected || null,
+      itemCount: validated.data.items.length
+    }).catch(() => {
+    });
     res.json(validated.data);
   }
 );

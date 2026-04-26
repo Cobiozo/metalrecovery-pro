@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db/schema";
+import { usersTable, aiAnalysisLogsTable } from "@workspace/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { incrementStat, STAT_METRICS } from "../lib/stats";
 import { resolveUser, type AuthRequest } from "../middlewares/auth";
@@ -288,6 +288,24 @@ router.post(
         .where(eq(usersTable.id, user.id))
         .catch(() => {});
     }
+
+    // Log the analysis: IP, account (if logged in), detected materials
+    const clientIp =
+      (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+      req.socket?.remoteAddress ||
+      "unknown";
+    const materialsDetected = validated.data.items
+      .map((item) => item.materialType)
+      .join(", ");
+    db.insert(aiAnalysisLogsTable)
+      .values({
+        ip: clientIp,
+        userId: user?.id ?? null,
+        userEmail: user?.email ?? null,
+        materialsDetected: materialsDetected || null,
+        itemCount: validated.data.items.length,
+      })
+      .catch(() => {});
 
     res.json(validated.data);
   },

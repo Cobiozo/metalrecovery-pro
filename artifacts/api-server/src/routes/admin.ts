@@ -3,8 +3,9 @@ import bcrypt from "bcrypt";
 import { db } from "@workspace/db";
 import {
   usersTable, sessionsTable, systemSettingsTable, SETTINGS_KEYS,
+  systemStatsTable, STAT_METRICS, aiAnalysisLogsTable,
 } from "@workspace/db/schema";
-import { eq, desc, ne } from "drizzle-orm";
+import { eq, desc, ne, sql } from "drizzle-orm";
 import { requireRole, type AuthRequest } from "../middlewares/auth";
 import { getStatsLastDays } from "../lib/stats";
 import { testSmtpConnection } from "../lib/mailer";
@@ -115,11 +116,14 @@ router.get("/stats", adminOnly, async (_req: AuthRequest, res: Response) => {
   const [
     dailyStats,
     totalUsers,
-    totalAiUsage,
+    totalAiRows,
   ] = await Promise.all([
     getStatsLastDays(30),
     db.select({ id: usersTable.id, role: usersTable.role }).from(usersTable),
-    db.select({ aiUsageCount: usersTable.aiUsageCount }).from(usersTable),
+    db
+      .select({ total: sql<number>`coalesce(sum(${systemStatsTable.value}), 0)` })
+      .from(systemStatsTable)
+      .where(eq(systemStatsTable.metric, STAT_METRICS.AI_ANALYSES)),
   ]);
 
   const userCounts = { admin: 0, user: 0, vip: 0, total: totalUsers.length };
@@ -129,9 +133,18 @@ router.get("/stats", adminOnly, async (_req: AuthRequest, res: Response) => {
     else userCounts.user++;
   }
 
-  const totalAI = totalAiUsage.reduce((sum, u) => sum + (u.aiUsageCount ?? 0), 0);
+  const totalAI = Number(totalAiRows[0]?.total ?? 0);
 
   res.json({ daily: dailyStats, users: userCounts, totalAiAnalyses: totalAI });
+});
+
+router.get("/ai-logs", adminOnly, async (_req: AuthRequest, res: Response) => {
+  const logs = await db
+    .select()
+    .from(aiAnalysisLogsTable)
+    .orderBy(desc(aiAnalysisLogsTable.createdAt))
+    .limit(100);
+  res.json(logs);
 });
 
 router.get("/settings", adminOnly, async (_req: AuthRequest, res: Response) => {
