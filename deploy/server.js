@@ -60470,8 +60470,8 @@ var electronicMaterials = [
   },
   {
     id: "ufo_mix",
-    name: "UFO \u2014 Nieznane/Mieszane",
-    nameEn: "UFO - Unknown/Mixed scrap",
+    name: "Mix PCB \u2014 Elektronika Mieszana",
+    nameEn: "Mixed PCB \u2014 Unknown/Mixed Electronics",
     category: "inne",
     unit: "kg",
     metalContentPerKg: {

@@ -1415,8 +1415,8 @@ export const electronicMaterials = [
   },
   {
     id: "ufo_mix",
-    name: "UFO — Nieznane/Mieszane",
-    nameEn: "UFO - Unknown/Mixed scrap",
+    name: "Mix PCB — Elektronika Mieszana",
+    nameEn: "Mixed PCB — Unknown/Mixed Electronics",
     category: "inne",
     unit: "kg",
     metalContentPerKg: {
