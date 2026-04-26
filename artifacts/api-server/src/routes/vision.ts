@@ -40,19 +40,19 @@ const MetalEstimateSchema = z.object({
   confidence: z.enum(["low", "medium", "high"]),
 });
 
-const BoundingBoxSchema = z.object({
+const BoxSchema = z.object({
   x: z.number().min(0).max(100),
   y: z.number().min(0).max(100),
   w: z.number().min(0).max(100),
   h: z.number().min(0).max(100),
-}).nullable().optional();
+});
 
 const VisionItemSchema = z.object({
   materialType: z.string(),
   description: z.string(),
   quantity: z.number().int().min(0),
   massGrams: z.number().min(0).nullable().optional(),
-  boundingBox: BoundingBoxSchema,
+  individualBoxes: z.array(BoxSchema).nullable().optional(),
   metalContent: z.object({
     Au: MetalEstimateSchema,
     Ag: MetalEstimateSchema,
@@ -136,14 +136,15 @@ B) IF a scale was detected in STEP 0 with a valid weight reading:
 
 STEP 4 — Estimate metal content and plating for each type.
 
-STEP 4B — For each item, estimate the BOUNDING BOX as percentages of the image dimensions:
-  - x: left edge of the group (0 = left edge of image, 100 = right edge)
-  - y: top edge of the group (0 = top of image, 100 = bottom)
-  - w: width of the bounding box as % of image width
-  - h: height of the bounding box as % of image height
-  Draw the tightest box that contains ALL visible instances of this material type.
-  If items of one type are scattered, use a box that encompasses all of them.
-  Values must be between 0 and 100.
+STEP 4B — For each item, mark EACH INDIVIDUAL PIECE separately using "individualBoxes" (an array).
+  One bounding box PER PHYSICAL PIECE — NOT one box for the whole group.
+  Format: x = left edge %, y = top edge %, w = width %, h = height % (all 0-100, relative to image size).
+  Rules:
+  - If there are 18 RAM sticks, provide 18 boxes — one tightly around each stick.
+  - If there are 6 CPUs, provide 6 boxes — one per chip.
+  - Draw the tightest box around each individual piece.
+  - Partially visible items at edges: include them.
+  - Maximum 40 boxes total per item type. If more pieces exist, mark the most visible ones.
 
 STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {
@@ -159,7 +160,10 @@ STEP 5 — Return ONLY this JSON (no markdown, no explanation):
       "description": "2-3 sentences in Polish about this type and its metal characteristics",
       "quantity": <integer piece count from STEP 3A; 0 only if truly impossible to count>,
       "massGrams": <number from STEP 3B if scale detected, otherwise null>,
-      "boundingBox": { "x": <left_pct>, "y": <top_pct>, "w": <width_pct>, "h": <height_pct> },
+      "individualBoxes": [
+        { "x": <left_pct>, "y": <top_pct>, "w": <width_pct>, "h": <height_pct> },
+        { "x": <left_pct>, "y": <top_pct>, "w": <width_pct>, "h": <height_pct> }
+      ],
       "metalContent": {
         "Au": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
         "Ag": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },

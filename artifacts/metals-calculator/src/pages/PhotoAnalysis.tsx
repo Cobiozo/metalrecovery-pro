@@ -37,7 +37,7 @@ type VisionItem = {
   description: string;
   quantity: number;
   massGrams?: number | null;
-  boundingBox?: BoundingBox | null;
+  individualBoxes?: BoundingBox[] | null;
   metalContent: {
     Au: MetalEstimate;
     Ag: MetalEstimate;
@@ -530,23 +530,30 @@ const ITEM_COLORS = [
 ];
 
 function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: VisionItem[] }) {
+  // Flatten all individual boxes into one list: { bb, label, color }
+  const allBoxes = items.flatMap((item, itemIdx) => {
+    const color = ITEM_COLORS[itemIdx % ITEM_COLORS.length];
+    return (item.individualBoxes ?? []).map((bb) => ({ bb, label: item.materialType, color }));
+  });
+
   const [visCount, setVisCount] = useState(0);
-  const withBox = items.filter((it) => it.boundingBox);
 
   useEffect(() => {
     setVisCount(0);
-    if (withBox.length === 0) return;
+    if (allBoxes.length === 0) return;
     let i = 0;
     let tid: ReturnType<typeof setTimeout>;
     const next = () => {
-      if (i >= withBox.length) return;
-      tid = setTimeout(() => { i++; setVisCount(i); next(); }, 320);
+      if (i >= allBoxes.length) return;
+      // faster reveal for many items
+      const delay = allBoxes.length > 10 ? 80 : 200;
+      tid = setTimeout(() => { i++; setVisCount(i); next(); }, delay);
     };
-    const init = setTimeout(next, 200);
+    const init = setTimeout(next, 150);
     return () => { clearTimeout(init); clearTimeout(tid); };
   }, [photoUrl]);
 
-  if (withBox.length === 0) return null;
+  if (allBoxes.length === 0) return null;
 
   return (
     <div className="rounded-xl overflow-hidden border border-border relative">
@@ -558,66 +565,64 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
         draggable={false}
       />
       <div className="absolute inset-0 pointer-events-none">
-        {withBox.slice(0, visCount).map((item, i) => {
-          const bb = item.boundingBox!;
-          const color = ITEM_COLORS[i % ITEM_COLORS.length];
-          return (
-            <div
-              key={i}
-              className="absolute"
-              style={{
-                left: `${bb.x}%`,
-                top: `${bb.y}%`,
-                width: `${bb.w}%`,
-                height: `${bb.h}%`,
-                animation: "detBoxIn 0.3s cubic-bezier(.17,.67,.35,1.25) both",
-              }}
-            >
-              {/* corner brackets */}
-              {(["tl","tr","bl","br"] as const).map((corner) => (
-                <span
-                  key={corner}
-                  style={{
-                    position: "absolute",
-                    width: "22%", height: "22%",
-                    borderColor: color,
-                    borderStyle: "solid",
-                    ...(corner === "tl" ? { top:0, left:0,   borderWidth: "2px 0 0 2px", borderRadius: "2px 0 0 0" } :
-                       corner === "tr" ? { top:0, right:0,  borderWidth: "2px 2px 0 0", borderRadius: "0 2px 0 0" } :
-                       corner === "bl" ? { bottom:0, left:0, borderWidth: "0 0 2px 2px", borderRadius: "0 0 0 2px" } :
-                                         { bottom:0, right:0,borderWidth: "0 2px 2px 0", borderRadius: "0 0 2px 0" }),
-                  }}
-                />
-              ))}
-              {/* label */}
+        {allBoxes.slice(0, visCount).map(({ bb, label, color }, i) => (
+          <div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${bb.x}%`,
+              top: `${bb.y}%`,
+              width: `${bb.w}%`,
+              height: `${bb.h}%`,
+              animation: "detBoxIn 0.22s cubic-bezier(.17,.67,.35,1.25) both",
+            }}
+          >
+            {/* corner brackets */}
+            {(["tl","tr","bl","br"] as const).map((corner) => (
+              <span
+                key={corner}
+                style={{
+                  position: "absolute",
+                  width: "28%", height: "28%",
+                  borderColor: color,
+                  borderStyle: "solid",
+                  ...(corner === "tl" ? { top:0, left:0,    borderWidth: "2px 0 0 2px", borderRadius: "2px 0 0 0" } :
+                     corner === "tr" ? { top:0, right:0,   borderWidth: "2px 2px 0 0", borderRadius: "0 2px 0 0" } :
+                     corner === "bl" ? { bottom:0, left:0,  borderWidth: "0 0 2px 2px", borderRadius: "0 0 0 2px" } :
+                                       { bottom:0, right:0, borderWidth: "0 2px 2px 0", borderRadius: "0 0 2px 0" }),
+                }}
+              />
+            ))}
+            {/* label only on first box of each item type to avoid clutter */}
+            {i === allBoxes.findIndex((b) => b.label === label) && (
               <span
                 style={{
                   position: "absolute",
-                  top: "-1.4em",
+                  top: "-1.5em",
                   left: 0,
                   whiteSpace: "nowrap",
-                  fontSize: "10px",
+                  fontSize: "9px",
                   fontFamily: "monospace",
-                  fontWeight: 600,
+                  fontWeight: 700,
                   color,
-                  background: "rgba(0,0,0,0.75)",
+                  background: "rgba(0,0,0,0.8)",
                   padding: "1px 4px",
                   borderRadius: "3px",
                   border: `1px solid ${color}55`,
-                  maxWidth: "18ch",
+                  maxWidth: "16ch",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                 }}
               >
-                {item.materialType}
+                {label}
               </span>
-            </div>
-          );
-        })}
+            )}
+          </div>
+        ))}
       </div>
       <style>{`
         @keyframes detBoxIn {
-          from { opacity: 0; transform: scale(1.1); }
+          from { opacity: 0; transform: scale(1.12); }
           to   { opacity: 1; transform: scale(1); }
         }
       `}</style>
