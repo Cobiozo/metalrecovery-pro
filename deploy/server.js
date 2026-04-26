@@ -50619,7 +50619,8 @@ var init_visitLogs = __esm({
     visitLogsTable = pgTable("visit_logs", {
       id: serial("id").primaryKey(),
       createdAt: timestamp("created_at").notNull().defaultNow(),
-      ip: text("ip").notNull()
+      ip: text("ip").notNull(),
+      date: text("date").notNull().default("")
     });
   }
 });
@@ -50720,7 +50721,7 @@ async function getStatsLastDays(days = 30) {
   }
   return result;
 }
-function getSeenSet(date6) {
+function getMemSet(date6) {
   if (!seenToday.has(date6)) {
     seenToday.clear();
     seenToday.set(date6, /* @__PURE__ */ new Set());
@@ -50729,13 +50730,18 @@ function getSeenSet(date6) {
 }
 async function trackUniqueVisit(ip) {
   const date6 = todayDate();
-  const seen = getSeenSet(date6);
-  if (seen.has(ip)) return;
-  seen.add(ip);
-  await incrementStat(STAT_METRICS.PAGE_VISITS);
+  const memSet = getMemSet(date6);
+  if (memSet.has(ip)) return;
   const { db: db2, visitLogsTable: visitLogsTable2 } = await Promise.resolve().then(() => (init_src(), src_exports));
-  db2.insert(visitLogsTable2).values({ ip }).catch(() => {
-  });
+  const { and: and2, eq: eq2 } = await Promise.resolve().then(() => (init_drizzle_orm(), drizzle_orm_exports));
+  const existing = await db2.select({ id: visitLogsTable2.id }).from(visitLogsTable2).where(and2(eq2(visitLogsTable2.ip, ip), eq2(visitLogsTable2.date, date6))).limit(1);
+  if (existing.length > 0) {
+    memSet.add(ip);
+    return;
+  }
+  memSet.add(ip);
+  await db2.insert(visitLogsTable2).values({ ip, date: date6 });
+  await incrementStat(STAT_METRICS.PAGE_VISITS);
 }
 var seenToday;
 var init_stats = __esm({

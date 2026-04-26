@@ -38,12 +38,12 @@ export async function getStatsLastDays(days = 30): Promise<Record<string, Record
   return result;
 }
 
-// In-memory deduplication: tracks which IPs have been counted today
-const seenToday = new Map<string, Set<string>>(); // date -> Set<IP>
+// In-memory fast-path cache: date -> Set<IP>
+const seenToday = new Map<string, Set<string>>();
 
-function getSeenSet(date: string): Set<string> {
+function getMemSet(date: string): Set<string> {
   if (!seenToday.has(date)) {
-    seenToday.clear(); // discard old dates
+    seenToday.clear(); // drop old-date entries
     seenToday.set(date, new Set());
   }
   return seenToday.get(date)!;
@@ -51,13 +51,30 @@ function getSeenSet(date: string): Set<string> {
 
 export async function trackUniqueVisit(ip: string): Promise<void> {
   const date = todayDate();
-  const seen = getSeenSet(date);
-  if (seen.has(ip)) return; // already counted today
-  seen.add(ip);
-  await incrementStat(STAT_METRICS.PAGE_VISITS);
-  // Log the visit with IP to the database
+  const memSet = getMemSet(date);
+
+  // Fast path: already seen this session
+  if (memSet.has(ip)) return;
+
+  // Slow path: check DB — survives server restarts
   const { db, visitLogsTable } = await import("@workspace/db");
-  db.insert(visitLogsTable).values({ ip }).catch(() => {});
+  const { and, eq } = await import("drizzle-orm");
+
+  const existing = await db
+    .select({ id: visitLogsTable.id })
+    .from(visitLogsTable)
+    .where(and(eq(visitLogsTable.ip, ip), eq(visitLogsTable.date, date)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    memSet.add(ip); // populate cache so next call is fast
+    return;
+  }
+
+  // New unique visit — insert and count
+  memSet.add(ip);
+  await db.insert(visitLogsTable).values({ ip, date });
+  await incrementStat(STAT_METRICS.PAGE_VISITS);
 }
 
 export { STAT_METRICS, todayDate };
