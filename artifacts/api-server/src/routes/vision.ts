@@ -1,4 +1,9 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
+import { db } from "@workspace/db";
+import { usersTable } from "@workspace/db/schema";
+import { eq, sql } from "drizzle-orm";
+import { incrementStat, STAT_METRICS } from "../lib/stats";
+import { resolveUser, type AuthRequest } from "../middlewares/auth";
 import multer from "multer";
 import OpenAI from "openai";
 import { z } from "zod";
@@ -273,6 +278,15 @@ router.post(
         details: validated.error.message,
       });
       return;
+    }
+
+    incrementStat(STAT_METRICS.AI_ANALYSES).catch(() => {});
+    const user = await resolveUser(req as AuthRequest).catch(() => null);
+    if (user) {
+      db.update(usersTable)
+        .set({ aiUsageCount: sql`${usersTable.aiUsageCount} + 1` })
+        .where(eq(usersTable.id, user.id))
+        .catch(() => {});
     }
 
     res.json(validated.data);

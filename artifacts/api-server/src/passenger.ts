@@ -4,7 +4,7 @@ import path from "node:path";
 import { exec } from "node:child_process";
 import fs from "node:fs";
 
-import router from "./routes/index.js";
+import router, { registerDbRoutes } from "./routes/index.js";
 
 const SOCIAL_BOT_RE =
   /facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot/i;
@@ -150,8 +150,16 @@ process.on("SIGINT", function () {
 });
 
 const port = parseInt(process.env.PORT || "3000", 10);
-httpServer = app.listen(port, function () {
-  console.log("[start] MetalRecovery Pro listening on port " + port);
-});
-httpServer.keepAliveTimeout = 65000;
-httpServer.headersTimeout = 66000;
+
+registerDbRoutes()
+  .then(function () {
+    httpServer = app.listen(port, function () {
+      console.log("[start] MetalRecovery Pro listening on port " + port);
+    });
+    httpServer!.keepAliveTimeout = 65000;
+    httpServer!.headersTimeout = 66000;
+  })
+  .catch(function (err) {
+    console.error("[start] Failed to register DB routes:", err);
+    process.exit(1);
+  });

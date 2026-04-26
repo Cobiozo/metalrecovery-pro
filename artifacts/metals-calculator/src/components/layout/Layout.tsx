@@ -1,12 +1,24 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { Beaker, Calculator, Coins, Activity, Info, WifiOff, RefreshCw, Download, ShoppingCart, ScanLine, Coffee } from "lucide-react";
+import {
+  Beaker, Calculator, Coins, Activity, Info, WifiOff, RefreshCw,
+  Download, ShoppingCart, ScanLine, Coffee, Shield, LogIn, LogOut,
+  User as UserIcon, Star,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePWA } from "@/hooks/usePWA";
+import { useAuth } from "@/hooks/useAuth";
+
+const ROLE_META = {
+  admin: { label: "Administrator", icon: Shield, color: "text-red-400", bg: "bg-red-500/10" },
+  vip:   { label: "VIP",           icon: Star,   color: "text-yellow-400", bg: "bg-yellow-500/10" },
+  user:  { label: "Użytkownik",    icon: UserIcon, color: "text-blue-400", bg: "bg-blue-500/10" },
+};
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
   const { isOffline, needRefresh, updateServiceWorker, canInstall, installApp } = usePWA();
+  const { user, logout, loading: authLoading } = useAuth();
 
   const navItems = [
     { href: "/", label: "Kalkulator", labelFull: "Kalkulator Metali", icon: Calculator },
@@ -16,16 +28,17 @@ export function Layout({ children }: { children: ReactNode }) {
     { href: "/procesy", label: "Procesy", labelFull: "Procesy Chemiczne", icon: Beaker },
   ];
 
+  const roleMeta = user ? (ROLE_META[user.role as keyof typeof ROLE_META] ?? ROLE_META.user) : null;
+  const RoleIcon = roleMeta?.icon ?? UserIcon;
+
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
-      {/* Offline banner */}
       {isOffline && (
         <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-center gap-2 px-4 py-2 bg-yellow-500/95 text-yellow-950 text-sm font-medium backdrop-blur-sm">
           <WifiOff className="w-4 h-4 shrink-0" />
           <span>Brak połączenia — dane z pamięci podręcznej</span>
         </div>
       )}
-      {/* SW Update banner */}
       {needRefresh && (
         <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between gap-2 px-4 py-2 bg-primary/95 text-primary-foreground text-sm font-medium backdrop-blur-sm">
           <span>Dostępna nowa wersja aplikacji</span>
@@ -38,6 +51,7 @@ export function Layout({ children }: { children: ReactNode }) {
           </button>
         </div>
       )}
+
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="p-6 flex items-center gap-3 border-b border-border">
@@ -49,6 +63,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <p className="text-xs text-primary font-mono font-medium">PRO EDITION</p>
           </div>
         </div>
+
         <nav className="flex-1 p-4 flex flex-col gap-2">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -69,8 +84,55 @@ export function Layout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+
+          {user?.role === "admin" && (
+            <Link
+              href="/admin"
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-md transition-colors text-sm font-medium",
+                location === "/admin"
+                  ? "bg-red-500/20 text-red-400"
+                  : "text-red-400/70 hover:bg-red-500/10 hover:text-red-400"
+              )}
+            >
+              <Shield className="w-4 h-4" />
+              Panel Admina
+            </Link>
+          )}
         </nav>
+
         <div className="p-4 border-t border-border mt-auto space-y-3">
+          {!authLoading && (
+            user ? (
+              <div className="bg-muted/50 border border-border rounded-md p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className={cn("p-1 rounded-full", roleMeta?.bg)}>
+                    <RoleIcon className={cn("w-3.5 h-3.5", roleMeta?.color)} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium truncate">{user.name ?? user.email}</p>
+                    <p className={cn("text-[10px] font-medium", roleMeta?.color)}>{roleMeta?.label}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => logout()}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground text-xs font-medium transition-colors"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Wyloguj się
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/logowanie"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-muted hover:bg-muted/80 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                Zaloguj się
+              </Link>
+            )
+          )}
+
           <a
             href="https://buycoffee.to/mobilneit"
             target="_blank"
@@ -109,10 +171,34 @@ export function Layout({ children }: { children: ReactNode }) {
         <div className="bg-primary/10 p-1.5 rounded-md">
           <Activity className="w-5 h-5 text-primary" />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 flex items-center gap-2">
           <span className="font-bold text-base leading-tight tracking-tight">MetalRecovery</span>
-          <span className="text-xs text-primary font-mono font-medium ml-2">PRO</span>
+          <span className="text-xs text-primary font-mono font-medium">PRO</span>
         </div>
+        {!authLoading && user?.role === "admin" && (
+          <Link href="/admin" className="p-1.5 rounded-md text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+            <Shield className="w-4 h-4" />
+          </Link>
+        )}
+        {!authLoading && (
+          user ? (
+            <button
+              onClick={() => logout()}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            >
+              {user.name?.split(" ")[0] ?? user.email.split("@")[0]}
+              <LogOut className="w-3.5 h-3.5 ml-1" />
+            </button>
+          ) : (
+            <Link
+              href="/logowanie"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted text-xs font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              Zaloguj
+            </Link>
+          )
+        )}
         <a
           href="https://buycoffee.to/mobilneit"
           target="_blank"
@@ -152,9 +238,7 @@ export function Layout({ children }: { children: ReactNode }) {
               href={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-colors text-xs font-medium",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground"
+                isActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               <Icon className={cn("w-5 h-5", isActive && "text-primary")} />
