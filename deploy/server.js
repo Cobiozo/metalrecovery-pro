@@ -82121,7 +82121,7 @@ ${lines}
             role: "user",
             content: [
               { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: dataUri, detail: "low" } }
+              { type: "image_url", image_url: { url: dataUri, detail: "high" } }
             ]
           }
         ]
@@ -82153,6 +82153,13 @@ ${lines}
         details: validated.error.message
       });
       return;
+    }
+    for (const item of validated.data.items) {
+      for (const pt of item.individualBoxes ?? []) {
+        const cy = pt.cy;
+        const correction = (cy / 100) ** 2 * 20;
+        pt.cy = Math.max(1, Math.min(99, Math.round(cy - correction)));
+      }
     }
     for (const item of validated.data.items) {
       const boxCount = item.individualBoxes?.length ?? 0;
