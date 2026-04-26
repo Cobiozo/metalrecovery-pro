@@ -554,12 +554,12 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
   }, [photoUrl]);
 
   return (
-    <div className="rounded-xl overflow-hidden border border-border relative">
+    <div className="rounded-xl border border-border overflow-y-auto" style={{ maxHeight: "75vh" }}>
+      <div className="relative">
       <img
         src={photoUrl}
         alt="Wynik analizy"
         className="block w-full h-auto select-none"
-        style={{ maxHeight: "70vh", objectFit: "contain", background: "#0a0a0a" }}
         draggable={false}
       />
       <div className="absolute inset-0 pointer-events-none">
@@ -624,6 +624,7 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
           to   { opacity: 1; transform: scale(1); }
         }
       `}</style>
+      </div>
     </div>
   );
 }

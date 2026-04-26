@@ -81996,15 +81996,23 @@ B) IF a scale was detected in STEP 0 with a valid weight reading:
 
 STEP 4 \u2014 Estimate metal content and plating for each type.
 
-STEP 4B \u2014 For each item, mark EACH INDIVIDUAL PIECE separately using "individualBoxes" (an array).
-  One bounding box PER PHYSICAL PIECE \u2014 NOT one box for the whole group.
-  Format: x = left edge %, y = top edge %, w = width %, h = height % (all 0-100, relative to image size).
-  Rules:
-  - If there are 18 RAM sticks, provide 18 boxes \u2014 one tightly around each stick.
-  - If there are 6 CPUs, provide 6 boxes \u2014 one per chip.
-  - Draw the tightest box around each individual piece.
-  - Partially visible items at edges: include them.
-  - Maximum 40 boxes total per item type. If more pieces exist, mark the most visible ones.
+STEP 4B \u2014 For each item draw ONE bounding box per individual physical piece in "individualBoxes".
+
+  HOW TO DRAW EACH BOX:
+  1. Find the CENTER of the piece (e.g. center of each RAM PCB, center of each CPU die).
+  2. Expand outward until you hit the physical edge of that piece on all four sides.
+  3. The box must FULLY CONTAIN the piece \u2014 do not clip edges.
+  4. Overlapping boxes are EXPECTED and acceptable for densely packed items.
+  5. Do NOT merge multiple pieces into one box.
+
+  COORDINATE SYSTEM (all 0\u2013100, % of total image width/height):
+  - x: left edge of the box
+  - y: top edge of the box
+  - w: box width  (x + w should reach the right edge of the piece)
+  - h: box height (y + h should reach the bottom edge of the piece)
+
+  COUNTS: one box per physical piece. 18 RAM sticks \u2192 18 boxes. 6 CPUs \u2192 6 boxes.
+  Maximum 40 boxes per item type.
 
 STEP 5 \u2014 Return ONLY this JSON (no markdown, no explanation):
 {

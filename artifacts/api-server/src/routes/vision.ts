@@ -136,26 +136,23 @@ B) IF a scale was detected in STEP 0 with a valid weight reading:
 
 STEP 4 — Estimate metal content and plating for each type.
 
-STEP 4B — For each item, mark EACH INDIVIDUAL PIECE separately using "individualBoxes" (an array).
-  PRECISION IS CRITICAL. Follow these rules strictly:
+STEP 4B — For each item draw ONE bounding box per individual physical piece in "individualBoxes".
 
-  BOX SIZING:
-  - The box must hug the PHYSICAL EDGES of the piece — PCB edge, chip outline, connector pins.
-  - Do NOT add any padding or margin outside the physical boundary.
-  - If pieces are touching or overlapping, the boxes may touch but should NOT extend into the neighboring piece.
-  - Use physical color/edge boundaries to separate adjacent items.
-  - When in doubt about an edge: SHRINK the box rather than expand it.
+  HOW TO DRAW EACH BOX:
+  1. Find the CENTER of the piece (e.g. center of each RAM PCB, center of each CPU die).
+  2. Expand outward until you hit the physical edge of that piece on all four sides.
+  3. The box must FULLY CONTAIN the piece — do not clip edges.
+  4. Overlapping boxes are EXPECTED and acceptable for densely packed items.
+  5. Do NOT merge multiple pieces into one box.
 
-  COUNTING:
-  - One box per individual physical piece. 18 RAM sticks = 18 boxes. 6 CPUs = 6 boxes.
-  - Do NOT group items of the same type into one box.
-  - Maximum 40 boxes per item type. If more pieces exist, mark the most clearly visible ones.
+  COORDINATE SYSTEM (all 0–100, % of total image width/height):
+  - x: left edge of the box
+  - y: top edge of the box
+  - w: box width  (x + w should reach the right edge of the piece)
+  - h: box height (y + h should reach the bottom edge of the piece)
 
-  COORDINATES (all values 0–100, % of image dimensions):
-  - x = left edge of the piece
-  - y = top edge of the piece
-  - w = width (x + w must NOT exceed the right physical edge of the piece)
-  - h = height (y + h must NOT exceed the bottom physical edge of the piece)
+  COUNTS: one box per physical piece. 18 RAM sticks → 18 boxes. 6 CPUs → 6 boxes.
+  Maximum 40 boxes per item type.
 
 STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {
