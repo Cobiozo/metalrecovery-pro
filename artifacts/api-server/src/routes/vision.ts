@@ -122,8 +122,13 @@ IMPORTANT: Apply the shape guide from above — do NOT call small square cards "
 IMPORTANT: Do NOT use "UFO" as a materialType name — ever. For mixed/unidentified electronics use the catalog entry "Mix PCB — Elektronika Mieszana".
 
 STEP 3 — Determine quantities.
-A) COUNT each type carefully: scan systematically left→right, top→bottom. Count EVERY visible unit including partially visible ones at edges.
-   If items overlap, estimate based on visible corners/edges — prefer overcounting over undercounting.
+A) COUNT each type carefully: scan systematically left→right, top→bottom.
+   STACKED / OVERLAPPING items rule — READ CAREFULLY:
+   • A module counts as ONE unit only when its PRIMARY FACE (the flat main surface) is clearly visible and unique.
+   • Thin horizontal or vertical EDGE STRIPS peeking out from under another module are NOT separate units — ignore them.
+   • For a pile of RAM sticks on a table: count only the sticks whose full (or mostly full) front PCB face is visible. Do not count the narrow edges of buried sticks as extra units.
+   • When you are unsure whether an edge strip is a separate module, DO NOT count it.
+   • Conservative counting is required: under-count rather than over-count.
 B) IF a scale was detected in STEP 0 with a valid weight reading:
    — scaleReading.weightGrams is the ACTUAL TOTAL MASS of all items on the scale.
    — Estimate what PERCENTAGE of that total mass belongs to each identified type.
