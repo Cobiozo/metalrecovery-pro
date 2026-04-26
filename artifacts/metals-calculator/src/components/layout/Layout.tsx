@@ -54,7 +54,7 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
-        <div className="p-6 flex items-center gap-3 border-b border-border">
+        <Link href="/" className="p-6 flex items-center gap-3 border-b border-border hover:bg-muted/30 transition-colors">
           <div className="bg-primary/10 p-2 rounded-md">
             <Activity className="w-6 h-6 text-primary" />
           </div>
@@ -62,7 +62,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <h1 className="font-bold text-lg leading-tight tracking-tight">MetalRecovery</h1>
             <p className="text-xs text-primary font-mono font-medium">PRO EDITION</p>
           </div>
-        </div>
+        </Link>
 
         <nav className="flex-1 p-4 flex flex-col gap-2">
           {navItems.map((item) => {
@@ -168,13 +168,15 @@ export function Layout({ children }: { children: ReactNode }) {
 
       {/* Mobile Top Bar */}
       <header className="md:hidden flex items-center gap-3 px-4 py-3 bg-card border-b border-border shrink-0">
-        <div className="bg-primary/10 p-1.5 rounded-md">
-          <Activity className="w-5 h-5 text-primary" />
-        </div>
-        <div className="flex-1 flex items-center gap-2">
-          <span className="font-bold text-base leading-tight tracking-tight">MetalRecovery</span>
-          <span className="text-xs text-primary font-mono font-medium">PRO</span>
-        </div>
+        <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="bg-primary/10 p-1.5 rounded-md shrink-0">
+            <Activity className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-bold text-base leading-tight tracking-tight truncate">MetalRecovery</span>
+            <span className="text-xs text-primary font-mono font-medium shrink-0">PRO</span>
+          </div>
+        </Link>
         {!authLoading && user?.role === "admin" && (
           <Link href="/admin" className="p-1.5 rounded-md text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors">
             <Shield className="w-4 h-4" />
@@ -212,10 +214,11 @@ export function Layout({ children }: { children: ReactNode }) {
         {canInstall && (
           <button
             onClick={installApp}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shrink-0"
+            title="Zainstaluj aplikację"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-semibold hover:bg-primary/90 transition-colors shrink-0"
           >
             <Download className="w-3.5 h-3.5" />
-            Zainstaluj
+            <span className="hidden sm:inline">Zainstaluj</span>
           </button>
         )}
       </header>
