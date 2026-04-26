@@ -126,6 +126,18 @@ export const GetElectronicMaterialsResponseItem = zod.object({
     .describe(
       "Per-metal multipliers applied to metal content when material is cleaned (plastic\/housing removed)",
     ),
+  catalogHint: zod
+    .string()
+    .optional()
+    .describe(
+      "Short English visual description to help AI\/vision models match photos to this material type",
+    ),
+  chemFraction: zod
+    .number()
+    .optional()
+    .describe(
+      "Fraction of batch mass that undergoes chemical processing (0–1). For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers) only the electronic sub-assembly fraction is dissolved. Used to compute realistic reagent volumes and electricity costs.",
+    ),
 });
 export const GetElectronicMaterialsResponse = zod.array(
   GetElectronicMaterialsResponseItem,
@@ -235,6 +247,12 @@ export const CalculateRecoveryBody = zod.object({
     .record(zod.string(), zod.number())
     .optional()
     .describe("Optional map of reagent name to custom price in PLN per liter"),
+  withSeparacja: zod
+    .boolean()
+    .optional()
+    .describe(
+      "When true, chemistry volumes are scaled for physical pre-separation (cutting edge connectors, removing gold-bearing ICs before acid bath). Reduces reagent consumption significantly for PCB-class materials.\n",
+    ),
 });
 
 export const CalculateRecoveryResponse = zod.object({
@@ -543,6 +561,12 @@ export const CompareProcessesBody = zod.object({
     .number()
     .optional()
     .describe("Electricity price in PLN per kWh (default 0.80)"),
+  withSeparacja: zod
+    .boolean()
+    .optional()
+    .describe(
+      "When true, chemistry volumes are scaled for physical pre-separation (cutting edge connectors, removing gold-bearing ICs before acid bath).\n",
+    ),
 });
 
 export const CompareProcessesResponseItem = zod.object({

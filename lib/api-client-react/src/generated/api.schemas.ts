@@ -127,7 +127,7 @@ export interface ElectronicMaterial {
   cleanedMultiplier?: CleanedMultiplier;
   /** Short English visual description to help AI/vision models match photos to this material type */
   catalogHint?: string;
-  /** Fraction of batch mass that undergoes chemical processing (0–1). For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers) only the electronic sub-assembly fraction is dissolved. */
+  /** Fraction of batch mass that undergoes chemical processing (0–1). For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers) only the electronic sub-assembly fraction is dissolved. Used to compute realistic reagent volumes and electricity costs. */
   chemFraction?: number;
 }
 
@@ -283,6 +283,9 @@ export interface CalculationRequest {
   electricityPricePerKwh?: number;
   /** Optional map of reagent name to custom price in PLN per liter */
   reagentPriceOverrides?: CalculationRequestReagentPriceOverrides;
+  /** When true, chemistry volumes are scaled for physical pre-separation (cutting edge connectors, removing gold-bearing ICs before acid bath). Reduces reagent consumption significantly for PCB-class materials.
+   */
+  withSeparacja?: boolean;
 }
 
 export type RecoveredMetalMetal =
@@ -347,6 +350,9 @@ export interface CompareRequest {
   batch: BatchItem[];
   /** Electricity price in PLN per kWh (default 0.80) */
   electricityPricePerKwh?: number;
+  /** When true, chemistry volumes are scaled for physical pre-separation (cutting edge connectors, removing gold-bearing ICs before acid bath).
+   */
+  withSeparacja?: boolean;
 }
 
 export interface PurchasePriceRequest {

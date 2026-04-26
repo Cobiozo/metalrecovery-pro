@@ -137,6 +137,9 @@ export const electronicMaterials = [
     weightPerPiece: 0.15,
     requiresCleaning: true,
     cleanedMultiplier: { Au: 1.18, Ag: 1.18, Pt: 1.18, Pd: 1.18 },
+    /** Po wstępnej separacji (wyłamanie/wycięcie złączy krawędziowych ISA/PCI i wymontowanie
+     *  złoconych IC) faktycznie do kąpieli kwasowej trafia ok. 10% masy wsadu. */
+    separacjaFraction: 0.10,
     metalContentPerKg: {
       Au: { min: 0.04, max: 0.20, typical: 0.10 },
       Ag: { min: 0.5, max: 2.5, typical: 1.2 },
@@ -154,6 +157,9 @@ export const electronicMaterials = [
     weightPerPiece: 0.10,
     requiresCleaning: true,
     cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
+    /** Płytki klasy C mają mniej złączy krawędziowych niż B — ok. 8% masy po separacji
+     *  (głównie przelotki THT-IC i złącza DIP złocone). */
+    separacjaFraction: 0.08,
     metalContentPerKg: {
       Au: { min: 0.01, max: 0.08, typical: 0.04 },
       Ag: { min: 0.2, max: 1.2, typical: 0.6 },

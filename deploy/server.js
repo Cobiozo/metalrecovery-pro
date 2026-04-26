@@ -71390,6 +71390,12 @@ var GetElectronicMaterialsResponseItem = objectType({
     Pd: numberType()
   }).optional().describe(
     "Per-metal multipliers applied to metal content when material is cleaned (plastic/housing removed)"
+  ),
+  catalogHint: stringType().optional().describe(
+    "Short English visual description to help AI/vision models match photos to this material type"
+  ),
+  chemFraction: numberType().optional().describe(
+    "Fraction of batch mass that undergoes chemical processing (0\u20131). For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers) only the electronic sub-assembly fraction is dissolved. Used to compute realistic reagent volumes and electricity costs."
   )
 });
 var GetElectronicMaterialsResponse = arrayType(
@@ -71450,7 +71456,10 @@ var CalculateRecoveryBody = objectType({
   acidConcentrationOverride: numberType().optional().describe("Optional acid concentration override in percent"),
   temperatureOverride: numberType().optional().describe("Optional temperature override in Celsius"),
   electricityPricePerKwh: numberType().optional().describe("Electricity price in PLN per kWh (default 0.80)"),
-  reagentPriceOverrides: recordType(stringType(), numberType()).optional().describe("Optional map of reagent name to custom price in PLN per liter")
+  reagentPriceOverrides: recordType(stringType(), numberType()).optional().describe("Optional map of reagent name to custom price in PLN per liter"),
+  withSeparacja: booleanType().optional().describe(
+    "When true, chemistry volumes are scaled for physical pre-separation (cutting edge connectors, removing gold-bearing ICs before acid bath). Reduces reagent consumption significantly for PCB-class materials.\n"
+  )
 });
 var CalculateRecoveryResponse = objectType({
   totalInputMassKg: numberType(),
@@ -71644,7 +71653,10 @@ var CompareProcessesBody = objectType({
       )
     })
   ).min(1),
-  electricityPricePerKwh: numberType().optional().describe("Electricity price in PLN per kWh (default 0.80)")
+  electricityPricePerKwh: numberType().optional().describe("Electricity price in PLN per kWh (default 0.80)"),
+  withSeparacja: booleanType().optional().describe(
+    "When true, chemistry volumes are scaled for physical pre-separation (cutting edge connectors, removing gold-bearing ICs before acid bath).\n"
+  )
 });
 var CompareProcessesResponseItem = objectType({
   processId: stringType(),
@@ -72085,6 +72097,9 @@ var electronicMaterials = [
     weightPerPiece: 0.15,
     requiresCleaning: true,
     cleanedMultiplier: { Au: 1.18, Ag: 1.18, Pt: 1.18, Pd: 1.18 },
+    /** Po wstępnej separacji (wyłamanie/wycięcie złączy krawędziowych ISA/PCI i wymontowanie
+     *  złoconych IC) faktycznie do kąpieli kwasowej trafia ok. 10% masy wsadu. */
+    separacjaFraction: 0.1,
     metalContentPerKg: {
       Au: { min: 0.04, max: 0.2, typical: 0.1 },
       Ag: { min: 0.5, max: 2.5, typical: 1.2 },
@@ -72102,6 +72117,9 @@ var electronicMaterials = [
     weightPerPiece: 0.1,
     requiresCleaning: true,
     cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
+    /** Płytki klasy C mają mniej złączy krawędziowych niż B — ok. 8% masy po separacji
+     *  (głównie przelotki THT-IC i złącza DIP złocone). */
+    separacjaFraction: 0.08,
     metalContentPerKg: {
       Au: { min: 0.01, max: 0.08, typical: 0.04 },
       Ag: { min: 0.2, max: 1.2, typical: 0.6 },
@@ -74316,7 +74334,12 @@ function resolveItemMetalContent(item) {
   }
   return base;
 }
-function computeCompareResult(batch, processId, metalPrices, electricityPricePerKwh = 0.8) {
+function resolveChemFraction(mat, withSeparacja) {
+  if (!withSeparacja) return mat?.chemFraction ?? 1;
+  if (mat?.separacjaFraction !== void 0) return mat.separacjaFraction;
+  return (mat?.chemFraction ?? 1) * 0.1;
+}
+function computeCompareResult(batch, processId, metalPrices, electricityPricePerKwh = 0.8, withSeparacja = false) {
   const process2 = chemicalProcessesMap[processId];
   let totalMassKg = 0;
   let chemMassKg = 0;
@@ -74327,7 +74350,7 @@ function computeCompareResult(batch, processId, metalPrices, electricityPricePer
     if (!content) continue;
     totalMassKg += massKg;
     const mat = electronicMaterialsMap[item.materialId];
-    chemMassKg += massKg * (mat?.chemFraction ?? 1);
+    chemMassKg += massKg * resolveChemFraction(mat, withSeparacja);
     totalMetalsG.Au += content.Au * massKg;
     totalMetalsG.Ag += content.Ag * massKg;
     totalMetalsG.Pt += content.Pt * massKg;
@@ -74392,7 +74415,7 @@ router5.post("/calculator/compare", async (req, res) => {
   }
   const metalPrices = await getOrFetchPrices();
   const elPrice = body.electricityPricePerKwh ?? 0.8;
-  const results = Object.keys(chemicalProcessesMap).map((pid) => computeCompareResult(body.batch, pid, metalPrices, elPrice)).sort((a, b) => b.netProfitPln - a.netProfitPln);
+  const results = Object.keys(chemicalProcessesMap).map((pid) => computeCompareResult(body.batch, pid, metalPrices, elPrice, body.withSeparacja ?? false)).sort((a, b) => b.netProfitPln - a.netProfitPln);
   res.json(results);
 });
 router5.post("/calculator/estimate", async (req, res) => {
@@ -74459,7 +74482,7 @@ router5.post("/calculator/estimate", async (req, res) => {
     if (!content) continue;
     totalMassKg += massKg;
     const mat = electronicMaterialsMap[item.materialId];
-    chemMassKg += massKg * (mat?.chemFraction ?? 1);
+    chemMassKg += massKg * resolveChemFraction(mat, body.withSeparacja ?? false);
     totalMetalsGPerKg.Au += content.Au * massKg;
     totalMetalsGPerKg.Ag += content.Ag * massKg;
     totalMetalsGPerKg.Pt += content.Pt * massKg;

@@ -41,6 +41,7 @@ type ProcessParams = {
   acidConcentrationOverride: number | null;
   temperatureOverride: number | null;
   electricityPricePerKwh: number;
+  withSeparacja: boolean;
 };
 
 const SESSIONS_KEY = "metalrecovery_sessions";
@@ -198,6 +199,7 @@ export function CalculatorPage() {
     acidConcentrationOverride: null,
     temperatureOverride: null,
     electricityPricePerKwh: 0.8,
+    withSeparacja: false,
   });
   const [reagentPriceOverrides, setReagentPriceOverrides] = useState<Record<string, number>>(loadReagentPrices);
   const [result, setResult] = useState<CalculationResult | null>(null);
@@ -337,6 +339,7 @@ export function CalculatorPage() {
       data: {
         batch: buildBatchForApi(),
         electricityPricePerKwh: processParams.electricityPricePerKwh,
+        ...(processParams.withSeparacja ? { withSeparacja: true } : {}),
       },
     });
   };
@@ -349,6 +352,7 @@ export function CalculatorPage() {
         batch: buildBatchForApi(),
         processId,
         electricityPricePerKwh: processParams.electricityPricePerKwh,
+        ...(processParams.withSeparacja ? { withSeparacja: true } : {}),
       },
     });
   };
@@ -413,6 +417,9 @@ export function CalculatorPage() {
     }
     if (Object.keys(reagentPriceOverrides).length > 0) {
       requestData.reagentPriceOverrides = reagentPriceOverrides;
+    }
+    if (processParams.withSeparacja) {
+      requestData.withSeparacja = true;
     }
 
     calculateMutation.mutate({ data: requestData });
@@ -876,6 +883,35 @@ export function CalculatorPage() {
                     <span>0.30 zł/kWh</span>
                     <span>2.00 zł/kWh</span>
                   </div>
+                </div>
+
+                <div className="space-y-2 pt-3 border-t border-border">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="separacja"
+                      checked={processParams.withSeparacja}
+                      onCheckedChange={(checked) =>
+                        setProcessParams((p) => ({ ...p, withSeparacja: !!checked }))
+                      }
+                      className="mt-0.5"
+                    />
+                    <div className="space-y-1">
+                      <Label htmlFor="separacja" className="font-semibold cursor-pointer">
+                        Separacja wstępna (wydziel złącza przed trawieniem)
+                      </Label>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Zaznacz jeśli fizycznie wycinasz złącza krawędziowe ISA/PCI/RAM i wymontowujesz
+                        złocone IC przed zanurzeniem w kwasie — do kąpieli trafi tylko ~8–10% masy
+                        płytek, co redukuje zużycie reagentów nawet 10×. Zysk z metali pozostaje
+                        niezmieniony (złoto jest zawarte w oddzielonych częściach).
+                      </p>
+                    </div>
+                  </div>
+                  {processParams.withSeparacja && (
+                    <div className="ml-7 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+                      ✓ Separacja aktywna — wolumeny chemii obliczane dla frakcji złącz (~8–10% masy wsadu)
+                    </div>
+                  )}
                 </div>
 
                 {selectedProcess.reagents && selectedProcess.reagents.length > 0 && (

@@ -21,6 +21,10 @@ interface CalculationRequest {
   temperatureOverride?: number;
   electricityPricePerKwh?: number;
   reagentPriceOverrides?: Record<string, number>;
+  /** When true, chemistry volumes are scaled to reflect physical separation before acid
+   *  treatment (cutting edge connectors, removing ICs).  Uses mat.separacjaFraction
+   *  when set; falls back to mat.chemFraction * 0.10 otherwise. */
+  withSeparacja?: boolean;
 }
 
 type MaterialEntry = {
@@ -32,6 +36,10 @@ type MaterialEntry = {
    *  For PCB-only materials this is 1.0. For whole devices (cameras, laptops, printers)
    *  only the electronic sub-assembly fraction undergoes chemical dissolution. */
   chemFraction?: number;
+  /** Fraction of mass that goes to chemistry AFTER physical separation (cutting off edge
+   *  connectors, removing ICs, etc.).  Defaults to chemFraction * 0.10 when not set.
+   *  Used when withSeparacja=true is passed to the estimate/compare endpoints. */
+  separacjaFraction?: number;
   metalContentPerKg: {
     Au: { typical: number };
     Ag: { typical: number };
@@ -477,11 +485,18 @@ function resolveItemMetalContent(
   return base;
 }
 
+function resolveChemFraction(mat: MaterialEntry | undefined, withSeparacja: boolean): number {
+  if (!withSeparacja) return mat?.chemFraction ?? 1.0;
+  if (mat?.separacjaFraction !== undefined) return mat.separacjaFraction;
+  return (mat?.chemFraction ?? 1.0) * 0.10;
+}
+
 function computeCompareResult(
   batch: BatchItem[],
   processId: string,
   metalPrices: { Au: number; Ag: number; Pt: number; Pd: number },
   electricityPricePerKwh = 0.8,
+  withSeparacja = false,
 ) {
   const process = chemicalProcessesMap[processId]!;
 
@@ -495,7 +510,7 @@ function computeCompareResult(
     if (!content) continue;
     totalMassKg += massKg;
     const mat = electronicMaterialsMap[item.materialId];
-    chemMassKg += massKg * (mat?.chemFraction ?? 1.0);
+    chemMassKg += massKg * resolveChemFraction(mat, withSeparacja);
     totalMetalsG.Au += content.Au * massKg;
     totalMetalsG.Ag += content.Ag * massKg;
     totalMetalsG.Pt += content.Pt * massKg;
@@ -552,7 +567,7 @@ function computeCompareResult(
 }
 
 router.post("/calculator/compare", async (req, res) => {
-  const body = req.body as { batch: BatchItem[]; electricityPricePerKwh?: number };
+  const body = req.body as { batch: BatchItem[]; electricityPricePerKwh?: number; withSeparacja?: boolean };
 
   if (!body.batch || !Array.isArray(body.batch) || body.batch.length === 0) {
     res.status(400).json({ error: "Invalid request: batch required" });
@@ -581,7 +596,7 @@ router.post("/calculator/compare", async (req, res) => {
   const elPrice = body.electricityPricePerKwh ?? 0.8;
 
   const results = Object.keys(chemicalProcessesMap)
-    .map((pid) => computeCompareResult(body.batch, pid, metalPrices, elPrice))
+    .map((pid) => computeCompareResult(body.batch, pid, metalPrices, elPrice, body.withSeparacja ?? false))
     .sort((a, b) => b.netProfitPln - a.netProfitPln);
 
   res.json(results);
@@ -693,7 +708,7 @@ router.post("/calculator/estimate", async (req, res) => {
     if (!content) continue;
     totalMassKg += massKg;
     const mat = electronicMaterialsMap[item.materialId];
-    chemMassKg += massKg * (mat?.chemFraction ?? 1.0);
+    chemMassKg += massKg * resolveChemFraction(mat, body.withSeparacja ?? false);
     totalMetalsGPerKg.Au += content.Au * massKg;
     totalMetalsGPerKg.Ag += content.Ag * massKg;
     totalMetalsGPerKg.Pt += content.Pt * massKg;
