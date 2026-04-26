@@ -82160,7 +82160,7 @@ ${lines}
       });
     }
     const clientIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
-    const materialsDetected = validated.data.items.map((item) => item.materialType).join(", ");
+    const materialsDetected = validated.data.items.map((item) => `${item.materialType} \xD7${item.quantity}`).join(", ");
     db.insert(aiAnalysisLogsTable).values({
       ip: clientIp,
       userId: user?.id ?? null,

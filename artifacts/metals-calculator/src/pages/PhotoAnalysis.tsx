@@ -742,6 +742,7 @@ export function PhotoAnalysisPage() {
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scanAreaRef = useRef<HTMLDivElement>(null);
 
   const handleFileSelect = useCallback((selected: File) => {
     setFile(selected);
@@ -765,6 +766,9 @@ export function PhotoAnalysisPage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setTimeout(() => {
+      scanAreaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
 
     try {
       const formData = new FormData();
@@ -975,7 +979,9 @@ export function PhotoAnalysisPage() {
       )}
 
       {loading && preview && (
-        <ScanningAnimation photoUrl={preview} />
+        <div ref={scanAreaRef}>
+          <ScanningAnimation photoUrl={preview} />
+        </div>
       )}
       {loading && !preview && (
         <Card className="border-border">

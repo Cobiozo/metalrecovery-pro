@@ -551,7 +551,7 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
                         <span className="text-muted-foreground/50">anonim</span>
                       )}
                     </td>
-                    <td className="py-1.5 pr-3 text-foreground/80 max-w-xs truncate">
+                    <td className="py-1.5 pr-3 text-foreground/80" style={{ maxWidth: "260px", wordBreak: "break-word" }}>
                       {log.materialsDetected || <span className="text-muted-foreground/50">—</span>}
                     </td>
                     <td className="py-1.5 text-right text-muted-foreground">{log.itemCount}</td>

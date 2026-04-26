@@ -325,7 +325,7 @@ router.post(
       req.socket?.remoteAddress ||
       "unknown";
     const materialsDetected = validated.data.items
-      .map((item) => item.materialType)
+      .map((item) => `${item.materialType} ×${item.quantity}`)
       .join(", ");
     db.insert(aiAnalysisLogsTable)
       .values({
