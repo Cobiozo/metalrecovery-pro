@@ -55,15 +55,20 @@ const ROLE_LABELS: Record<string, { label: string; icon: React.ElementType; colo
 type Tab = "users" | "stats" | "settings";
 
 export function AdminPage() {
-  const { user, authHeaders, isAdmin } = useAuth();
+  const { user, authHeaders, isAdmin, loading } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab>("users");
 
   useEffect(() => {
-    if (!isAdmin) navigate("/");
-  }, [isAdmin, navigate]);
+    if (!loading && !isAdmin) navigate("/");
+  }, [loading, isAdmin, navigate]);
 
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-[40vh]">
+      <div className="w-7 h-7 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
   if (!user || !isAdmin) return null;
 
   return (
