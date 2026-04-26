@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import {
   ShoppingCart, TrendingUp, TrendingDown, Minus, Zap, Beaker,
   CircleDollarSign, Info, Sparkles, Plus, Trash2, Layers,
-  FlaskConical, Package, Pencil,
+  FlaskConical, Package, Pencil, Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -357,16 +357,22 @@ function SingleMode({
   const [targetMargin, setTargetMargin] = useState(20);
   const [electricityPrice, setElectricityPrice] = useState(0.8);
   const [isCleaned, setIsCleaned] = useState(false);
+  const [quantityGrams, setQuantityGrams] = useState<number | null>(null);
   const [result, setResult] = useState<PurchasePriceResult | null>(null);
 
   useEffect(() => {
     try {
       const visionMaterialId = localStorage.getItem("metalrecovery_vision_new_material");
       if (visionMaterialId) {
+        const visionQtyKg = localStorage.getItem("metalrecovery_vision_quantity");
         localStorage.removeItem("metalrecovery_vision_new_material");
         localStorage.removeItem("metalrecovery_vision_quantity");
         localStorage.removeItem("metalrecovery_vision_plating_quality");
         setMaterialId(visionMaterialId);
+        if (visionQtyKg) {
+          const kg = parseFloat(visionQtyKg);
+          if (kg > 0) setQuantityGrams(Math.round(kg * 1000));
+        }
       }
     } catch {
       // private mode
@@ -454,6 +460,40 @@ function SingleMode({
             </div>
           )}
 
+          <div className="space-y-2">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
+              <Scale className="h-3.5 w-3.5" />
+              Posiadana ilość (opcjonalnie)
+            </Label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="np. 89"
+                  value={quantityGrams ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setQuantityGrams(v === "" ? null : Math.max(1, parseInt(v, 10) || 1));
+                  }}
+                  className="pr-9 bg-background"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none">g</span>
+              </div>
+              {quantityGrams != null && (
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  = {quantityGrams >= 1000
+                    ? `${(quantityGrams / 1000).toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} kg`
+                    : `${quantityGrams} g`}
+                </span>
+              )}
+            </div>
+            {quantityGrams == null && (
+              <p className="text-xs text-muted-foreground">Wpisz gramaturę, aby zobaczyć łączną kwotę skupu</p>
+            )}
+          </div>
+
           <ProcessSliders
             processId={processId} setProcessId={setProcessId}
             targetMargin={targetMargin} setTargetMargin={setTargetMargin}
@@ -484,7 +524,7 @@ function SingleMode({
       )}
 
       {canCompute && !isLoading && result && (
-        <ResultCard result={result} isCleaned={materialRequiresCleaning && isCleaned} />
+        <ResultCard result={result} isCleaned={materialRequiresCleaning && isCleaned} quantityGrams={quantityGrams} />
       )}
     </>
   );
@@ -659,9 +699,9 @@ function BatchRowItem({
         <div className="relative w-28 shrink-0">
           <Input
             type="number"
-            min="0"
-            step="0.1"
-            placeholder="0.0"
+            min="0.001"
+            step="0.001"
+            placeholder="0.000"
             value={row.quantityKg}
             onChange={(e) => onChangeQty(e.target.value)}
             className="pr-7 font-mono text-sm"
@@ -813,10 +853,13 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
   );
 }
 
-function ResultCard({ result, isCleaned }: { result: PurchasePriceResult; isCleaned?: boolean }) {
+function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePriceResult; isCleaned?: boolean; quantityGrams?: number | null }) {
   const price = result.maxPurchasePricePerKgPln;
   const isPricePositive = price > 0;
   const priceColor = isPricePositive ? "text-success" : "text-destructive";
+  const totalPln = (quantityGrams != null && quantityGrams > 0)
+    ? price * (quantityGrams / 1000)
+    : null;
 
   return (
     <Card className={cn(
@@ -866,6 +909,24 @@ function ResultCard({ result, isCleaned }: { result: PurchasePriceResult; isClea
             </p>
           )}
         </div>
+
+        {totalPln !== null && (
+          <div className={cn(
+            "flex items-center justify-between px-4 py-3 rounded-xl border-2 font-mono",
+            totalPln > 0
+              ? "bg-success/10 border-success/40 text-success"
+              : "bg-destructive/10 border-destructive/40 text-destructive",
+          )}>
+            <span className="text-sm font-semibold not-italic">
+              Za {quantityGrams! >= 1000
+                ? `${(quantityGrams! / 1000).toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} kg`
+                : `${quantityGrams} g`}
+            </span>
+            <span className="text-2xl font-extrabold">
+              {totalPln >= 0 ? formatCurrency(totalPln) : `−${formatCurrency(Math.abs(totalPln))}`}
+            </span>
+          </div>
+        )}
 
         <Separator />
 
