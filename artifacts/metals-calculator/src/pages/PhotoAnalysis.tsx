@@ -30,11 +30,14 @@ type PlatingAnalysis = {
   notes?: string;
 };
 
+type BoundingBox = { x: number; y: number; w: number; h: number };
+
 type VisionItem = {
   materialType: string;
   description: string;
   quantity: number;
   massGrams?: number | null;
+  boundingBox?: BoundingBox | null;
   metalContent: {
     Au: MetalEstimate;
     Ag: MetalEstimate;
@@ -522,6 +525,106 @@ function ScanningAnimation({ photoUrl }: { photoUrl: string }) {
   );
 }
 
+const ITEM_COLORS = [
+  "#00ffaa", "#60a5fa", "#facc15", "#f472b6", "#a78bfa", "#34d399", "#fb923c",
+];
+
+function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: VisionItem[] }) {
+  const [visCount, setVisCount] = useState(0);
+  const withBox = items.filter((it) => it.boundingBox);
+
+  useEffect(() => {
+    setVisCount(0);
+    if (withBox.length === 0) return;
+    let i = 0;
+    let tid: ReturnType<typeof setTimeout>;
+    const next = () => {
+      if (i >= withBox.length) return;
+      tid = setTimeout(() => { i++; setVisCount(i); next(); }, 320);
+    };
+    const init = setTimeout(next, 200);
+    return () => { clearTimeout(init); clearTimeout(tid); };
+  }, [photoUrl]);
+
+  if (withBox.length === 0) return null;
+
+  return (
+    <div className="rounded-xl overflow-hidden border border-border relative">
+      <img
+        src={photoUrl}
+        alt="Wynik analizy"
+        className="block w-full h-auto select-none"
+        style={{ maxHeight: "70vh", objectFit: "contain", background: "#0a0a0a" }}
+        draggable={false}
+      />
+      <div className="absolute inset-0 pointer-events-none">
+        {withBox.slice(0, visCount).map((item, i) => {
+          const bb = item.boundingBox!;
+          const color = ITEM_COLORS[i % ITEM_COLORS.length];
+          return (
+            <div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${bb.x}%`,
+                top: `${bb.y}%`,
+                width: `${bb.w}%`,
+                height: `${bb.h}%`,
+                animation: "detBoxIn 0.3s cubic-bezier(.17,.67,.35,1.25) both",
+              }}
+            >
+              {/* corner brackets */}
+              {(["tl","tr","bl","br"] as const).map((corner) => (
+                <span
+                  key={corner}
+                  style={{
+                    position: "absolute",
+                    width: "22%", height: "22%",
+                    borderColor: color,
+                    borderStyle: "solid",
+                    ...(corner === "tl" ? { top:0, left:0,   borderWidth: "2px 0 0 2px", borderRadius: "2px 0 0 0" } :
+                       corner === "tr" ? { top:0, right:0,  borderWidth: "2px 2px 0 0", borderRadius: "0 2px 0 0" } :
+                       corner === "bl" ? { bottom:0, left:0, borderWidth: "0 0 2px 2px", borderRadius: "0 0 0 2px" } :
+                                         { bottom:0, right:0,borderWidth: "0 2px 2px 0", borderRadius: "0 0 2px 0" }),
+                  }}
+                />
+              ))}
+              {/* label */}
+              <span
+                style={{
+                  position: "absolute",
+                  top: "-1.4em",
+                  left: 0,
+                  whiteSpace: "nowrap",
+                  fontSize: "10px",
+                  fontFamily: "monospace",
+                  fontWeight: 600,
+                  color,
+                  background: "rgba(0,0,0,0.75)",
+                  padding: "1px 4px",
+                  borderRadius: "3px",
+                  border: `1px solid ${color}55`,
+                  maxWidth: "18ch",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {item.materialType}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <style>{`
+        @keyframes detBoxIn {
+          from { opacity: 0; transform: scale(1.1); }
+          to   { opacity: 1; transform: scale(1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export function PhotoAnalysisPage() {
   const [, navigate] = useLocation();
   const { add } = useCustomMaterials();
@@ -887,6 +990,10 @@ export function PhotoAnalysisPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {result && !loading && preview && (
+        <PhotoWithDetections photoUrl={preview} items={result.items} />
       )}
 
       {result && !loading && (

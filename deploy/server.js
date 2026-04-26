@@ -81903,11 +81903,18 @@ var MetalEstimateSchema = external_exports.object({
   value_g_per_kg: external_exports.number().min(0),
   confidence: external_exports.enum(["low", "medium", "high"])
 });
+var BoundingBoxSchema = external_exports.object({
+  x: external_exports.number().min(0).max(100),
+  y: external_exports.number().min(0).max(100),
+  w: external_exports.number().min(0).max(100),
+  h: external_exports.number().min(0).max(100)
+}).nullable().optional();
 var VisionItemSchema = external_exports.object({
   materialType: external_exports.string(),
   description: external_exports.string(),
   quantity: external_exports.number().int().min(0),
   massGrams: external_exports.number().min(0).nullable().optional(),
+  boundingBox: BoundingBoxSchema,
   metalContent: external_exports.object({
     Au: MetalEstimateSchema,
     Ag: MetalEstimateSchema,
@@ -81989,6 +81996,15 @@ B) IF a scale was detected in STEP 0 with a valid weight reading:
 
 STEP 4 \u2014 Estimate metal content and plating for each type.
 
+STEP 4B \u2014 For each item, estimate the BOUNDING BOX as percentages of the image dimensions:
+  - x: left edge of the group (0 = left edge of image, 100 = right edge)
+  - y: top edge of the group (0 = top of image, 100 = bottom)
+  - w: width of the bounding box as % of image width
+  - h: height of the bounding box as % of image height
+  Draw the tightest box that contains ALL visible instances of this material type.
+  If items of one type are scattered, use a box that encompasses all of them.
+  Values must be between 0 and 100.
+
 STEP 5 \u2014 Return ONLY this JSON (no markdown, no explanation):
 {
   "scaleReading": {
@@ -82003,6 +82019,7 @@ STEP 5 \u2014 Return ONLY this JSON (no markdown, no explanation):
       "description": "2-3 sentences in Polish about this type and its metal characteristics",
       "quantity": <integer piece count from STEP 3A; 0 only if truly impossible to count>,
       "massGrams": <number from STEP 3B if scale detected, otherwise null>,
+      "boundingBox": { "x": <left_pct>, "y": <top_pct>, "w": <width_pct>, "h": <height_pct> },
       "metalContent": {
         "Au": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
         "Ag": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
