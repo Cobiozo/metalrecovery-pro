@@ -269,7 +269,7 @@ router.post(
             role: "user",
             content: [
               { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: dataUri, detail: "low" } },
+              { type: "image_url", image_url: { url: dataUri, detail: "high" } },
             ],
           },
         ],
@@ -304,6 +304,17 @@ router.post(
         details: validated.error.message,
       });
       return;
+    }
+
+    // Correct systematic downward bias: AI overestimates cy for items in the lower
+    // portion of tall portrait images. Bias follows a quadratic pattern:
+    // delta ≈ (cy/100)^2 * 20.  Applied to cy only; cx errors are minor.
+    for (const item of validated.data.items) {
+      for (const pt of item.individualBoxes ?? []) {
+        const cy = pt.cy;
+        const correction = (cy / 100) ** 2 * 20;
+        pt.cy = Math.max(1, Math.min(99, Math.round(cy - correction)));
+      }
     }
 
     // Reconcile: align quantity to actual marker count so UI stays consistent
