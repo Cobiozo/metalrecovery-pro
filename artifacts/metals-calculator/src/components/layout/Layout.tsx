@@ -31,6 +31,8 @@ export function Layout({ children }: { children: ReactNode }) {
   const roleMeta = user ? (ROLE_META[user.role as keyof typeof ROLE_META] ?? ROLE_META.user) : null;
   const RoleIcon = roleMeta?.icon ?? UserIcon;
 
+  const hasBanner = isOffline || needRefresh;
+
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
       {isOffline && (
@@ -44,13 +46,15 @@ export function Layout({ children }: { children: ReactNode }) {
           <span>Dostępna nowa wersja aplikacji</span>
           <button
             onClick={() => updateServiceWorker(true)}
-            className="flex items-center gap-1.5 rounded-md bg-primary-foreground/20 hover:bg-primary-foreground/30 px-3 py-1 text-xs font-semibold transition-colors"
+            className="flex items-center gap-1.5 rounded-md bg-primary-foreground/20 hover:bg-primary-foreground/30 px-3 py-1 text-xs font-semibold transition-colors shrink-0"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Zaktualizuj
           </button>
         </div>
       )}
+      {/* Spacer for fixed banner on mobile */}
+      {hasBanner && <div className="md:hidden h-9 shrink-0" />}
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
