@@ -553,8 +553,6 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
     return () => { clearTimeout(init); clearTimeout(tid); };
   }, [photoUrl]);
 
-  if (allBoxes.length === 0) return null;
-
   return (
     <div className="rounded-xl overflow-hidden border border-border relative">
       <img
