@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+
+# Social media crawlers — explicitly allowed
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: Discordbot
+Allow: /
+
+Sitemap: https://metalrecovery.online/sitemap.xml
