@@ -14,7 +14,7 @@ if (!process.env.DATABASE_URL) {
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const db = drizzle(pool, { schema });
 
-const email = process.argv[2] ?? "admin@metalrecovery.online";
+const email = process.argv[2] ?? "biuro@mobilne-it.pl";
 const password = process.argv[3] ?? "Admin1234!";
 const name = process.argv[4] ?? "Administrator";
 
