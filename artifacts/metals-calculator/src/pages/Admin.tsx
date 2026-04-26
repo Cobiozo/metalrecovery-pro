@@ -62,7 +62,7 @@ export function AdminPage() {
         </div>
       </div>
 
-      <div className="flex gap-2 border-b border-border pb-0">
+      <div className="flex border-b border-border pb-0">
         {(["users", "stats", "settings"] as Tab[]).map((t) => {
           const icons = { users: Users, stats: BarChart2, settings: Settings };
           const labels = { users: "Użytkownicy", stats: "Statystyki", settings: "Ustawienia" };
@@ -71,14 +71,14 @@ export function AdminPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px ${
                 tab === t
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Icon className="w-4 h-4" />
-              {labels[t]}
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{labels[t]}</span>
             </button>
           );
         })}
@@ -274,7 +274,7 @@ function CreateUserForm({
   return (
     <form onSubmit={submit} className="bg-card border border-primary/30 rounded-lg p-4 space-y-3">
       <h3 className="font-semibold text-sm">Nowy użytkownik</h3>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input required type="email" placeholder="Email *" value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
@@ -365,7 +365,7 @@ function EditUserForm({
   return (
     <form onSubmit={submit} className="bg-card border border-yellow-500/30 rounded-lg p-4 space-y-3">
       <h3 className="font-semibold text-sm">Edycja: {user.email}</h3>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input placeholder="Imię / nazwa" value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
@@ -568,18 +568,18 @@ function SettingsTab({
           <Activity className="w-4 h-4 text-primary" />
           Rejestracja użytkowników
         </h3>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-sm font-medium">Status rejestracji</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {regEnabled
-                ? "Rejestracja jest włączona — nowi użytkownicy mogą się rejestrować"
-                : "Rejestracja jest wyłączona — tylko administrator może tworzyć konta"}
+                ? "Rejestracja włączona — nowi użytkownicy mogą się rejestrować"
+                : "Rejestracja wyłączona — tylko administrator może tworzyć konta"}
             </p>
           </div>
           <button
             onClick={() => set("registration_enabled", regEnabled ? "false" : "true")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors shrink-0 self-start sm:self-auto ${
               regEnabled ? "bg-green-500/10 text-green-400 hover:bg-green-500/20" : "bg-muted text-muted-foreground hover:bg-muted/80"
             }`}
           >
@@ -601,11 +601,13 @@ function SettingsTab({
       </div>
 
       <div className="bg-card border border-border rounded-lg p-5 space-y-4">
-        <h3 className="font-semibold flex items-center gap-2">
-          <Mail className="w-4 h-4 text-primary" />
-          Konfiguracja SMTP
-          <span className="text-xs text-muted-foreground font-normal ml-1">(wymagane do emailowej rejestracji)</span>
-        </h3>
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            <Mail className="w-4 h-4 text-primary" />
+            Konfiguracja SMTP
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5 ml-6">wymagane do emailowej rejestracji</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-muted-foreground mb-1">Serwer SMTP</label>
