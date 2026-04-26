@@ -48,21 +48,16 @@ export function usePWA() {
     await prompt.userChoice;
   };
 
-  const {
-    needRefresh: [needRefresh],
-    updateServiceWorker,
-  } = useRegisterSW({
+  useRegisterSW({
     onRegistered(r) {
       if (r) {
         swUpdateInterval.current = setInterval(
-          () => {
-            r.update();
-          },
+          () => r.update(),
           60 * 60 * 1000,
         );
       }
     },
-    onRegisterError(error) {
+    onRegisterError(error: unknown) {
       console.warn("[PWA] SW registration error:", error);
     },
   });
@@ -75,7 +70,7 @@ export function usePWA() {
     };
   }, []);
 
-  return { isOffline, needRefresh, updateServiceWorker, canInstall, installApp };
+  return { isOffline, canInstall, installApp };
 }
 
 interface BeforeInstallPromptEvent extends Event {

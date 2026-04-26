@@ -35,7 +35,7 @@ export default defineConfig({
     tailwindcss(),
     runtimeErrorOverlay(),
     VitePWA({
-      registerType: "prompt",
+      registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "icons/apple-touch-icon.png"],
       devOptions: {
         enabled: false,
@@ -69,6 +69,8 @@ export default defineConfig({
         ],
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/api\//],

@@ -82106,6 +82106,7 @@ ${lines}
       const openai = getOpenAIClient();
       const response = await openai.chat.completions.create({
         model: "gpt-5.4",
+        temperature: 0,
         max_completion_tokens: 4096,
         messages: [
           {

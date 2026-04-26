@@ -595,13 +595,16 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
                 background: color,
                 boxShadow: `0 0 4px 1px ${color}99`,
               }} />
-              {/* label on first pin only */}
+              {/* label on first pin only — flip side based on position */}
               {isFirst && (
                 <span style={{
                   position: "absolute",
-                  top: "-1.7em",
-                  left: "50%",
-                  transform: "translateX(-50%)",
+                  // near top → show below dot; near bottom → show above; default above
+                  top: pcy < 12 ? "1.1em" : "-1.7em",
+                  // near right edge → align right; otherwise center
+                  left: pcx > 80 ? "auto" : "50%",
+                  right: pcx > 80 ? "0" : "auto",
+                  transform: pcx > 80 ? "none" : "translateX(-50%)",
                   whiteSpace: "nowrap",
                   fontSize: "9px",
                   fontFamily: "monospace",

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Beaker, Calculator, Coins, Activity, Info, WifiOff, RefreshCw,
+  Beaker, Calculator, Coins, Activity, Info, WifiOff,
   Download, ShoppingCart, ScanLine, Coffee, Shield, LogIn, LogOut,
   User as UserIcon, Star,
 } from "lucide-react";
@@ -17,7 +17,7 @@ const ROLE_META = {
 
 export function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const { isOffline, needRefresh, updateServiceWorker, canInstall, installApp } = usePWA();
+  const { isOffline, canInstall, installApp } = usePWA();
   const { user, logout, loading: authLoading } = useAuth();
 
   const navItems = [
@@ -31,8 +31,6 @@ export function Layout({ children }: { children: ReactNode }) {
   const roleMeta = user ? (ROLE_META[user.role as keyof typeof ROLE_META] ?? ROLE_META.user) : null;
   const RoleIcon = roleMeta?.icon ?? UserIcon;
 
-  const hasBanner = isOffline || needRefresh;
-
   return (
     <div className="min-h-screen bg-background flex flex-col md:flex-row">
       {isOffline && (
@@ -41,20 +39,8 @@ export function Layout({ children }: { children: ReactNode }) {
           <span>Brak połączenia — dane z pamięci podręcznej</span>
         </div>
       )}
-      {needRefresh && (
-        <div className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between gap-2 px-4 py-2 bg-primary/95 text-primary-foreground text-sm font-medium backdrop-blur-sm">
-          <span>Dostępna nowa wersja aplikacji</span>
-          <button
-            onClick={() => updateServiceWorker(true)}
-            className="flex items-center gap-1.5 rounded-md bg-primary-foreground/20 hover:bg-primary-foreground/30 px-3 py-1 text-xs font-semibold transition-colors shrink-0"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Zaktualizuj
-          </button>
-        </div>
-      )}
-      {/* Spacer for fixed banner on mobile */}
-      {hasBanner && <div className="md:hidden h-9 shrink-0" />}
+      {/* Spacer for offline banner on mobile */}
+      {isOffline && <div className="md:hidden h-9 shrink-0" />}
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 border-r border-border bg-card flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
