@@ -13,6 +13,7 @@ import { PhotoAnalysisPage } from "@/pages/PhotoAnalysis";
 import { LoginPage } from "@/pages/Login";
 import { AdminPage } from "@/pages/Admin";
 import { AuthProvider } from "@/hooks/useAuth";
+import { getAuthApiBase } from "@/lib/api";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,12 @@ function Router() {
 function App() {
   useEffect(() => {
     document.documentElement.classList.add('dark');
+
+    // Track unique visit once per browser session (server deduplicates by IP per day)
+    if (!sessionStorage.getItem('visit_tracked')) {
+      sessionStorage.setItem('visit_tracked', '1');
+      fetch(`${getAuthApiBase()}/visit`, { method: 'POST' }).catch(() => {});
+    }
   }, []);
 
   return (

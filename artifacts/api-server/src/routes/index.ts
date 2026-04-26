@@ -51,6 +51,17 @@ export async function registerDbRoutes(): Promise<void> {
     console.error("[bootstrap] Failed to create admin:", err);
   });
 
+  const { trackUniqueVisit } = await import("../lib/stats");
+
+  router.post("/visit", (req, res) => {
+    const ip =
+      (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ||
+      req.socket.remoteAddress ||
+      "unknown";
+    trackUniqueVisit(ip).catch(() => {});
+    res.json({ ok: true });
+  });
+
   const [{ default: authRouter }, { default: adminRouter }] = await Promise.all([
     import("./auth"),
     import("./admin"),

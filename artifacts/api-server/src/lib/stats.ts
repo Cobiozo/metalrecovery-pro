@@ -36,4 +36,23 @@ export async function getStatsLastDays(days = 30): Promise<Record<string, Record
   return result;
 }
 
+// In-memory deduplication: tracks which IPs have been counted today
+const seenToday = new Map<string, Set<string>>(); // date -> Set<IP>
+
+function getSeenSet(date: string): Set<string> {
+  if (!seenToday.has(date)) {
+    seenToday.clear(); // discard old dates
+    seenToday.set(date, new Set());
+  }
+  return seenToday.get(date)!;
+}
+
+export async function trackUniqueVisit(ip: string): Promise<void> {
+  const date = todayDate();
+  const seen = getSeenSet(date);
+  if (seen.has(ip)) return; // already counted today
+  seen.add(ip);
+  await incrementStat(STAT_METRICS.PAGE_VISITS);
+}
+
 export { STAT_METRICS, todayDate };

@@ -50407,6 +50407,14 @@ var init_src = __esm({
 });
 
 // src/lib/stats.ts
+var stats_exports = {};
+__export(stats_exports, {
+  STAT_METRICS: () => STAT_METRICS,
+  getStatsLastDays: () => getStatsLastDays,
+  incrementStat: () => incrementStat,
+  todayDate: () => todayDate,
+  trackUniqueVisit: () => trackUniqueVisit
+});
 function todayDate() {
   return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
 }
@@ -50429,12 +50437,28 @@ async function getStatsLastDays(days = 30) {
   }
   return result;
 }
+function getSeenSet(date6) {
+  if (!seenToday.has(date6)) {
+    seenToday.clear();
+    seenToday.set(date6, /* @__PURE__ */ new Set());
+  }
+  return seenToday.get(date6);
+}
+async function trackUniqueVisit(ip) {
+  const date6 = todayDate();
+  const seen = getSeenSet(date6);
+  if (seen.has(ip)) return;
+  seen.add(ip);
+  await incrementStat(STAT_METRICS.PAGE_VISITS);
+}
+var seenToday;
 var init_stats = __esm({
   "src/lib/stats.ts"() {
     "use strict";
     init_src();
     init_schema2();
     init_drizzle_orm();
+    seenToday = /* @__PURE__ */ new Map();
   }
 });
 
@@ -81845,6 +81869,13 @@ async function registerDbRoutes() {
   });
   await bootstrapAdmin().catch((err) => {
     console.error("[bootstrap] Failed to create admin:", err);
+  });
+  const { trackUniqueVisit: trackUniqueVisit2 } = await Promise.resolve().then(() => (init_stats(), stats_exports));
+  router9.post("/visit", (req, res) => {
+    const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
+    trackUniqueVisit2(ip).catch(() => {
+    });
+    res.json({ ok: true });
   });
   const [{ default: authRouter }, { default: adminRouter }] = await Promise.all([
     Promise.resolve().then(() => (init_auth2(), auth_exports)),
