@@ -137,14 +137,25 @@ B) IF a scale was detected in STEP 0 with a valid weight reading:
 STEP 4 — Estimate metal content and plating for each type.
 
 STEP 4B — For each item, mark EACH INDIVIDUAL PIECE separately using "individualBoxes" (an array).
-  One bounding box PER PHYSICAL PIECE — NOT one box for the whole group.
-  Format: x = left edge %, y = top edge %, w = width %, h = height % (all 0-100, relative to image size).
-  Rules:
-  - If there are 18 RAM sticks, provide 18 boxes — one tightly around each stick.
-  - If there are 6 CPUs, provide 6 boxes — one per chip.
-  - Draw the tightest box around each individual piece.
-  - Partially visible items at edges: include them.
-  - Maximum 40 boxes total per item type. If more pieces exist, mark the most visible ones.
+  PRECISION IS CRITICAL. Follow these rules strictly:
+
+  BOX SIZING:
+  - The box must hug the PHYSICAL EDGES of the piece — PCB edge, chip outline, connector pins.
+  - Do NOT add any padding or margin outside the physical boundary.
+  - If pieces are touching or overlapping, the boxes may touch but should NOT extend into the neighboring piece.
+  - Use physical color/edge boundaries to separate adjacent items.
+  - When in doubt about an edge: SHRINK the box rather than expand it.
+
+  COUNTING:
+  - One box per individual physical piece. 18 RAM sticks = 18 boxes. 6 CPUs = 6 boxes.
+  - Do NOT group items of the same type into one box.
+  - Maximum 40 boxes per item type. If more pieces exist, mark the most clearly visible ones.
+
+  COORDINATES (all values 0–100, % of image dimensions):
+  - x = left edge of the piece
+  - y = top edge of the piece
+  - w = width (x + w must NOT exceed the right physical edge of the piece)
+  - h = height (y + h must NOT exceed the bottom physical edge of the piece)
 
 STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {
