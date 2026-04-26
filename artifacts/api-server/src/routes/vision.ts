@@ -41,10 +41,8 @@ const MetalEstimateSchema = z.object({
 });
 
 const BoxSchema = z.object({
-  x: z.number().min(0).max(100),
-  y: z.number().min(0).max(100),
-  w: z.number().min(0).max(100),
-  h: z.number().min(0).max(100),
+  cx: z.number().min(0).max(100),
+  cy: z.number().min(0).max(100),
 });
 
 const VisionItemSchema = z.object({
@@ -136,23 +134,18 @@ B) IF a scale was detected in STEP 0 with a valid weight reading:
 
 STEP 4 — Estimate metal content and plating for each type.
 
-STEP 4B — For each item draw ONE bounding box per individual physical piece in "individualBoxes".
+STEP 4B — For each item mark the CENTER POINT of every individual physical piece in "individualBoxes".
 
-  HOW TO DRAW EACH BOX:
-  1. Find the CENTER of the piece (e.g. center of each RAM PCB, center of each CPU die).
-  2. Expand outward until you hit the physical edge of that piece on all four sides.
-  3. The box must FULLY CONTAIN the piece — do not clip edges.
-  4. Overlapping boxes are EXPECTED and acceptable for densely packed items.
-  5. Do NOT merge multiple pieces into one box.
+  HOW TO MARK EACH PIECE:
+  1. Find the geometric center of the piece (center of the RAM PCB, center of the CPU die, etc.).
+  2. Record that single point as cx (horizontal %) and cy (vertical %).
+  3. One entry per physical piece. 18 RAM sticks → 18 entries. 40 CPUs → 40 entries.
+  4. Maximum 40 entries per item type.
 
-  COORDINATE SYSTEM (all 0–100, % of total image width/height):
-  - x: left edge of the box (0 = left image edge)
-  - y: top edge of the box  (0 = top image edge)
-  - w: box width  (x + w must NOT exceed 100 — clamp at the image edge if needed)
-  - h: box height (y + h must NOT exceed 100 — clamp at the image edge if needed)
-  HARD RULE: x+w ≤ 100 and y+h ≤ 100. Items near an image edge: reduce w or h so the box does not go outside.
-
-  COUNTS: one box per physical piece. 40 CPUs → 40 boxes. Maximum 40 boxes per item type.
+  COORDINATE SYSTEM (0–100, % of total image width/height):
+  - cx: horizontal center of the piece (0 = left edge, 100 = right edge)
+  - cy: vertical center of the piece   (0 = top edge,  100 = bottom edge)
+  HARD RULE: cx and cy must both be between 0 and 100.
 
 STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {
@@ -169,8 +162,8 @@ STEP 5 — Return ONLY this JSON (no markdown, no explanation):
       "quantity": <integer piece count from STEP 3A; 0 only if truly impossible to count>,
       "massGrams": <number from STEP 3B if scale detected, otherwise null>,
       "individualBoxes": [
-        { "x": <left_pct>, "y": <top_pct>, "w": <width_pct>, "h": <height_pct> },
-        { "x": <left_pct>, "y": <top_pct>, "w": <width_pct>, "h": <height_pct> }
+        { "cx": <center_x_pct>, "cy": <center_y_pct> },
+        { "cx": <center_x_pct>, "cy": <center_y_pct> }
       ],
       "metalContent": {
         "Au": { "value_g_per_kg": <number>, "confidence": "low|medium|high" },
@@ -273,7 +266,7 @@ router.post(
             role: "user",
             content: [
               { type: "text", text: prompt },
-              { type: "image_url", image_url: { url: dataUri, detail: "high" } },
+              { type: "image_url", image_url: { url: dataUri, detail: "low" } },
             ],
           },
         ],

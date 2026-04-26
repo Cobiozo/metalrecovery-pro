@@ -30,7 +30,7 @@ type PlatingAnalysis = {
   notes?: string;
 };
 
-type BoundingBox = { x: number; y: number; w: number; h: number };
+type BoundingBox = { cx: number; cy: number };
 
 type VisionItem = {
   materialType: string;
@@ -564,71 +564,68 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
       />
       <div className="absolute inset-0 pointer-events-none">
         {allBoxes.slice(0, visCount).map(({ bb, label, color }, i) => {
-          // Clamp boxes so they never extend outside the image boundaries
-          const cx = Math.max(0, Math.min(bb.x, 99));
-          const cy = Math.max(0, Math.min(bb.y, 99));
-          const cw = Math.max(1, Math.min(bb.w, 100 - cx));
-          const ch = Math.max(1, Math.min(bb.h, 100 - cy));
+          const pcx = Math.max(0, Math.min(bb.cx, 100));
+          const pcy = Math.max(0, Math.min(bb.cy, 100));
+          const isFirst = i === allBoxes.findIndex((b) => b.label === label);
           return (
-          <div
-            key={i}
-            className="absolute"
-            style={{
-              left: `${cx}%`,
-              top: `${cy}%`,
-              width: `${cw}%`,
-              height: `${ch}%`,
-              animation: "detBoxIn 0.22s cubic-bezier(.17,.67,.35,1.25) both",
-            }}
-          >
-            {/* corner brackets */}
-            {(["tl","tr","bl","br"] as const).map((corner) => (
-              <span
-                key={corner}
-                style={{
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: `${pcx}%`,
+                top: `${pcy}%`,
+                transform: "translate(-50%, -50%)",
+                animation: "detPinIn 0.2s cubic-bezier(.17,.67,.35,1.5) both",
+              }}
+            >
+              {/* outer ring */}
+              <span style={{
+                position: "absolute",
+                inset: "-6px",
+                borderRadius: "50%",
+                border: `2px solid ${color}`,
+                opacity: 0.7,
+              }} />
+              {/* solid dot */}
+              <span style={{
+                display: "block",
+                width: "7px",
+                height: "7px",
+                borderRadius: "50%",
+                background: color,
+                boxShadow: `0 0 4px 1px ${color}99`,
+              }} />
+              {/* label on first pin only */}
+              {isFirst && (
+                <span style={{
                   position: "absolute",
-                  width: "28%", height: "28%",
-                  borderColor: color,
-                  borderStyle: "solid",
-                  ...(corner === "tl" ? { top:0, left:0,    borderWidth: "2px 0 0 2px", borderRadius: "2px 0 0 0" } :
-                     corner === "tr" ? { top:0, right:0,   borderWidth: "2px 2px 0 0", borderRadius: "0 2px 0 0" } :
-                     corner === "bl" ? { bottom:0, left:0,  borderWidth: "0 0 2px 2px", borderRadius: "0 0 0 2px" } :
-                                       { bottom:0, right:0, borderWidth: "0 2px 2px 0", borderRadius: "0 0 2px 0" }),
-                }}
-              />
-            ))}
-            {/* label only on first box of each item type to avoid clutter */}
-            {i === allBoxes.findIndex((b) => b.label === label) && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-1.5em",
-                  left: 0,
+                  top: "-1.7em",
+                  left: "50%",
+                  transform: "translateX(-50%)",
                   whiteSpace: "nowrap",
                   fontSize: "9px",
                   fontFamily: "monospace",
                   fontWeight: 700,
                   color,
-                  background: "rgba(0,0,0,0.8)",
-                  padding: "1px 4px",
+                  background: "rgba(0,0,0,0.85)",
+                  padding: "1px 5px",
                   borderRadius: "3px",
-                  border: `1px solid ${color}55`,
-                  maxWidth: "16ch",
+                  border: `1px solid ${color}66`,
+                  maxWidth: "18ch",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                }}
-              >
-                {label}
-              </span>
-            )}
-          </div>
+                }}>
+                  {label}
+                </span>
+              )}
+            </div>
           );
         })}
       </div>
       <style>{`
-        @keyframes detBoxIn {
-          from { opacity: 0; transform: scale(1.12); }
-          to   { opacity: 1; transform: scale(1); }
+        @keyframes detPinIn {
+          from { opacity: 0; transform: translate(-50%, -50%) scale(2); }
+          to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
       `}</style>
       </div>
