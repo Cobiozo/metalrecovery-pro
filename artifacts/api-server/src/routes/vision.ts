@@ -146,13 +146,13 @@ STEP 4B — For each item draw ONE bounding box per individual physical piece in
   5. Do NOT merge multiple pieces into one box.
 
   COORDINATE SYSTEM (all 0–100, % of total image width/height):
-  - x: left edge of the box
-  - y: top edge of the box
-  - w: box width  (x + w should reach the right edge of the piece)
-  - h: box height (y + h should reach the bottom edge of the piece)
+  - x: left edge of the box (0 = left image edge)
+  - y: top edge of the box  (0 = top image edge)
+  - w: box width  (x + w must NOT exceed 100 — clamp at the image edge if needed)
+  - h: box height (y + h must NOT exceed 100 — clamp at the image edge if needed)
+  HARD RULE: x+w ≤ 100 and y+h ≤ 100. Items near an image edge: reduce w or h so the box does not go outside.
 
-  COUNTS: one box per physical piece. 18 RAM sticks → 18 boxes. 6 CPUs → 6 boxes.
-  Maximum 40 boxes per item type.
+  COUNTS: one box per physical piece. 40 CPUs → 40 boxes. Maximum 40 boxes per item type.
 
 STEP 5 — Return ONLY this JSON (no markdown, no explanation):
 {

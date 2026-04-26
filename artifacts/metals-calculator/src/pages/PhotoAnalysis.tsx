@@ -563,15 +563,21 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
         draggable={false}
       />
       <div className="absolute inset-0 pointer-events-none">
-        {allBoxes.slice(0, visCount).map(({ bb, label, color }, i) => (
+        {allBoxes.slice(0, visCount).map(({ bb, label, color }, i) => {
+          // Clamp boxes so they never extend outside the image boundaries
+          const cx = Math.max(0, Math.min(bb.x, 99));
+          const cy = Math.max(0, Math.min(bb.y, 99));
+          const cw = Math.max(1, Math.min(bb.w, 100 - cx));
+          const ch = Math.max(1, Math.min(bb.h, 100 - cy));
+          return (
           <div
             key={i}
             className="absolute"
             style={{
-              left: `${bb.x}%`,
-              top: `${bb.y}%`,
-              width: `${bb.w}%`,
-              height: `${bb.h}%`,
+              left: `${cx}%`,
+              top: `${cy}%`,
+              width: `${cw}%`,
+              height: `${ch}%`,
               animation: "detBoxIn 0.22s cubic-bezier(.17,.67,.35,1.25) both",
             }}
           >
@@ -616,7 +622,8 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
               </span>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
       <style>{`
         @keyframes detBoxIn {
