@@ -195,7 +195,7 @@ export function Layout({ children }: { children: ReactNode }) {
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted text-xs font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0"
             >
               <LogIn className="w-3.5 h-3.5" />
-              Zaloguj
+              <span className="hidden sm:inline">Zaloguj</span>
             </Link>
           )
         )}

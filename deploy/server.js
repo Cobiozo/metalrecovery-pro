@@ -66497,6 +66497,71 @@ var require_multer = __commonJS({
   }
 });
 
+// src/lib/migrate.ts
+var migrate_exports = {};
+__export(migrate_exports, {
+  ensureSchema: () => ensureSchema
+});
+async function ensureSchema() {
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      name TEXT,
+      role TEXT NOT NULL DEFAULT 'user',
+      is_active BOOLEAN NOT NULL DEFAULT true,
+      email_verified BOOLEAN NOT NULL DEFAULT false,
+      ai_usage_count INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      last_login_at TIMESTAMPTZ
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS sessions (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS system_stats (
+      date TEXT NOT NULL,
+      metric TEXT NOT NULL,
+      value INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (date, metric)
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS email_verifications (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  console.log("[migrate] Schema OK");
+}
+var init_migrate = __esm({
+  "src/lib/migrate.ts"() {
+    "use strict";
+    init_src();
+    init_drizzle_orm();
+  }
+});
+
 // src/lib/mailer.ts
 async function getSettings() {
   const rows = await db.select().from(systemSettingsTable);
@@ -81753,8 +81818,34 @@ router9.use(materials_default);
 router9.use(chemicals_default);
 router9.use(calculator_default);
 router9.use("/vision", vision_default);
+async function bootstrapAdmin() {
+  const { db: db2 } = await Promise.resolve().then(() => (init_src(), src_exports));
+  const { usersTable: usersTable2 } = await Promise.resolve().then(() => (init_schema2(), schema_exports));
+  const bcrypt3 = await import("bcrypt");
+  const existing = await db2.select({ id: usersTable2.id }).from(usersTable2).limit(1);
+  if (existing.length > 0) return;
+  const email3 = (process.env.ADMIN_EMAIL ?? "biuro@mobilne-it.pl").toLowerCase().trim();
+  const password = process.env.ADMIN_PASSWORD ?? "Admin1234!";
+  const passwordHash = await bcrypt3.hash(password, 12);
+  await db2.insert(usersTable2).values({
+    email: email3,
+    passwordHash,
+    name: "Administrator",
+    role: "admin",
+    isActive: true,
+    emailVerified: true
+  });
+  console.log(`[bootstrap] Admin account created: ${email3}`);
+}
 async function registerDbRoutes() {
   if (!process.env.DATABASE_URL) return;
+  const { ensureSchema: ensureSchema2 } = await Promise.resolve().then(() => (init_migrate(), migrate_exports));
+  await ensureSchema2().catch((err) => {
+    console.error("[migrate] Schema error:", err);
+  });
+  await bootstrapAdmin().catch((err) => {
+    console.error("[bootstrap] Failed to create admin:", err);
+  });
   const [{ default: authRouter }, { default: adminRouter }] = await Promise.all([
     Promise.resolve().then(() => (init_auth2(), auth_exports)),
     Promise.resolve().then(() => (init_admin(), admin_exports))
