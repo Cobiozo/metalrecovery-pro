@@ -744,13 +744,43 @@ export function PhotoAnalysisPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scanAreaRef = useRef<HTMLDivElement>(null);
 
-  const handleFileSelect = useCallback((selected: File) => {
-    setFile(selected);
+  // Normalize EXIF orientation via Canvas before upload.
+  // The browser auto-corrects EXIF rotation when rendering, but the raw file buffer
+  // sent to the AI has the unrotated pixels → coordinates would be systematically wrong.
+  // Drawing through Canvas flattens EXIF rotation so the AI sees the same image
+  // the user sees.
+  const normalizeImage = useCallback((file: File): Promise<{ blob: Blob; url: string }> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const rawUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(rawUrl);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { resolve({ blob: file, url: URL.createObjectURL(file) }); return; }
+            resolve({ blob, url: URL.createObjectURL(blob) });
+          },
+          "image/jpeg",
+          0.92,
+        );
+      };
+      img.onerror = () => resolve({ blob: file, url: rawUrl });
+      img.src = rawUrl;
+    });
+  }, []);
+
+  const handleFileSelect = useCallback(async (selected: File) => {
     setResult(null);
     setError(null);
-    const url = URL.createObjectURL(selected);
+    const { blob, url } = await normalizeImage(selected);
+    setFile(new File([blob], selected.name, { type: "image/jpeg" }));
     setPreview(url);
-  }, []);
+  }, [normalizeImage]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
