@@ -249,19 +249,13 @@ function VisionResultCard({
   onQuantityChange,
   weightPerPieceKg,
   initialMassKg,
-  authHeaders,
-  isLoggedIn,
 }: {
   result: VisionItem;
   onSaveProfile: () => void;
   onQuantityChange: (qty: number) => void;
   weightPerPieceKg?: number;
   initialMassKg?: number | null;
-  authHeaders: () => Record<string, string>;
-  isLoggedIn: boolean;
 }) {
-  const { toast } = useToast();
-  const [correctionOpen, setCorrectionOpen] = useState(false);
   const scaleMode = initialMassKg != null && initialMassKg > 0;
   const [qty, setQty] = useState<number>(
     scaleMode ? initialMassKg : (result.quantity > 0 ? result.quantity : 0)
@@ -529,26 +523,6 @@ function VisionResultCard({
         </div>
       )}
 
-      {isLoggedIn && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full gap-2 text-orange-400/70 hover:text-orange-400 text-xs border border-orange-500/15 hover:border-orange-500/30 hover:bg-orange-500/5"
-          onClick={() => setCorrectionOpen(true)}
-        >
-          <Flag className="w-3.5 h-3.5" />
-          Zgłoś błędną klasyfikację AI
-        </Button>
-      )}
-
-      <CorrectionDialog
-        open={correctionOpen}
-        onClose={() => setCorrectionOpen(false)}
-        aiMaterialType={result.materialType}
-        imageDescription={result.description}
-        authHeaders={authHeaders}
-        toast={toast}
-      />
     </div>
   );
 }
@@ -880,6 +854,7 @@ export function PhotoAnalysisPage() {
   const [editedQuantities, setEditedQuantities] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saveItem, setSaveItem] = useState<VisionItem | null>(null);
+  const [analysisCorrectionOpen, setAnalysisCorrectionOpen] = useState(false);
 
   useEffect(() => {
     fetch(`${getVisionApiBase()}/vision/status`)
@@ -1175,7 +1150,29 @@ export function PhotoAnalysisPage() {
       )}
 
       {result && !loading && preview && (
-        <PhotoWithDetections photoUrl={preview} items={result.items} />
+        <div>
+          <PhotoWithDetections photoUrl={preview} items={result.items} />
+          {user && (
+            <div className="max-w-2xl mx-auto mt-2 px-1">
+              <button
+                type="button"
+                onClick={() => setAnalysisCorrectionOpen(true)}
+                className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-orange-400 transition-colors py-1"
+              >
+                <Flag className="w-3 h-3" />
+                Zgłoś błędną analizę
+              </button>
+              <CorrectionDialog
+                open={analysisCorrectionOpen}
+                onClose={() => setAnalysisCorrectionOpen(false)}
+                aiMaterialType={result.items.map((i) => i.materialType).join(", ")}
+                imageDescription={result.items.map((i) => i.description).join(" | ")}
+                authHeaders={authHeaders}
+                toast={toast}
+              />
+            </div>
+          )}
+        </div>
       )}
 
       {result && !loading && (
@@ -1206,8 +1203,6 @@ export function PhotoAnalysisPage() {
               weightPerPieceKg={getWeightPerPieceKg(item.materialType)}
               initialMassKg={item.massGrams != null && item.massGrams > 0 ? item.massGrams / 1000 : null}
               onSaveProfile={() => setSaveItem(item)}
-              authHeaders={authHeaders}
-              isLoggedIn={!!user}
               onQuantityChange={(qty) =>
                 setEditedQuantities((prev) => {
                   const next = [...prev];
