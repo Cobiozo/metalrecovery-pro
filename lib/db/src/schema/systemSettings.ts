@@ -17,4 +17,5 @@ export const SETTINGS_KEYS = {
   SMTP_FROM: "smtp_from",
   SMTP_SECURE: "smtp_secure",
   SITE_URL: "site_url",
+  API_URL: "api_url",
 } as const;

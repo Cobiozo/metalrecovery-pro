@@ -50547,7 +50547,8 @@ var init_systemSettings = __esm({
       SMTP_PASS: "smtp_pass",
       SMTP_FROM: "smtp_from",
       SMTP_SECURE: "smtp_secure",
-      SITE_URL: "site_url"
+      SITE_URL: "site_url",
+      API_URL: "api_url"
     };
   }
 });
@@ -66960,6 +66961,16 @@ async function getSetting(key) {
   const rows = await db.select({ value: systemSettingsTable.value }).from(systemSettingsTable).where(eq(systemSettingsTable.key, key)).limit(1);
   return rows[0]?.value ?? null;
 }
+function deriveApiBaseUrl(req) {
+  const proto = req.headers["x-forwarded-proto"]?.split(",")[0]?.trim() || req.protocol || "https";
+  const host = req.headers["x-forwarded-host"]?.split(",")[0]?.trim() || req.get("host") || "";
+  return `${proto}://${host}`;
+}
+async function getApiUrl(req) {
+  const saved = await getSetting(SETTINGS_KEYS.API_URL);
+  if (saved) return saved.replace(/\/+$/, "");
+  return deriveApiBaseUrl(req);
+}
 var import_express7, import_bcrypt, import_crypto, router7, SESSION_DURATION_DAYS, auth_default;
 var init_auth2 = __esm({
   "src/routes/auth.ts"() {
@@ -67057,8 +67068,8 @@ var init_auth2 = __esm({
         token: verToken,
         expiresAt: expires
       });
-      const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
-      const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
+      const apiUrl = await getApiUrl(req);
+      const verificationLink = `${apiUrl}/api/auth/verify-email/${verToken}`;
       let emailError = null;
       try {
         await sendVerificationEmail(normalizedEmail, name2 ?? normalizedEmail, verificationLink);
@@ -67087,7 +67098,8 @@ var init_auth2 = __esm({
       const verification = rows[0];
       await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, verification.userId));
       await db.delete(emailVerificationsTable).where(eq(emailVerificationsTable.id, verification.id));
-      res.redirect("/logowanie?verified=1");
+      const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
+      res.redirect(`${siteUrl}/logowanie?verified=1`);
     });
     router7.post("/resend-verification", async (req, res) => {
       const { email: email3 } = req.body ?? {};
@@ -67113,8 +67125,8 @@ var init_auth2 = __esm({
         token: verToken,
         expiresAt: expires
       });
-      const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
-      const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
+      const apiUrl = await getApiUrl(req);
+      const verificationLink = `${apiUrl}/api/auth/verify-email/${verToken}`;
       let emailError = null;
       try {
         await sendVerificationEmail(user.email, user.name ?? user.email, verificationLink);

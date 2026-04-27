@@ -760,7 +760,7 @@ function SettingsTab({
         </div>
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            URL strony (do linków w emailach)
+            URL strony (frontend, do przekierowań po weryfikacji)
           </label>
           <input
             value={settings.site_url ?? ""}
@@ -768,6 +768,18 @@ function SettingsTab({
             placeholder="https://metalrecovery.online"
             className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground mb-1.5">
+            URL API (do linków weryfikacyjnych w emailach)
+          </label>
+          <input
+            value={settings.api_url ?? ""}
+            onChange={(e) => set("api_url", e.target.value)}
+            placeholder="https://recovery-calculator-bawolekw9.replit.app"
+            className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          <p className="text-xs text-muted-foreground mt-1">Zostaw puste jeśli frontend i API są na tej samej domenie</p>
         </div>
       </div>
 

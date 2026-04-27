@@ -32,6 +32,24 @@ async function getSetting(key: string): Promise<string | null> {
   return rows[0]?.value ?? null;
 }
 
+function deriveApiBaseUrl(req: Request): string {
+  const proto =
+    (req.headers["x-forwarded-proto"] as string)?.split(",")[0]?.trim() ||
+    req.protocol ||
+    "https";
+  const host =
+    (req.headers["x-forwarded-host"] as string)?.split(",")[0]?.trim() ||
+    req.get("host") ||
+    "";
+  return `${proto}://${host}`;
+}
+
+async function getApiUrl(req: Request): Promise<string> {
+  const saved = await getSetting(SETTINGS_KEYS.API_URL);
+  if (saved) return saved.replace(/\/+$/, "");
+  return deriveApiBaseUrl(req);
+}
+
 router.get("/register-status", async (_req, res) => {
   const val = await getSetting(SETTINGS_KEYS.REGISTRATION_ENABLED);
   res.json({ enabled: val === "true" });
@@ -147,8 +165,8 @@ router.post("/register", async (req: Request, res: Response) => {
     expiresAt: expires,
   });
 
-  const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
-  const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
+  const apiUrl = await getApiUrl(req);
+  const verificationLink = `${apiUrl}/api/auth/verify-email/${verToken}`;
 
   let emailError: string | null = null;
   try {
@@ -188,7 +206,8 @@ router.get("/verify-email/:token", async (req: Request, res: Response) => {
   await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, verification.userId));
   await db.delete(emailVerificationsTable).where(eq(emailVerificationsTable.id, verification.id));
 
-  res.redirect("/logowanie?verified=1");
+  const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
+  res.redirect(`${siteUrl}/logowanie?verified=1`);
 });
 
 router.post("/resend-verification", async (req: Request, res: Response) => {
@@ -224,8 +243,8 @@ router.post("/resend-verification", async (req: Request, res: Response) => {
     expiresAt: expires,
   });
 
-  const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
-  const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
+  const apiUrl = await getApiUrl(req);
+  const verificationLink = `${apiUrl}/api/auth/verify-email/${verToken}`;
 
   let emailError: string | null = null;
   try {
