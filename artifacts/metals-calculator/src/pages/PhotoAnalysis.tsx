@@ -9,11 +9,13 @@ import {
   Camera, Upload, ScanLine, Loader2, AlertTriangle, Info,
   FlaskConical, Star, CheckCircle2, XCircle, Sparkles,
   ChevronRight, ImageIcon, RotateCcw, ShoppingCart, Calculator, Scale,
-  Flag,
+  Flag, ChevronsUpDown, Check,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useCustomMaterials } from "@/lib/useCustomMaterials";
 import { CustomMaterialModal } from "@/components/CustomMaterialModal";
@@ -221,6 +223,7 @@ function CorrectionDialog({
 }) {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [customMaterial, setCustomMaterial] = useState("");
+  const [comboOpen, setComboOpen] = useState(false);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -274,21 +277,55 @@ function CorrectionDialog({
             <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
               Właściwy materiał <span className="text-destructive">*</span>
             </label>
-            <select
-              value={selectedCategory}
-              onChange={(e) => { setSelectedCategory(e.target.value); setCustomMaterial(""); }}
-              className="w-full h-9 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="">— wybierz kategorię —</option>
-              {CORRECTION_CATEGORIES.map((group) => (
-                <optgroup key={group.group} label={group.group}>
-                  {group.items.map((item) => (
-                    <option key={item} value={item}>{item}</option>
-                  ))}
-                </optgroup>
-              ))}
-              <option value="__other__">Inna kategoria (wpisz ręcznie)…</option>
-            </select>
+            <Popover open={comboOpen} onOpenChange={setComboOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={comboOpen}
+                  className="w-full justify-between bg-background font-normal h-10 px-3 text-sm"
+                >
+                  <span className={selectedCategory && selectedCategory !== "__other__" ? "text-foreground truncate" : "text-muted-foreground"}>
+                    {selectedCategory && selectedCategory !== "__other__" ? selectedCategory : "— wybierz lub wyszukaj kategorię —"}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start" style={{ maxHeight: "340px" }}>
+                <Command filter={(itemValue, search) => {
+                  if (!search) return 1;
+                  return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+                }}>
+                  <CommandInput placeholder="Szukaj kategorii..." className="h-9" />
+                  <CommandList className="max-h-[280px]">
+                    <CommandEmpty>Brak wyników</CommandEmpty>
+                    {CORRECTION_CATEGORIES.map((group) => (
+                      <CommandGroup key={group.group} heading={<span className="text-xs font-bold uppercase tracking-wider text-amber-500">{group.group}</span>}>
+                        {group.items.map((item) => (
+                          <CommandItem
+                            key={item}
+                            value={item}
+                            onSelect={() => { setSelectedCategory(item); setCustomMaterial(""); setComboOpen(false); }}
+                          >
+                            <Check className={cn("mr-2 h-4 w-4", selectedCategory === item ? "opacity-100" : "opacity-0")} />
+                            {item}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    ))}
+                    <CommandGroup>
+                      <CommandItem
+                        value="Inna kategoria (wpisz ręcznie)"
+                        onSelect={() => { setSelectedCategory("__other__"); setComboOpen(false); }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", selectedCategory === "__other__" ? "opacity-100" : "opacity-0")} />
+                        Inna kategoria (wpisz ręcznie)…
+                      </CommandItem>
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             {selectedCategory === "__other__" && (
               <input
                 type="text"
