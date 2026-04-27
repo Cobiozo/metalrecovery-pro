@@ -82,6 +82,12 @@ sshpass -p "$SSH_PASS" scp $SCP_OPTS \
   "$SSH_USER@$SSH_HOST:$REMOTE_DIR/server.js"
 echo "  ✓ server.js wgrany"
 
+# Kopiuj też jako api-bundle.cjs (alternatywna nazwa startup file w cPanel)
+echo "  → Kopiowanie jako api-bundle.cjs ..."
+sshpass -p "$SSH_PASS" ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
+  "cp $REMOTE_DIR/server.js $REMOTE_DIR/api-bundle.cjs"
+echo "  ✓ api-bundle.cjs zaktualizowany"
+
 echo "  → Synchronizacja public/ ..."
 sshpass -p "$SSH_PASS" ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
   "rm -rf $REMOTE_DIR/public && mkdir -p $REMOTE_DIR/public"
