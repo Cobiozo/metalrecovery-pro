@@ -73548,6 +73548,157 @@ var electronicMaterials = [
     },
     notes: "Mieszane kondensatory MLCC bez identyfikacji PME/BME (~0.2g/szt). Warto\u015B\u0107 typowa 1.5 g/kg Pd i 8 g/kg Ag zak\u0142ada ~15-20% PME w partii. Dla lepszego wyniku: rozr\xF3\u017Cnij typ \u2014 'MLCC PME (stare, bogate w Pd)' dla urz\u0105dze\u0144 pre-2000 lub 'MLCC BME (nowe, niskie Pd)' dla post-2000."
   },
+  // ─── SERWERY I SPRZĘT SIECIOWY RACK ──────────────────────────────────────
+  {
+    id: "serwer_rack_1u",
+    name: "Serwer rack 1U (ca\u0142o\u015B\u0107, z obudow\u0105)",
+    nameEn: "1U Rack Server (complete, with chassis)",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 16,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 6.5, Ag: 6.5, Pt: 5, Pd: 6.5 },
+    chemFraction: 0.15,
+    catalogHint: "1U rack-mount server (Dell PowerEdge 1xx0/Rxxx, HP ProLiant DL360/DL380, IBM x3550) \u2014 thin black or silver metal chassis exactly 1U=44mm tall, designed to slide into a 19-inch server rack \u2014 front panel with USB ports, VGA, drive bays, power button, LCD display \u2014 rear panel dense with ports (dual LAN, VGA, COM, iDRAC/iLO management port, PSU units) \u2014 14-18 kg typical with dual PSU \u2014 DEFINITELY e-waste, contains rich PCBs",
+    metalContentPerKg: {
+      Au: { min: 0.04, max: 0.15, typical: 0.08 },
+      Ag: { min: 0.08, max: 0.32, typical: 0.16 },
+      Pt: { min: 0, max: 5e-3, typical: 2e-3 },
+      Pd: { min: 3e-3, max: 0.025, typical: 0.012 }
+    },
+    notes: "Serwer rack 1U z obudow\u0105 (Dell PowerEdge 1950/R610/R620/R630, HP DL360 Gen5-Gen9, IBM x3550 itp.). Masa typowa: 14-18 kg. \u0179r\xF3d\u0142a danych: Hagel\xFCken 2006 (server PCB frakcja), UNEP 2012 'Recycling Rates of Metals', HP Environmental Product Declarations 2012-2018. chemFraction=0.15 \u2014 p\u0142yta serwerowa + RAID + NIC + RAM stanowi\u0105 ~15% ca\u0142kowitej masy; stal obudowy, dwa PSU, wentylatory i okablowanie to ~85%. Checkbox 'Oczyszczony' = obudowa+PSU+wentylatory usuni\u0119te \u2192 zostaje frakcja PCB (Au ~0.50-0.70 g/kg). cleanedMultiplier=6.5 odzwierciedla stosunek 16 kg / 2.5 kg PCB. Ag z lutowia RoHS SAC305 + styki. Pd z BME-MLCC serwerowych. Skup ca\u0142ego serwera: 0.5-2 z\u0142/kg; same PCB serwerowe: 200-400 z\u0142/kg."
+  },
+  {
+    id: "serwer_rack_2u",
+    name: "Serwer rack 2U (ca\u0142o\u015B\u0107, z obudow\u0105)",
+    nameEn: "2U Rack Server (complete, with chassis)",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 22,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 6, Ag: 6, Pt: 5, Pd: 6 },
+    chemFraction: 0.17,
+    catalogHint: "2U rack-mount server (Dell PowerEdge 2xx0/Rxxx, HP ProLiant DL380, IBM x3650) \u2014 2U=88mm tall black/silver chassis for 19-inch rack \u2014 more drive bays than 1U (up to 8-12 LFF or 24 SFF), dual PSU visible in rear, multiple expansion card slots \u2014 heavier than 1U (18-28 kg) \u2014 DEFINITELY e-waste with dense PCBs",
+    metalContentPerKg: {
+      Au: { min: 0.04, max: 0.14, typical: 0.08 },
+      Ag: { min: 0.08, max: 0.3, typical: 0.15 },
+      Pt: { min: 0, max: 5e-3, typical: 2e-3 },
+      Pd: { min: 3e-3, max: 0.025, typical: 0.011 }
+    },
+    notes: "Serwer rack 2U z obudow\u0105 (Dell PowerEdge 2950/R720/R730, HP DL380 Gen5-Gen10, IBM x3650). Masa typowa: 18-28 kg. Wi\u0119cej miejsc na dyski i kart rozszerze\u0144 ni\u017C 1U \u2014 ale udzia\u0142 PCB w masie ca\u0142kowitej podobny (~17%). chemFraction=0.17 \u2014 p\u0142yta + karty PCIe + RAM + CPU stanowi\u0105 ~17% masy. cleanedMultiplier=6.0 (stosunek masy ca\u0142ej do masy PCB). Dane: UNEP 2012, Buchert 2012 '\xD6kologische Standards in der IT-Beschaffung' (server PCB 15-20% masy). Skup: 0.3-1.5 z\u0142/kg ca\u0142o\u015Bci; PCB: 200-400 z\u0142/kg."
+  },
+  {
+    id: "serwer_blade_modul",
+    name: "Serwer blade \u2014 modu\u0142 (bez obudowy chassis)",
+    nameEn: "Blade Server module (without blade chassis)",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 4,
+    requiresCleaning: false,
+    chemFraction: 0.7,
+    catalogHint: "Blade server module (Dell PowerEdge M702/M710/M820, HP ProLiant BL460c/BL490c, IBM BladeCenter HS22) \u2014 thin rectangular compute module (70mm wide \xD7 250mm deep \xD7 34mm thick) designed to slide into a blade enclosure \u2014 front has just a latch/handle and status LEDs \u2014 almost entirely circuit boards (motherboard + RAM + CPUs) without heavy chassis \u2014 3-5 kg per module \u2014 HIGH PCB density, valuable",
+    metalContentPerKg: {
+      Au: { min: 0.15, max: 0.55, typical: 0.3 },
+      Ag: { min: 0.3, max: 1.2, typical: 0.65 },
+      Pt: { min: 0, max: 8e-3, typical: 3e-3 },
+      Pd: { min: 0.01, max: 0.06, typical: 0.028 }
+    },
+    notes: "Modu\u0142 blade server (Dell M-series, HP BL-series, IBM BladeCenter). Masa typowa: 3-5 kg. Modu\u0142 to prawie wy\u0142\u0105cznie elektronika \u2014 p\u0142yta blade + DIMM + 2\xD7CPU + z\u0142\u0105cza mid-plane \u2014 brak ci\u0119\u017Ckiej obudowy jak w serwerze rack. chemFraction=0.70 \u2014 metalowa p\u0142yta czo\u0142owa i heat-sink ~30% masy. Au z g\u0119stych pad\xF3w BGA, z\u0142\u0105czy high-density mid-plane, z\u0142oconych stref kontaktowych. Dane: HP BL460c Gen8 EPD; Ueberschaar 2017 (wysokog\u0119sto\u015Bciowe PCB serwerowe). Znacznie wy\u017Csze Au/kg ni\u017C ca\u0142y serwer rack. Skup: 150-350 z\u0142/kg."
+  },
+  {
+    id: "serwer_blade_chassis",
+    name: "Obudowa blade chassis (pusty, bez modu\u0142\xF3w)",
+    nameEn: "Blade enclosure/chassis (empty, no blades)",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 35,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 4, Ag: 3.5, Pt: 3, Pd: 3.5 },
+    chemFraction: 0.25,
+    catalogHint: "Blade server enclosure (Dell PowerEdge M1000e, HP BladeSystem c7000, IBM BladeCenter H) \u2014 large heavy chassis (14U or 10U) designed to hold multiple blade modules \u2014 front shows empty bays where blades slot in \u2014 rear has IO modules (network switches, fiber channel), power supplies, fan modules \u2014 30-55 kg \u2014 the backplane alone is a very rich PCB with hundreds of high-speed connectors",
+    metalContentPerKg: {
+      Au: { min: 0.05, max: 0.2, typical: 0.1 },
+      Ag: { min: 0.1, max: 0.5, typical: 0.22 },
+      Pt: { min: 0, max: 5e-3, typical: 1e-3 },
+      Pd: { min: 5e-3, max: 0.04, typical: 0.018 }
+    },
+    notes: "Pusta obudowa blade chassis (Dell M1000e ~55 kg, HP c7000 ~52 kg, IBM BladeCenter H ~65 kg). Warto\u015B\u0107 pochodzi g\u0142\xF3wnie z: (1) backplane mid-plane PCB (~8 kg, bardzo bogata w Au z powodu setek z\u0142\u0105czy high-speed), (2) modu\u0142y IO sieciowe i FC, (3) modu\u0142y zasilania. Stal obudowy ~50-60% masy (recykling \u017Celaza, nie Au). chemFraction=0.25 \u2014 backplane + IO modules + fan control PCBs. cleanedMultiplier=4.0 (backplane ~25% masy, ale bardzo Au-bogata). Dane: bran\u017Cowe dane e-waste dla backplane connectors 1-3 g Au/kg PCB."
+  },
+  {
+    id: "serwer_tower",
+    name: "Serwer wie\u017Cowy (ca\u0142o\u015B\u0107, z obudow\u0105)",
+    nameEn: "Tower Server (complete, with chassis)",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 35,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 7, Ag: 7, Pt: 5, Pd: 7 },
+    chemFraction: 0.12,
+    catalogHint: "Tower server (Dell PowerEdge T110/T310/T410/T610/T710, HP ProLiant ML110/ML150/ML350/ML370, IBM x3400/x3500) \u2014 looks like a large desktop PC tower but taller (400-600mm high, 200-250mm wide) \u2014 professional server branding, usually rack-convertible, multiple drive bays, redundant PSU options, rear dense with server ports (iDRAC/iLO, dual LAN, VGA, COM) \u2014 very heavy 25-45 kg \u2014 DEFINITELY e-waste",
+    metalContentPerKg: {
+      Au: { min: 0.03, max: 0.1, typical: 0.06 },
+      Ag: { min: 0.06, max: 0.25, typical: 0.13 },
+      Pt: { min: 0, max: 4e-3, typical: 1e-3 },
+      Pd: { min: 2e-3, max: 0.02, typical: 9e-3 }
+    },
+    notes: "Serwer wie\u017Cowy z obudow\u0105 (Dell PowerEdge T-series, HP ML-series). Masa typowa: 25-45 kg. Najni\u017Cszy stosunek Au/kg w\u015Br\xF3d serwer\xF3w bo najwi\u0119ksza obudowa stalowa. chemFraction=0.12 \u2014 PCB (p\u0142yta + karty) to ~12% masy wie\u017Cy; reszta to stalowa obudowa, zasilacze, nap\u0119dy, kable. cleanedMultiplier=7.0. Dane: HP ML350 Gen9 EPD; UNEP 2012 serwery wie\u017Cowe. Skup: 0.2-1.0 z\u0142/kg ca\u0142o\u015Bci; wydzielone PCB: 150-300 z\u0142/kg."
+  },
+  {
+    id: "przelacznik_sieciowy_enterprise",
+    name: "Prze\u0142\u0105cznik sieciowy enterprise (Cisco/HP/Juniper)",
+    nameEn: "Enterprise network switch (Cisco/HP/Juniper)",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 9,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 2.5, Ag: 2.5, Pt: 2, Pd: 2.5 },
+    chemFraction: 0.55,
+    catalogHint: "Enterprise managed network switch (Cisco Catalyst 2950/3750/4500/6500, HP ProCurve/Aruba, Juniper EX series, Brocade, Extreme Networks) \u2014 1U-7U rack-mount metal chassis \u2014 front panel dense with RJ45/SFP/SFP+ ports in rows \u2014 status LEDs per port \u2014 sometimes removable line cards on sides \u2014 much denser in PCB than regular consumer router \u2014 5-80 kg depending on size \u2014 DEFINITELY valuable e-waste",
+    metalContentPerKg: {
+      Au: { min: 0.15, max: 0.6, typical: 0.3 },
+      Ag: { min: 0.3, max: 1.2, typical: 0.55 },
+      Pt: { min: 0, max: 8e-3, typical: 3e-3 },
+      Pd: { min: 0.01, max: 0.06, typical: 0.025 }
+    },
+    notes: "Prze\u0142\u0105cznik sieciowy enterprise (Cisco Catalyst, HP ProCurve, Juniper EX, Extreme, Brocade). Masa typowa: Cisco 3750 ~8 kg, Cisco 4506 ~25 kg, Cisco 6506 ~45 kg. Bardzo wysoka g\u0119sto\u015B\u0107 PCB \u2014 backplane + linie kart + g\u0119ste z\u0142\u0105cza SFP \u2014 udzia\u0142 PCB ~50-60% masy (bez ci\u0119\u017Ckiej obudowy zasilacza). chemFraction=0.55. Znacznie wy\u017Csze Au/kg ni\u017C ca\u0142e serwery ze wzgl\u0119du na g\u0119ste z\u0142\u0105cza backplane i high-speed interconnect. cleanedMultiplier=2.5 (usu\u0144 PSU, wentylatory, blaszan\u0105 obudow\u0119). Dane: bran\u017Cowe dane skupu e-waste Cisco, Hagel\xFCken 2006 backplane connector Au density. Skup: 5-30 z\u0142/kg."
+  },
+  {
+    id: "nas_device",
+    name: "NAS (sieciowy zas\xF3b dyskowy, bez dysk\xF3w)",
+    nameEn: "NAS device (network-attached storage, no drives)",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 3,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 2.5, Ag: 2.5, Pt: 2, Pd: 2.5 },
+    chemFraction: 0.4,
+    catalogHint: "NAS device (QNAP, Synology, NetApp E-series, Buffalo TeraStation, Drobo) \u2014 standalone box with multiple disk bays (usually 4-16 bays visible on front) \u2014 drive bays occupied or empty \u2014 LAN port(s) on rear, USB ports \u2014 dedicated storage device NOT a router \u2014 1.5-8 kg without drives \u2014 moderate e-waste value",
+    metalContentPerKg: {
+      Au: { min: 0.08, max: 0.25, typical: 0.14 },
+      Ag: { min: 0.15, max: 0.5, typical: 0.28 },
+      Pt: { min: 0, max: 4e-3, typical: 1e-3 },
+      Pd: { min: 5e-3, max: 0.03, typical: 0.015 }
+    },
+    notes: "Urz\u0105dzenie NAS (QNAP, Synology, Buffalo, NetApp) bez dysk\xF3w twardych. Masa typowa: 1.5-8 kg. chemFraction=0.40 \u2014 PCB kontrolera, ARM/x86 p\u0142yta, pami\u0119\u0107 flash, z\u0142\u0105cza SATA backplane stanowi\u0105 ~40% masy; reszta to plastikowa/aluminiowa obudowa i metalowe szyny dysk\xF3w. cleanedMultiplier=2.5. Warto\u015Bci AU zbli\u017Cone do mocniejszego routera ale ni\u017Csze ni\u017C serwer blade (brak high-density PCIe). Dane: szacunki na podstawie QNAP TS-453/Synology DS918+ teardowns + por\xF3wnanie z routerami enterprise."
+  },
+  {
+    id: "pdu_kvm_rack",
+    name: "PDU / KVM / listwy zasilaj\u0105ce rack (bez transformatora)",
+    nameEn: "PDU / KVM / rack power distribution unit",
+    category: "serwery",
+    unit: "kg",
+    weightPerPiece: 2.5,
+    requiresCleaning: false,
+    chemFraction: 0.25,
+    catalogHint: "Rack power distribution unit (APC, Eaton, Raritan) or KVM switch (Avocent, Raritan, HP) \u2014 long thin bar (1U, 350-500mm long) with a row of IEC C13/C19 outlets, OR KVM box with multiple VGA/USB ports for switching between servers \u2014 minimal electronics (basic relay/MOSFET switching, no CPUs) \u2014 1-5 kg \u2014 LOW value e-waste",
+    metalContentPerKg: {
+      Au: { min: 0.02, max: 0.08, typical: 0.04 },
+      Ag: { min: 0.1, max: 0.5, typical: 0.22 },
+      Pt: { min: 0, max: 2e-3, typical: 1e-3 },
+      Pd: { min: 2e-3, max: 0.015, typical: 7e-3 }
+    },
+    notes: "Listwa PDU rack lub prze\u0142\u0105cznik KVM. Elektronika minimalna \u2014 g\u0142\xF3wnie przeka\u017Aniki, bezpieczniki, podstawowe PCB sterowania. chemFraction=0.25 \u2014 PCB + z\u0142\u0105cza ~25% masy; reszta to aluminium listwa, gniazda IEC, przewody. Au bardzo niskie. Warto\u015B\u0107 g\u0142\xF3wnie z recyklingu Cu (przewody) i Al."
+  },
   // ─── INNE ─────────────────────────────────────────────────────────────────
   {
     id: "catalytic_converter",
@@ -82191,11 +82342,23 @@ IMPORTANT \u2014 the following ARE electronic waste (e-waste) with recoverable p
   \u2022 Printers (inkjet, laser) \u2014 contain PCBs and gold contacts
   \u2022 Game consoles (Atari, Nintendo, Sega, PlayStation, Xbox) \u2014 contain rich PCBs
   \u2022 Audio/video equipment (tape decks, CD/DVD players, amplifiers)
+  \u2022 SERVER EQUIPMENT \u2014 ALWAYS e-waste with recoverable Au/Ag/Pd:
+      \u2013 Rack servers (Dell PowerEdge, HP ProLiant, IBM xSeries) 1U/2U/4U \u2014 classify as "Serwer rack 1U (ca\u0142o\u015B\u0107, z obudow\u0105)" or "Serwer rack 2U"
+      \u2013 Blade server modules (Dell M-series, HP BL-series) \u2014 classify as "Serwer blade \u2014 modu\u0142"
+      \u2013 Blade chassis/enclosures (Dell M1000e, HP c7000) \u2014 classify as "Obudowa blade chassis"
+      \u2013 Tower servers (Dell PowerEdge T, HP ProLiant ML) \u2014 classify as "Serwer wie\u017Cowy (ca\u0142o\u015B\u0107, z obudow\u0105)"
+      \u2013 Enterprise network switches (Cisco Catalyst, HP ProCurve, Juniper EX) \u2014 classify as "Prze\u0142\u0105cznik sieciowy enterprise"
+      \u2013 NAS devices (QNAP, Synology, NetApp) \u2014 classify as "NAS (sieciowy zas\xF3b dyskowy, bez dysk\xF3w)"
+      \u2013 SAN/fiber channel equipment \u2014 classify as "Prze\u0142\u0105cznik sieciowy enterprise"
   \u2022 Any device with a circuit board, connectors or microchips
+CRITICAL RULE \u2014 NEVER classify server equipment as "Nieelektroniczne". Rack servers, blade servers, switches, NAS, SANs are ALWAYS e-waste with recoverable precious metals. A Dell PowerEdge, HP ProLiant, or any device with a 19-inch rack form factor IS ALWAYS e-waste.
 DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings, clothing, non-electronic mechanical parts are NOT e-waste.
 Non-e-waste \u2192 materialType = "Nieelektroniczne \u2014 [Polish name]", all metal values = 0.0, quantity = 0.
 
 CRITICAL VISUAL SHAPE GUIDE \u2014 read before identifying:
+  RACK SERVER (1U/2U) \u2014 ALWAYS e-waste: Metal chassis with height exactly 1U (44mm) or 2U (88mm) \xD7 ~430-480mm wide \xD7 ~600-800mm deep \u2014 designed to slide into a 19-inch server rack \u2014 front face shows USB ports, VGA, drive bay slots (blank or with 2.5"/3.5" drive caddies), power button, LCD status display, or just blank drive bays \u2014 DELL branding (PowerEdge 1950/2950/R610/R620/R630/R720/R730/R740), HP (ProLiant DL360/DL380/DL580), IBM (x3550/x3650), CISCO (UCS) \u2014 if you see "Dell PowerEdge", "ProLiant", "iDRAC" or a 19-inch rack-mount chassis, it IS ALWAYS e-waste, NEVER "Nieelektroniczne". Select "Serwer rack 1U" or "Serwer rack 2U".
+  BLADE SERVER MODULE: Slim rectangular compute module (~70mm\xD7250mm\xD734mm) with a small front face showing only a handle/latch and status LEDs \u2014 slides horizontally into a blade enclosure \u2014 no external ports visible \u2014 brands: Dell M-series, HP BL-series, IBM BladeCenter HS. Very high PCB density.
+  ENTERPRISE NETWORK SWITCH: 1U metal chassis densely packed with RJ45/SFP/SFP+ ports in rows on the FRONT \u2014 Cisco Catalyst (24/48 ports, blue/black, Cisco logo), HP ProCurve/Aruba (grey), Juniper EX (black), Brocade, Extreme Networks \u2014 heavy for its size \u2014 ALWAYS e-waste with recoverable gold.
   RAM sticks (DIMM/SO-DIMM): LONG thin rectangular board (133mm\xD730mm desktop or 67mm\xD730mm laptop). Memory chips in ONE ROW along the LENGTH. A notch cut into the edge contacts. Never square. Never small.
   mini PCIe / M.2 cards (laptop WiFi/BT/WWAN): TINY card, roughly SQUARE (30\xD726mm) or small rectangle (30\xD751mm). Gold contacts on ONE SHORT EDGE ONLY. Two tiny coaxial (MHF/IPEX) connectors. FCC-ID label. This is NOT RAM \u2014 it is 3-5\xD7 smaller than a RAM stick.
   Laptop sub-boards (USB/audio/touchpad/power): small rectangular or square PCBs (40-120mm) with ribbon cable connectors, dedicated to a single laptop function. No large CPU/GPU die.
@@ -82287,7 +82450,7 @@ STEP 5 \u2014 Return ONLY this JSON (no markdown, no explanation):
 }
 
 ALL string values (color, thickness, notes, descriptions) MUST be in POLISH.
-Reference metal values: motherboards ~0.2\u20130.5 g Au/kg; ceramic CPUs ~3\u201310 g Au/kg; gold fingers ~2\u201315 g Au/kg; RAM (gold contacts, DIMM) ~0.6\u20131.5 g Au/kg; mini PCIe / M.2 WiFi cards ~0.4\u20130.8 g Au/kg; laptop sub-boards ~0.1\u20130.2 g Au/kg; CPU socket adapter boards ~0.5\u20131.5 g Au/kg; ZIF/test IC sockets (precision) ~1\u20134 g Au/kg; SIMM memory slot connectors ~0.8\u20132.5 g Au/kg; standard DIP IC sockets (cheap) ~0.1\u20130.5 g Au/kg; telecom backplane connectors (industrial) ~2\u20138 g Au/kg; GOLD-PLATED CONNECTOR PINS bare (grubo z\u0142ocone piny/styki bez plastiku, uniform golden surface) ~2\u20138 g Au/kg, ~0.5\u20133 g Ag/kg \u2014 HIGH VALUE, do NOT estimate as 0.05; CROSSBAR RELAY CONTACTS (styki krzy\u017Cownicy, telecom exchanges) ~3\u201310 g Au/kg, ~1\u20138 g Ag/kg, ~0.1\u20131.5 g Pd/kg \u2014 VERY HIGH VALUE; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg; CERAMIC DIP ICs (white/grey/beige ceramic body, gold lid or gold legs \u2014 EPROMs, old CPUs, PALs from 1975-1995) ~5\u201325 g Au/kg \u2014 HIGHEST VALUE of any IC type, GRF data: Intel 8086 ceramic=18 g/kg, EPROM 2716=22 g/kg \u2014 do NOT confuse with black plastic DIP chips (those are only ~0.1\u20130.5 g Au/kg); plastic DIP/SOIC/QFP ICs (standard black epoxy chips) ~0.1\u20130.5 g Au/kg; GPU graphics cards (modern, with multiple BGA chips + GDDR memory) ~0.15\u20130.35 g Au/kg, ~1\u20132 g Ag/kg; SSD/NVMe PCBs (small rectangular board with NAND flash chips) ~0.2\u20130.5 g Au/kg, ~0.8\u20132 g Ag/kg; MLCC ceramic capacitors from PRE-2000 devices (PME type, large body 0805/1206 size) ~3\u201315 g Pd/kg, ~20\u201380 g Ag/kg \u2014 VERY HIGH Pd content; MLCC ceramic capacitors from POST-2000 devices (BME type, tiny 0402/0201) ~0.1\u20130.5 g Pd/kg \u2014 low; tantalum capacitors (SMD, yellow/orange/black teardrop shape) ~0.3\u20131.0 g Pd/kg, ~0.8\u20132.5 g Ag/kg; SMD resistors, inductors, and standard transistors/diodes DO NOT contain significant precious metals \u2014 do not classify these as high-value e-waste.`;
+Reference metal values: motherboards ~0.2\u20130.5 g Au/kg; ceramic CPUs ~3\u201310 g Au/kg; gold fingers ~2\u201315 g Au/kg; RAM (gold contacts, DIMM) ~0.6\u20131.5 g Au/kg; mini PCIe / M.2 WiFi cards ~0.4\u20130.8 g Au/kg; laptop sub-boards ~0.1\u20130.2 g Au/kg; CPU socket adapter boards ~0.5\u20131.5 g Au/kg; ZIF/test IC sockets (precision) ~1\u20134 g Au/kg; SIMM memory slot connectors ~0.8\u20132.5 g Au/kg; standard DIP IC sockets (cheap) ~0.1\u20130.5 g Au/kg; telecom backplane connectors (industrial) ~2\u20138 g Au/kg; GOLD-PLATED CONNECTOR PINS bare (grubo z\u0142ocone piny/styki bez plastiku, uniform golden surface) ~2\u20138 g Au/kg, ~0.5\u20133 g Ag/kg \u2014 HIGH VALUE, do NOT estimate as 0.05; CROSSBAR RELAY CONTACTS (styki krzy\u017Cownicy, telecom exchanges) ~3\u201310 g Au/kg, ~1\u20138 g Ag/kg, ~0.1\u20131.5 g Pd/kg \u2014 VERY HIGH VALUE; VHS camcorders (whole) ~0.08 g Au/kg, ~0.55 g Ag/kg; Video8/Hi8 camcorders (whole) ~0.10 g Au/kg, ~0.65 g Ag/kg; Super 8 film cameras ~0.025 g Au/kg, ~0.18 g Ag/kg; digital cameras (whole) ~0.09 g Au/kg, ~0.55 g Ag/kg; CERAMIC DIP ICs (white/grey/beige ceramic body, gold lid or gold legs \u2014 EPROMs, old CPUs, PALs from 1975-1995) ~5\u201325 g Au/kg \u2014 HIGHEST VALUE of any IC type, GRF data: Intel 8086 ceramic=18 g/kg, EPROM 2716=22 g/kg \u2014 do NOT confuse with black plastic DIP chips (those are only ~0.1\u20130.5 g Au/kg); plastic DIP/SOIC/QFP ICs (standard black epoxy chips) ~0.1\u20130.5 g Au/kg; GPU graphics cards (modern, with multiple BGA chips + GDDR memory) ~0.15\u20130.35 g Au/kg, ~1\u20132 g Ag/kg; SSD/NVMe PCBs (small rectangular board with NAND flash chips) ~0.2\u20130.5 g Au/kg, ~0.8\u20132 g Ag/kg; MLCC ceramic capacitors from PRE-2000 devices (PME type, large body 0805/1206 size) ~3\u201315 g Pd/kg, ~20\u201380 g Ag/kg \u2014 VERY HIGH Pd content; MLCC ceramic capacitors from POST-2000 devices (BME type, tiny 0402/0201) ~0.1\u20130.5 g Pd/kg \u2014 low; tantalum capacitors (SMD, yellow/orange/black teardrop shape) ~0.3\u20131.0 g Pd/kg, ~0.8\u20132.5 g Ag/kg; SMD resistors, inductors, and standard transistors/diodes DO NOT contain significant precious metals \u2014 do not classify these as high-value e-waste; RACK SERVER 1U whole (with chassis, ~16 kg) ~0.05\u20130.15 g Au/kg, ~0.10\u20130.30 g Ag/kg, ~0.01\u20130.025 g Pd/kg \u2014 low Au/kg because heavy steel chassis dominates; RACK SERVER 2U whole ~0.05\u20130.14 g Au/kg; BLADE SERVER module (no chassis, ~4 kg, just compute board) ~0.15\u20130.55 g Au/kg \u2014 much higher Au/kg than rack server; ENTERPRISE SWITCH (Cisco Catalyst, HP ProCurve, all-PCB dense) ~0.15\u20130.60 g Au/kg, ~0.30\u20131.2 g Ag/kg \u2014 gold in dense backplane connectors and SFP ports; NAS device (QNAP/Synology without drives) ~0.08\u20130.25 g Au/kg.`;
 function handleUpload(req, res, next) {
   upload.single("image")(req, res, (err) => {
     if (err instanceof import_multer.default.MulterError) {
