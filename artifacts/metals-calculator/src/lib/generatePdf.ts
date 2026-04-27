@@ -162,7 +162,10 @@ export function generateCalculationPdf(options: GeneratePdfOptions): void {
 
   const processParamsData: [string, string][] = [
     ["Proces chemiczny", result.processName],
-    ["Masa całkowita wsadu", `${result.totalInputMassKg.toFixed(3)} kg`],
+    ["Masa wejściowa (całość)", `${result.totalInputMassKg.toFixed(3)} kg`],
+    ...(result.chemProcessedMassKg !== undefined && result.chemProcessedMassKg < result.totalInputMassKg * 0.99
+      ? [["Masa do obróbki kwasowej", `${result.chemProcessedMassKg.toFixed(3)} kg (obudowa/plastik nie wchodzi do kwasu)`] as [string, string]]
+      : []),
     ["Szacowany czas procesu", `${result.estimatedTimeHours} godz.`],
     ["Cena energii elektrycznej", `${processParams.electricityPricePerKwh.toFixed(2)} zł/kWh`],
   ];

@@ -558,12 +558,13 @@ function computeCompareResult(
           : "not_profitable";
 
   const avgTimePerKg = (process.timePerKgMin + process.timePerKgMax) / 2;
-  const estimatedTimeHours = Math.round(avgTimePerKg * totalMassKg * 10) / 10;
+  const estimatedTimeHours = Math.round(avgTimePerKg * chemMassKg * 10) / 10;
 
   return {
     processId,
     processName: process.name,
     totalInputMassKg: Math.round(totalMassKg * 1000) / 1000,
+    chemProcessedMassKg: Math.round(chemMassKg * 1000) / 1000,
     netProfitPln,
     totalRevenuePln,
     totalCostPln,
@@ -823,20 +824,21 @@ router.post("/calculator/estimate", async (req, res) => {
   }
 
   const avgTimePerKg = (process.timePerKgMin + process.timePerKgMax) / 2;
-  let estimatedTimeHours = avgTimePerKg * totalMassKg;
+  let estimatedTimeHours = avgTimePerKg * chemMassKg;
 
   if (body.temperatureOverride !== undefined && processOptimalTemp !== undefined) {
     const tempFactor = 1 + (processOptimalTemp - body.temperatureOverride) * 0.01;
-    estimatedTimeHours = Math.max(avgTimePerKg * 0.5, estimatedTimeHours * Math.max(0.5, Math.min(2.0, tempFactor)));
+    estimatedTimeHours = Math.max(avgTimePerKg * chemMassKg * 0.5, estimatedTimeHours * Math.max(0.5, Math.min(2.0, tempFactor)));
   }
 
   if (concOverride !== undefined && processDefaultConc !== undefined && concOverride > 0) {
     const timeConcFactor = Math.max(0.4, Math.min(1.5, Math.pow(processDefaultConc / concOverride, 0.7)));
-    estimatedTimeHours = Math.max(process.timePerKgMin * 0.4 * totalMassKg, estimatedTimeHours * timeConcFactor);
+    estimatedTimeHours = Math.max(process.timePerKgMin * 0.4 * chemMassKg, estimatedTimeHours * timeConcFactor);
   }
 
   res.json({
     totalInputMassKg: Math.round(totalMassKg * 1000) / 1000,
+    chemProcessedMassKg: Math.round(chemMassKg * 1000) / 1000,
     processId: body.processId,
     processName: process.name,
     estimatedTimeHours: Math.round(estimatedTimeHours * 10) / 10,

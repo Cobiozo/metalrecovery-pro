@@ -329,6 +329,8 @@ export const CalculationResultProfitabilityRating = {
 
 export interface CalculationResult {
   totalInputMassKg: number;
+  /** Mass fraction that actually undergoes chemical processing (totalInputMassKg * chemFraction). For whole devices (servers, laptops) this is much less than totalInputMassKg. */
+  chemProcessedMassKg?: number;
   processId: string;
   processName: string;
   estimatedTimeHours: number;
@@ -467,6 +469,8 @@ export interface ProcessCompareResult {
   processId: string;
   processName: string;
   totalInputMassKg: number;
+  /** Mass actually processed by chemistry (totalInputMassKg × chemFraction) */
+  chemProcessedMassKg?: number;
   netProfitPln: number;
   totalRevenuePln: number;
   totalCostPln: number;

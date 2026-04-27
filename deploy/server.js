@@ -74729,11 +74729,12 @@ function computeCompareResult(batch, processId, metalPrices, electricityPricePer
   const profitMargin = totalRevenuePln > 0 ? netProfitPln / totalRevenuePln : -1;
   const profitabilityRating = profitMargin > 0.5 ? "very_profitable" : profitMargin > 0.2 ? "profitable" : profitMargin > 0 ? "marginal" : "not_profitable";
   const avgTimePerKg = (process2.timePerKgMin + process2.timePerKgMax) / 2;
-  const estimatedTimeHours = Math.round(avgTimePerKg * totalMassKg * 10) / 10;
+  const estimatedTimeHours = Math.round(avgTimePerKg * chemMassKg * 10) / 10;
   return {
     processId,
     processName: process2.name,
     totalInputMassKg: Math.round(totalMassKg * 1e3) / 1e3,
+    chemProcessedMassKg: Math.round(chemMassKg * 1e3) / 1e3,
     netProfitPln,
     totalRevenuePln,
     totalCostPln,
@@ -74915,17 +74916,18 @@ router5.post("/calculator/estimate", async (req, res) => {
     profitabilityNote = `Nieop\u0142acalne. Koszty chemii (${totalCostPln.toFixed(2)} PLN) przekraczaj\u0105 warto\u015B\u0107 odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwi\u0119ksz materia\u0142 wsadu lub zmie\u0144 proces.`;
   }
   const avgTimePerKg = (process2.timePerKgMin + process2.timePerKgMax) / 2;
-  let estimatedTimeHours = avgTimePerKg * totalMassKg;
+  let estimatedTimeHours = avgTimePerKg * chemMassKg;
   if (body.temperatureOverride !== void 0 && processOptimalTemp !== void 0) {
     const tempFactor = 1 + (processOptimalTemp - body.temperatureOverride) * 0.01;
-    estimatedTimeHours = Math.max(avgTimePerKg * 0.5, estimatedTimeHours * Math.max(0.5, Math.min(2, tempFactor)));
+    estimatedTimeHours = Math.max(avgTimePerKg * chemMassKg * 0.5, estimatedTimeHours * Math.max(0.5, Math.min(2, tempFactor)));
   }
   if (concOverride !== void 0 && processDefaultConc !== void 0 && concOverride > 0) {
     const timeConcFactor = Math.max(0.4, Math.min(1.5, Math.pow(processDefaultConc / concOverride, 0.7)));
-    estimatedTimeHours = Math.max(process2.timePerKgMin * 0.4 * totalMassKg, estimatedTimeHours * timeConcFactor);
+    estimatedTimeHours = Math.max(process2.timePerKgMin * 0.4 * chemMassKg, estimatedTimeHours * timeConcFactor);
   }
   res.json({
     totalInputMassKg: Math.round(totalMassKg * 1e3) / 1e3,
+    chemProcessedMassKg: Math.round(chemMassKg * 1e3) / 1e3,
     processId: body.processId,
     processName: process2.name,
     estimatedTimeHours: Math.round(estimatedTimeHours * 10) / 10,

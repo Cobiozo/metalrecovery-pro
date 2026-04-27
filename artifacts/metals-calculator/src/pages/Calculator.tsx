@@ -1131,9 +1131,18 @@ export function CalculatorPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm text-muted-foreground">Masa całkowita</span>
+                      <span className="text-sm text-muted-foreground">Masa wejściowa (całość)</span>
                       <span className="font-mono font-bold">{formatMass(result.totalInputMassKg, 'kg')}</span>
                     </div>
+                    {result.chemProcessedMassKg !== undefined && result.chemProcessedMassKg < result.totalInputMassKg * 0.99 && (
+                      <div className="flex justify-between items-center border-b border-border pb-2">
+                        <span className="text-sm text-muted-foreground text-amber-600 dark:text-amber-400">
+                          Masa do obróbki kwasowej
+                          <span className="block text-xs text-muted-foreground">plastik/obudowa nie wchodzi do kwasu</span>
+                        </span>
+                        <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{formatMass(result.chemProcessedMassKg, 'kg')}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center border-b border-border pb-2">
                       <span className="text-sm text-muted-foreground">Szacowany czas</span>
                       <span className="font-mono font-bold">{result.estimatedTimeHours} godz.</span>
