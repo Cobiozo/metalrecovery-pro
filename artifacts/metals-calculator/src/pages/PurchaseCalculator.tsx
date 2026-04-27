@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useId } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import {
   useGetElectronicMaterials,
   getGetElectronicMaterialsQueryKey,
@@ -64,6 +65,7 @@ function makeRow(): BatchRow {
 }
 
 export function PurchaseCalculatorPage() {
+  const { user } = useAuth();
   const [mode, setMode] = useState<Mode>("single");
   const [profileModal, setProfileModal] = useState<{ open: boolean; editing: CustomMaterial | null }>({
     open: false, editing: null,
@@ -95,18 +97,20 @@ export function PurchaseCalculatorPage() {
             Oblicz maksymalną cenę zakupu złomu elektronicznego przy założonej marży zysku
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 text-xs shrink-0"
-          onClick={() => setProfileModal({ open: true, editing: null })}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Własny profil
-          {customMats.length > 0 && (
-            <Badge variant="secondary" className="ml-0.5 text-xs px-1.5 py-0 h-4">{customMats.length}</Badge>
-          )}
-        </Button>
+        {user && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs shrink-0"
+            onClick={() => setProfileModal({ open: true, editing: null })}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Własny profil
+            {customMats.length > 0 && (
+              <Badge variant="secondary" className="ml-0.5 text-xs px-1.5 py-0 h-4">{customMats.length}</Badge>
+            )}
+          </Button>
+        )}
       </div>
 
       <div className="flex gap-2 p-1 bg-muted/40 rounded-lg border border-border">
@@ -157,7 +161,7 @@ export function PurchaseCalculatorPage() {
         />
       )}
 
-      {customMats.length > 0 && (
+      {user && customMats.length > 0 && (
         <Card className="border-border/50 bg-muted/10">
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -188,19 +192,21 @@ export function PurchaseCalculatorPage() {
         </Card>
       )}
 
-      <CustomMaterialModal
-        open={profileModal.open}
-        onOpenChange={(open) => setProfileModal((prev) => ({ ...prev, open }))}
-        existing={profileModal.editing}
-        onSave={(data) => {
-          if (profileModal.editing) {
-            update(profileModal.editing.id, data);
-          } else {
-            add(data);
-          }
-        }}
-        onDelete={profileModal.editing ? () => remove(profileModal.editing!.id) : undefined}
-      />
+      {user && (
+        <CustomMaterialModal
+          open={profileModal.open}
+          onOpenChange={(open) => setProfileModal((prev) => ({ ...prev, open }))}
+          existing={profileModal.editing}
+          onSave={(data) => {
+            if (profileModal.editing) {
+              update(profileModal.editing.id, data);
+            } else {
+              add(data);
+            }
+          }}
+          onDelete={profileModal.editing ? () => remove(profileModal.editing!.id) : undefined}
+        />
+      )}
     </div>
   );
 }

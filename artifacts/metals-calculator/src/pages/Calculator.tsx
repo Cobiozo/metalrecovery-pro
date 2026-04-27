@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useCalculateRecovery, useCompareProcesses, CalculationResult, ProcessCompareResult } from "@workspace/api-client-react";
 import { useCustomMaterials, getInlineContent } from "@/lib/useCustomMaterials";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -192,6 +193,7 @@ function MaterialCombobox({
 }
 
 export function CalculatorPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("wsad");
   const [batchItems, setBatchItems] = useState<BatchItemState[]>([{ id: '1', materialId: '', quantity: 1 }]);
   const [selectedProcessId, setSelectedProcessId] = useState<string>("");
@@ -506,13 +508,15 @@ export function CalculatorPage() {
           <h1 className="text-2xl font-bold font-sans tracking-tight">Kalkulator Odzysku Metali</h1>
           <p className="text-muted-foreground text-sm mt-1">Precyzyjne szacowanie opłacalności procesów hydrometalurgicznych</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowHistory(!showHistory)} className="shrink-0">
-          <History className="h-4 w-4 mr-2" />
-          Historia ({savedSessions.length})
-        </Button>
+        {user && (
+          <Button variant="outline" size="sm" onClick={() => setShowHistory(!showHistory)} className="shrink-0">
+            <History className="h-4 w-4 mr-2" />
+            Historia ({savedSessions.length})
+          </Button>
+        )}
       </div>
 
-      {showHistory && (
+      {user && showHistory && (
         <Card className="border-primary/30 bg-card">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
