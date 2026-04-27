@@ -889,8 +889,8 @@ export function PhotoAnalysisPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl md:max-w-4xl mx-auto">
-      <div>
+    <div className="space-y-6">
+      <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold font-sans tracking-tight flex items-center gap-2">
           <ScanLine className="h-6 w-6 text-primary" />
           Analiza zdjęcia
@@ -900,6 +900,7 @@ export function PhotoAnalysisPage() {
         </p>
       </div>
 
+      <div className="max-w-2xl mx-auto">
       {!file ? (
         <Card
           className="border-dashed border-2 border-border hover:border-primary/50 transition-colors cursor-pointer"
@@ -989,33 +990,23 @@ export function PhotoAnalysisPage() {
           </CardContent>
         </Card>
       )}
+      </div>
 
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-      />
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
-      />
+      <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])} />
 
       {error && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="py-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-destructive">Błąd analizy</p>
-              <p className="text-xs text-destructive/80 mt-1">{error}</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-destructive">Błąd analizy</p>
+                <p className="text-xs text-destructive/80 mt-1">{error}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {loading && preview && (
@@ -1024,22 +1015,24 @@ export function PhotoAnalysisPage() {
         </div>
       )}
       {loading && !preview && (
-        <Card className="border-border">
-          <CardContent className="py-12 flex flex-col items-center gap-4 text-center">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
-              <div className="relative bg-primary/10 p-4 rounded-full">
-                <ScanLine className="w-8 h-8 text-primary animate-pulse" />
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-border">
+            <CardContent className="py-12 flex flex-col items-center gap-4 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                <div className="relative bg-primary/10 p-4 rounded-full">
+                  <ScanLine className="w-8 h-8 text-primary animate-pulse" />
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="font-semibold">Analizuję zdjęcie...</p>
-              <p className="text-muted-foreground text-sm mt-1">
-                AI rozpoznaje materiał i szacuje zawartość metali (3–8 sek.)
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+              <div>
+                <p className="font-semibold">Analizuję zdjęcie...</p>
+                <p className="text-muted-foreground text-sm mt-1">
+                  AI rozpoznaje materiał i szacuje zawartość metali (3–8 sek.)
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {result && !loading && preview && (
@@ -1047,7 +1040,7 @@ export function PhotoAnalysisPage() {
       )}
 
       {result && !loading && (
-        <div className="space-y-4">
+        <div className="max-w-2xl mx-auto space-y-4">
           {result.scaleReading?.detected && result.scaleReading.weightGrams != null && (
             <div className="flex items-start gap-3 bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3">
               <Scale className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
