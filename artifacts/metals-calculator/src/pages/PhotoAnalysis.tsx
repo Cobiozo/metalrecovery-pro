@@ -134,6 +134,76 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
+const CORRECTION_CATEGORIES = [
+  { group: "Płyty główne i podzespoły PC", items: [
+    "Płyta główna laptopa",
+    "Płyta główna desktopa (ATX/mATX)",
+    "Karta graficzna GPU",
+    "Karta sieciowa / rozszerzenia ISA/PCI",
+    "RAM DDR — kości pamięci",
+    "SSD / NVMe (płytka)",
+    "Dysk twardy HDD",
+  ]},
+  { group: "Procesory i układy scalone", items: [
+    "Procesor ceramiczny (stary CPU — wysoka wartość Au)",
+    "Procesor plastikowy (nowy CPU)",
+    "Układy scalone ceramiczne DIP (EPROMs, stare CPU — biała/szara ceramika)",
+    "Układy scalone plastikowe (DIP/SOIC/QFP)",
+  ]},
+  { group: "Złącza i styki", items: [
+    "Piny/styki złącz elektronicznych (grubo złocone, bez plastiku)",
+    "Styki krzyżownicy (kontakty Pd-Ag z central telefonicznych)",
+    "Złącza telekomów backplane (TELECOM, przemysłowe)",
+    "ZIF / IC test sockets (precyzyjne podstawki IC)",
+    "SIMM memory slot connectors",
+    "Standardowe podstawki DIP IC (tanie)",
+  ]},
+  { group: "Serwery i sieć", items: [
+    "Serwer rack 1U (całość, z obudową)",
+    "Serwer rack 2U (całość, z obudową)",
+    "Serwer blade — moduł",
+    "Obudowa blade chassis",
+    "Serwer wieżowy (całość, z obudową)",
+    "Przełącznik sieciowy enterprise (Cisco, HP ProCurve)",
+    "NAS (sieciowy zasób dyskowy, bez dysków)",
+  ]},
+  { group: "Stacje dokujące i huby", items: [
+    "Stacja dokująca do laptopa (Dell WD, HP, Lenovo ThinkPad)",
+    "Hub USB / replikator portów (niemarkowy, biurowy)",
+  ]},
+  { group: "Kondensatory", items: [
+    "Kondensatory MLCC stare PRE-2000 (wysoka zawartość Pd)",
+    "Kondensatory MLCC nowe POST-2000 (niska wartość)",
+    "Kondensatory tantalowe SMD",
+  ]},
+  { group: "Kamery i fotografia", items: [
+    "Kamera wideo VHS (całość)",
+    "Kamera Hi8 / Video8 (całość)",
+    "Kamera cyfrowa / aparat fotograficzny",
+    "Kamera Super 8 (filmowa)",
+  ]},
+  { group: "RTV / elektronika użytkowa", items: [
+    "Konsola do gier (retro — Atari, Nintendo, Sega, PlayStation)",
+    "Drukarka (laserowa/atramentowa)",
+    "Sprzęt audio/video (wieża, amplituner, odtwarzacz)",
+    "Oscyloskop / analizator sygnałowy (sprzęt pomiarowy)",
+    "Telefon / smartfon",
+    "Tablet / iPad",
+    "Laptop (całość)",
+    "Monitor LCD/CRT",
+  ]},
+  { group: "Mix elektroniki", items: [
+    "Mix PCB — Elektronika Mieszana",
+    "Stara elektronika (ogólna)",
+    "mini PCIe / M.2 karty WiFi/BT",
+    "Podpłytki laptopa (USB, audio, touchpad)",
+  ]},
+  { group: "Nieelektroniczne", items: [
+    "Nieelektroniczne — metal (stal, aluminium, mosiądz)",
+    "Nieelektroniczne — plastik/mechanika",
+  ]},
+];
+
 function CorrectionDialog({
   open,
   onClose,
@@ -149,9 +219,12 @@ function CorrectionDialog({
   authHeaders: () => Record<string, string>;
   toast: ReturnType<typeof useToast>["toast"];
 }) {
-  const [correctMaterial, setCorrectMaterial] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [customMaterial, setCustomMaterial] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const correctMaterial = selectedCategory === "__other__" ? customMaterial : selectedCategory;
 
   async function submit() {
     const trimmed = correctMaterial.trim();
@@ -170,7 +243,8 @@ function CorrectionDialog({
       });
       if (!res.ok) throw new Error();
       toast({ title: "Dziękujemy za zgłoszenie!", description: "Korekta zostanie sprawdzona przez administratora." });
-      setCorrectMaterial("");
+      setSelectedCategory("");
+      setCustomMaterial("");
       setNote("");
       onClose();
     } catch {
@@ -182,7 +256,7 @@ function CorrectionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Flag className="w-4 h-4 text-orange-400" />
@@ -200,13 +274,31 @@ function CorrectionDialog({
             <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
               Właściwy materiał <span className="text-destructive">*</span>
             </label>
-            <input
-              type="text"
-              value={correctMaterial}
-              onChange={(e) => setCorrectMaterial(e.target.value)}
-              placeholder="np. Stacja dokująca Dell WD22..."
+            <select
+              value={selectedCategory}
+              onChange={(e) => { setSelectedCategory(e.target.value); setCustomMaterial(""); }}
               className="w-full h-9 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
-            />
+            >
+              <option value="">— wybierz kategorię —</option>
+              {CORRECTION_CATEGORIES.map((group) => (
+                <optgroup key={group.group} label={group.group}>
+                  {group.items.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </optgroup>
+              ))}
+              <option value="__other__">Inna kategoria (wpisz ręcznie)…</option>
+            </select>
+            {selectedCategory === "__other__" && (
+              <input
+                type="text"
+                value={customMaterial}
+                onChange={(e) => setCustomMaterial(e.target.value)}
+                placeholder="Opisz właściwy materiał…"
+                autoFocus
+                className="w-full h-9 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary mt-1.5"
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
