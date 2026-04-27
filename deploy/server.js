@@ -67091,14 +67091,14 @@ var init_auth2 = __esm({
       const token = req.params.token;
       const now = /* @__PURE__ */ new Date();
       const rows = await db.select().from(emailVerificationsTable).where(and(eq(emailVerificationsTable.token, token), gt(emailVerificationsTable.expiresAt, now))).limit(1);
+      const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
       if (!rows.length) {
-        res.status(400).send("Link weryfikacyjny jest nieprawid\u0142owy lub wygas\u0142.");
+        res.redirect(`${siteUrl}/logowanie?verified_error=1`);
         return;
       }
       const verification = rows[0];
       await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, verification.userId));
       await db.delete(emailVerificationsTable).where(eq(emailVerificationsTable.id, verification.id));
-      const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
       res.redirect(`${siteUrl}/logowanie?verified=1`);
     });
     router7.post("/resend-verification", async (req, res) => {

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Activity, LogIn, Eye, EyeOff, UserPlus, ArrowLeft, Loader2 } from "lucide-react";
+import { Activity, LogIn, Eye, EyeOff, UserPlus, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { getAuthApiBase } from "@/lib/api";
 
 type Mode = "login" | "register";
@@ -24,16 +24,20 @@ export function LoginPage() {
 
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const verified = params.get("verified") === "1";
+  const verifiedError = params.get("verified_error") === "1";
 
   useEffect(() => {
     if (user) navigate("/");
   }, [user, navigate]);
 
   useEffect(() => {
-    if (verified) {
-      toast({ title: "Email potwierdzony", description: "Możesz się teraz zalogować." });
+    if (verified || verifiedError) {
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete("verified");
+      clean.searchParams.delete("verified_error");
+      window.history.replaceState({}, "", clean.toString());
     }
-  }, [verified, toast]);
+  }, [verified, verifiedError]);
 
   useEffect(() => {
     fetch(`${getAuthApiBase()}/auth/register-status`)
@@ -136,6 +140,26 @@ export function LoginPage() {
             <p className="text-xs text-primary font-mono font-medium mt-0.5">PRO EDITION</p>
           </div>
         </div>
+
+        {verified && (
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/30 mb-4">
+            <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-green-300">Email potwierdzony!</p>
+              <p className="text-xs text-green-400/80 mt-0.5">Konto zostało aktywowane. Możesz się teraz zalogować.</p>
+            </div>
+          </div>
+        )}
+
+        {verifiedError && (
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 mb-4">
+            <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-red-300">Link weryfikacyjny wygasł</p>
+              <p className="text-xs text-red-400/80 mt-0.5">Ten link jest już nieważny lub wygasł. Zaloguj się poniżej i użyj opcji ponownego wysłania emaila.</p>
+            </div>
+          </div>
+        )}
 
         <div className="bg-card border border-border rounded-xl p-6 shadow-lg">
           <h2 className="text-lg font-semibold mb-5">

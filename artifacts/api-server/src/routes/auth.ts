@@ -197,8 +197,10 @@ router.get("/verify-email/:token", async (req: Request, res: Response) => {
     .where(and(eq(emailVerificationsTable.token, token), gt(emailVerificationsTable.expiresAt, now)))
     .limit(1);
 
+  const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
+
   if (!rows.length) {
-    res.status(400).send("Link weryfikacyjny jest nieprawidłowy lub wygasł.");
+    res.redirect(`${siteUrl}/logowanie?verified_error=1`);
     return;
   }
 
@@ -206,7 +208,6 @@ router.get("/verify-email/:token", async (req: Request, res: Response) => {
   await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, verification.userId));
   await db.delete(emailVerificationsTable).where(eq(emailVerificationsTable.id, verification.id));
 
-  const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
   res.redirect(`${siteUrl}/logowanie?verified=1`);
 });
 
