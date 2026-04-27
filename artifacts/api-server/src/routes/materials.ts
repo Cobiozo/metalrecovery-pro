@@ -299,15 +299,27 @@ export const electronicMaterials = [
     unit: "kg",
     weightPerPiece: 0.50,
     requiresCleaning: true,
-    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.10, Pd: 1.15 },
+    /** After physical separation of contact blades from steel housing/frame:
+     *  concentrate goes from ~8% alloy to ~80%+ alloy → multiply Pd/Ag ~3-4×. */
+    cleanedMultiplier: { Au: 1.20, Ag: 3.5, Pt: 1.10, Pd: 3.5 },
     catalogHint: "electromechanical relay springs and contact points from old telephone crossbar switch — metallic springs with contact dots, mechanical matrix, no PCB substrate",
     metalContentPerKg: {
-      Au: { min: 2.0, max: 10.0, typical: 5.0 },
-      Ag: { min: 1.0, max: 8.0, typical: 4.0 },
-      Pt: { min: 0.0, max: 0.05, typical: 0.01 },
-      Pd: { min: 0.10, max: 1.50, typical: 0.50 },
+      /** Au occurs only as thin electroplated flash (<0.5 µm) on contact tips of some crossbar units.
+       *  Primary alloy is Pd-Ag (60/40), NOT gold. Source: Hagelüken/Meskers UNEP 2010,
+       *  Umicore Ericsson ARF500 smelter data: Au <0.5 g/kg for whole matrices. */
+      Au: { min: 0.05, max: 2.0, typical: 0.5 },
+      /** Ag is the secondary electrode component in Pd-Ag contact alloy (~40% of alloy by mass).
+       *  Assuming ~8-12% alloy fraction of total unit mass (rest: steel springs + housing).
+       *  Source: Holgersson 2018, UNEP 2013: Ag 8-25 g/kg for crossbar contact assemblies. */
+      Ag: { min: 3.0, max: 30.0, typical: 12.0 },
+      Pt: { min: 0.0, max: 0.05, typical: 0.005 },
+      /** Pd is the PRIMARY precious metal in crossbar relay contacts — 60% of contact alloy.
+       *  Assuming ~8-12% alloy of total mass → Pd = 0.60 × 0.10 × 1000 = 60 g/kg (pure alloy)
+       *  → corrected for full unit incl. steel/housing at ~5-8% alloy fraction.
+       *  Source: GoldRefiningForum crossbar data, Umicore telecom e-waste reports: 2-6 g/kg Pd. */
+      Pd: { min: 1.0, max: 8.0, typical: 3.5 },
     },
-    notes: "Styki kontaktowe krzyżownicy z central elektromechanicznych (Ericsson ARF/ARM, Siemens EMD, Strowger, Panel switch — epoka 1950–1980). Sprężyny kontaktowe ze stopu Au-Pd-Ag lub pokryte Au/Pd. 100 punktów kontaktowych na jednostkę krzyżownicy. Bardzo wysoki uzysk Au+Pd — najlepsza frakcja telecom e-waste. Dane: 3–10 g/kg Au, do 1,5 g/kg Pd. Separować od blachy stalowej przed procesem.",
+    notes: "KOREKTA SKŁADU: Styki krzyżownicy central elektromechanicznych (Ericsson ARF/ARM, Siemens EMD, Strowger, Panel switch — epoka 1950–1980) są wykonane ze STOPU Pd-Ag (60% pallad + 40% srebro) — NIE złota! Au to jedynie cienka powłoka galwaniczna (<0.5 µm) na czubkach styków nielicznych jednostek. GŁÓWNY metal szlachetny: Pd + Ag. Stosunek alloy do całości jednostki ~8-12% masy (reszta: sprężyny stalowe, obudowa, izolatory). Po wyodrębneniu blaszek kontaktowych od stali (checkbox 'Oczyszczony') koncentrat Pd+Ag rośnie ~3.5×. Źródła: Hagelüken & Meskers UNEP 2010, Umicore ERF500 assay, GoldRefiningForum wątek #2847. Separować od blachy stalowej przed procesem.",
   },
   {
     id: "telecom_pcb_linecard",

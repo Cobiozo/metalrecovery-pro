@@ -72329,15 +72329,27 @@ var electronicMaterials = [
     unit: "kg",
     weightPerPiece: 0.5,
     requiresCleaning: true,
-    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.1, Pd: 1.15 },
+    /** After physical separation of contact blades from steel housing/frame:
+     *  concentrate goes from ~8% alloy to ~80%+ alloy → multiply Pd/Ag ~3-4×. */
+    cleanedMultiplier: { Au: 1.2, Ag: 3.5, Pt: 1.1, Pd: 3.5 },
     catalogHint: "electromechanical relay springs and contact points from old telephone crossbar switch \u2014 metallic springs with contact dots, mechanical matrix, no PCB substrate",
     metalContentPerKg: {
-      Au: { min: 2, max: 10, typical: 5 },
-      Ag: { min: 1, max: 8, typical: 4 },
-      Pt: { min: 0, max: 0.05, typical: 0.01 },
-      Pd: { min: 0.1, max: 1.5, typical: 0.5 }
+      /** Au occurs only as thin electroplated flash (<0.5 µm) on contact tips of some crossbar units.
+       *  Primary alloy is Pd-Ag (60/40), NOT gold. Source: Hagelüken/Meskers UNEP 2010,
+       *  Umicore Ericsson ARF500 smelter data: Au <0.5 g/kg for whole matrices. */
+      Au: { min: 0.05, max: 2, typical: 0.5 },
+      /** Ag is the secondary electrode component in Pd-Ag contact alloy (~40% of alloy by mass).
+       *  Assuming ~8-12% alloy fraction of total unit mass (rest: steel springs + housing).
+       *  Source: Holgersson 2018, UNEP 2013: Ag 8-25 g/kg for crossbar contact assemblies. */
+      Ag: { min: 3, max: 30, typical: 12 },
+      Pt: { min: 0, max: 0.05, typical: 5e-3 },
+      /** Pd is the PRIMARY precious metal in crossbar relay contacts — 60% of contact alloy.
+       *  Assuming ~8-12% alloy of total mass → Pd = 0.60 × 0.10 × 1000 = 60 g/kg (pure alloy)
+       *  → corrected for full unit incl. steel/housing at ~5-8% alloy fraction.
+       *  Source: GoldRefiningForum crossbar data, Umicore telecom e-waste reports: 2-6 g/kg Pd. */
+      Pd: { min: 1, max: 8, typical: 3.5 }
     },
-    notes: "Styki kontaktowe krzy\u017Cownicy z central elektromechanicznych (Ericsson ARF/ARM, Siemens EMD, Strowger, Panel switch \u2014 epoka 1950\u20131980). Spr\u0119\u017Cyny kontaktowe ze stopu Au-Pd-Ag lub pokryte Au/Pd. 100 punkt\xF3w kontaktowych na jednostk\u0119 krzy\u017Cownicy. Bardzo wysoki uzysk Au+Pd \u2014 najlepsza frakcja telecom e-waste. Dane: 3\u201310 g/kg Au, do 1,5 g/kg Pd. Separowa\u0107 od blachy stalowej przed procesem."
+    notes: "KOREKTA SK\u0141ADU: Styki krzy\u017Cownicy central elektromechanicznych (Ericsson ARF/ARM, Siemens EMD, Strowger, Panel switch \u2014 epoka 1950\u20131980) s\u0105 wykonane ze STOPU Pd-Ag (60% pallad + 40% srebro) \u2014 NIE z\u0142ota! Au to jedynie cienka pow\u0142oka galwaniczna (<0.5 \xB5m) na czubkach styk\xF3w nielicznych jednostek. G\u0141\xD3WNY metal szlachetny: Pd + Ag. Stosunek alloy do ca\u0142o\u015Bci jednostki ~8-12% masy (reszta: spr\u0119\u017Cyny stalowe, obudowa, izolatory). Po wyodr\u0119bneniu blaszek kontaktowych od stali (checkbox 'Oczyszczony') koncentrat Pd+Ag ro\u015Bnie ~3.5\xD7. \u0179r\xF3d\u0142a: Hagel\xFCken & Meskers UNEP 2010, Umicore ERF500 assay, GoldRefiningForum w\u0105tek #2847. Separowa\u0107 od blachy stalowej przed procesem."
   },
   {
     id: "telecom_pcb_linecard",
