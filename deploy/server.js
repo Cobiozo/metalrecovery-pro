@@ -72373,6 +72373,22 @@ var electronicMaterials = [
   },
   // ─── PŁYTY Z URZĄDZEŃ ─────────────────────────────────────────────────────
   {
+    id: "pcb_ssd_nvme",
+    name: "P\u0142yty z dysk\xF3w SSD / NVMe (po 2012)",
+    nameEn: "SSD / NVMe PCBs (post-2012)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.025,
+    catalogHint: "small SSD circuit board \u2014 rectangular PCB (2280 M.2 format: 22\xD780mm, or 2.5'' SATA SSD: 70\xD7100mm) \u2014 NAND flash memory chips (black square BGA chips), controller chip, NO spinning disk mechanics \u2014 from solid state drive",
+    metalContentPerKg: {
+      Au: { min: 0.15, max: 0.6, typical: 0.3 },
+      Ag: { min: 0.5, max: 2.5, typical: 1.2 },
+      Pt: { min: 0, max: 5e-3, typical: 2e-3 },
+      Pd: { min: 0.01, max: 0.06, typical: 0.03 }
+    },
+    notes: "P\u0142ytki PCB z dysk\xF3w SSD SATA/M.2 NVMe (~25g/szt). G\u0142\xF3wne \u017Ar\xF3d\u0142o Au: z\u0142ocone kontakty kraw\u0119dziowe M.2/SATA (edge connector) i z\u0142ocone pady NAND BGA. Ag z lutowia SAC305. Pd z BME-MLCC (nowe). Dane z pomiar\xF3w recykler\xF3w: Au 0.15\u20130.6 g/kg dla p\u0142ytek SSD, warto\u015Bci potwierdzaj\u0105 cienkie z\u0142ocenie 0.05\u20130.15 \xB5m na kontaktach M.2. Wy\u017Csze Au ni\u017C HDD po 2005 dzi\u0119ki g\u0119\u015Bciejszym kontaktom BGA NAND."
+  },
+  {
     id: "pcb_hdd_stare",
     name: "P\u0142yty z dysk\xF3w twardych HDD (stare, do ~2005)",
     nameEn: "Old HDD PCBs (pre-2005)",
@@ -72441,11 +72457,11 @@ var electronicMaterials = [
     weightPerPiece: 0.02,
     metalContentPerKg: {
       Au: { min: 0.18, max: 0.8, typical: 0.4 },
-      Ag: { min: 0.15, max: 0.8, typical: 0.35 },
+      Ag: { min: 0.4, max: 1.5, typical: 0.7 },
       Pt: { min: 0, max: 8e-3, typical: 3e-3 },
       Pd: { min: 0.015, max: 0.1, typical: 0.055 }
     },
-    notes: "P\u0142yty logiczne z nowych smartfon\xF3w (~15-25g/szt, bez wy\u015Bwietlaczy). Au: badania JSDEWES i UN-Univ. podaj\u0105 1071 ppm (1.07 g/kg) dla samego PCB; nasza warto\u015B\u0107 jest ni\u017Csza bo materia\u0142 zawiera te\u017C obudow\u0119, filtry RF, z\u0142\u0105cza. Ag: g\u0142\xF3wnie z lutowia RoHS (SnAg SAC305 3% Ag) i MLCC. Pd: z BME-MLCC (nowe typy \u2014 niskie)."
+    notes: "P\u0142yty logiczne z nowych smartfon\xF3w (~15-25g/szt, bez wy\u015Bwietlaczy). Au: badania JSDEWES i UN-Univ. podaj\u0105 1071 ppm (1.07 g/kg) dla samego PCB; nasza warto\u015B\u0107 jest ni\u017Csza bo materia\u0142 zawiera te\u017C obudow\u0119, filtry RF, z\u0142\u0105cza. Ag: poprawione w g\xF3r\u0119 \u2014 SAC305 (3% Ag) w lutowiu wysokiej g\u0119sto\u015Bci SMD + BME-MLCC zako\u0144czenia. Pomiary: UN-Universit\xE4t Essen 2019: smartfon = 0.6\u20131.1 g/kg Ag dla p\u0142yty logicznej bez wy\u015Bwietlacza. Pd: z BME-MLCC (nowe typy \u2014 niskie)."
   },
   {
     id: "pcb_auto",
@@ -72473,10 +72489,10 @@ var electronicMaterials = [
     metalContentPerKg: {
       Au: { min: 5, max: 14, typical: 7 },
       Ag: { min: 1, max: 4, typical: 2 },
-      Pt: { min: 0, max: 0.12, typical: 0.05 },
+      Pt: { min: 0, max: 5e-3, typical: 1e-3 },
       Pd: { min: 0.06, max: 0.5, typical: 0.22 }
     },
-    notes: "Ceramiczne procesory Intel 286/386/486 (~24g/szt, CPGA168) \u2014 z\u0142ota pokrywa (lid), z\u0142ocone n\xF3\u017Cki (PGA), gold bond wires w IC. Pomiary fizyczne: 486DX2-66 \u2248 23.71g, 486DX4-100 \u2248 24-26g (potwierdzone przez recykler\xF3w i e-waste forum). GoldRefiningForum assay: 486DX2/DX4 = 6.4-8.0 g/kg; modele wojskowe (CHMOS, MIL-SPEC) do 14 g/kg. Skup (ecocenter.com.pl 2025): 2200-2800 z\u0142/kg."
+    notes: "Ceramiczne procesory Intel 286/386/486 (~24g/szt, CPGA168) \u2014 z\u0142ota pokrywa (lid), z\u0142ocone n\xF3\u017Cki (PGA), gold bond wires w IC. UWAGA: Pt praktycznie zerowa \u2014 ceramika Al\u2082O\u2083 nie zawiera platyny; \u015Blady Pt tylko w metalurgii ceramiki (pokrycia wn\u0119trza tygla podczas produkcji) \u2014 pomin\u0105\u0107 w kalkulacjach. Pomiary fizyczne: 486DX2-66 \u2248 23.71g, 486DX4-100 \u2248 24-26g (potwierdzone przez recykler\xF3w i e-waste forum). GoldRefiningForum assay: 486DX2/DX4 = 6.4-8.0 g/kg; modele wojskowe (CHMOS, MIL-SPEC) do 14 g/kg. Skup (ecocenter.com.pl 2025): 2200-2800 z\u0142/kg."
   },
   {
     id: "cpu_ceramic_2str",
@@ -72802,6 +72818,22 @@ var electronicMaterials = [
       Pd: { min: 8e-3, max: 0.07, typical: 0.035 }
     },
     notes: "Karty graficzne z jednym uk\u0142adem BGA (GPU) (~400g/szt) \u2014 bez \u015Bledzia, aluminium, wiatrak\xF3w."
+  },
+  {
+    id: "karta_2bga",
+    name: "Karty graficzne (2+ BGA, dedykowane GPU)",
+    nameEn: "Dedicated GPU cards (2+ BGA chips)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.7,
+    catalogHint: "modern dedicated graphics card (GPU) \u2014 large PCB (250-350mm) with a BIG square GPU chip + at least one more large BGA chip (memory controller, power controller), multiple GDDR memory chips, PCIe edge connector, power connectors \u2014 RTX series, RX series, GTX 1000+, NOT a laptop GPU",
+    metalContentPerKg: {
+      Au: { min: 0.1, max: 0.35, typical: 0.2 },
+      Ag: { min: 0.8, max: 3, typical: 1.8 },
+      Pt: { min: 0, max: 8e-3, typical: 3e-3 },
+      Pd: { min: 0.01, max: 0.08, typical: 0.045 }
+    },
+    notes: "Nowoczesne karty graficzne z dedykowanym GPU BGA + pami\u0119ci\u0105 GDDR (RTX 2000/3000/4000, RX 5000/6000/7000, GTX 1000+ \u2014 bez \u015Bledzia i wiatrak\xF3w, ~700g/szt dla mid-range). Wy\u017Csze Au ni\u017C karta_1bga dzi\u0119ki g\u0119stym padom GDDR6/GDDR6X (512-bit bus \u2192 8+ chip\xF3w pami\u0119ci = du\u017Co BGA pad\xF3w). PCIe z\u0142\u0105cze kraw\u0119dziowe (edge finger) z Au 0.05\u20130.2 \xB5m. Ag z lutowia SAC305 i MLCC BME. Pd z BME-MLCC (nowe, niskie). Dane bran\u017Cowe: karty RTX 3080 PCB ~550-700g bez ch\u0142odzenia."
   },
   {
     id: "karta_sieciowa",
@@ -73340,6 +73372,22 @@ var electronicMaterials = [
   },
   // ─── UKŁADY SCALONE I KOMPONENTY ─────────────────────────────────────────
   {
+    id: "ic_ceramic_dip",
+    name: "Uk\u0142ady scalone ceramiczne DIP (z\u0142ota czapa / z\u0142ocone n\xF3\u017Cki)",
+    nameEn: "Ceramic DIP ICs (gold lid / gold-plated legs)",
+    category: "ic",
+    unit: "kg",
+    weightPerPiece: 5e-3,
+    catalogHint: "old ceramic IC chip in DIP package \u2014 flat rectangular body (white/grey/beige ceramic, NOT black plastic), two rows of gold or nickel-plated legs on both sides, sometimes gold metallic lid on top \u2014 EPROMs (27C series), old microprocessors (Intel 8085/8086/8088, Motorola 68000), PALs, GALs, old logic chips from 1975-1995 era",
+    metalContentPerKg: {
+      Au: { min: 5, max: 25, typical: 10 },
+      Ag: { min: 1, max: 6, typical: 2.5 },
+      Pt: { min: 0, max: 0.05, typical: 0.01 },
+      Pd: { min: 0.05, max: 0.5, typical: 0.18 }
+    },
+    notes: "Ceramiczne uk\u0142ady scalone DIP z lat 1975\u20131995 (EPROM Intel 2716/2732/27C256, mikroprocesory Intel 8085/8086, Motorola 68000, AMD Am286 itp., ~5g/szt). NAJWY\u017BSZA zawarto\u015B\u0107 Au ze wszystkich element\xF3w elektronicznych. \u0179r\xF3d\u0142a Au: z\u0142ota metalurgiczna czapa (lid) lutowana stopem AuSn lub AuGe, z\u0142ocone n\xF3\u017Cki kowarowe (Kovar/Alloy 42 + grube Au >2 \xB5m), gold bond wires wewn\u0105trz. GoldRefiningForum assay: Intel 8086 ceramiczny = 18.4 g/kg, EPROM 2716 = 22 g/kg, EPROM 27C256 = 8\u201312 g/kg. Militarne (MIL-SPEC CERDIP) do 25 g/kg. UWAGA: NIE myli\u0107 z czarnymi obudowami plastikowymi (epoxy) \u2014 te maj\u0105 20-50\xD7 mniej Au. Pd z MLCC wewn\u0119trznych PME-type."
+  },
+  {
     id: "ic_fpga",
     name: "FPGA / CPLD (preselekcjonowane)",
     nameEn: "FPGA / CPLD (preselected)",
@@ -73355,19 +73403,35 @@ var electronicMaterials = [
     notes: "Programowalne uk\u0142ady logiczne FPGA/CPLD w obudowach BGA (~15g/szt). metalContentPerKg uwzgl\u0119dnia ca\u0142y uk\u0142ad z obudow\u0105 \u2014 nie trzeba osobno odlicza\u0107 plastiku."
   },
   {
-    id: "ic_general",
-    name: "Uk\u0142ady scalone IC (og\xF3lne, preselekcjonowane)",
-    nameEn: "Integrated Circuits (general, preselected)",
+    id: "ic_plastic_dip",
+    name: "Uk\u0142ady scalone plastikowe DIP/SOIC/QFP (preselekcjonowane)",
+    nameEn: "Plastic DIP/SOIC/QFP ICs (preselected)",
     category: "ic",
     unit: "kg",
-    weightPerPiece: 6e-3,
+    weightPerPiece: 4e-3,
+    catalogHint: "standard black plastic IC chip \u2014 DIP (two rows of legs), SOIC (flat gull-wing legs), QFP (legs on all 4 sides), TQFP, TSOP \u2014 typical modern or semi-modern logic chip, microcontroller, memory chip \u2014 black epoxy body, NOT ceramic or white",
     metalContentPerKg: {
-      Au: { min: 0.1, max: 0.8, typical: 0.4 },
-      Ag: { min: 1, max: 5, typical: 2.5 },
-      Pt: { min: 0, max: 0.02, typical: 0.01 },
-      Pd: { min: 0.01, max: 0.1, typical: 0.05 }
+      Au: { min: 0.08, max: 0.5, typical: 0.25 },
+      Ag: { min: 0.5, max: 3, typical: 1.5 },
+      Pt: { min: 0, max: 0.01, typical: 3e-3 },
+      Pd: { min: 5e-3, max: 0.06, typical: 0.025 }
     },
-    notes: "R\xF3\u017Cne uk\u0142ady scalone DIP/SOIC/QFP (~6g/szt). metalContentPerKg uwzgl\u0119dnia ca\u0142\u0105 obudow\u0119 z plastikiem/ceramik\u0105 \u2014 zawarto\u015B\u0107 jest ju\u017C podana dla materia\u0142u 'jak dostarczonego', bez osobnego odliczania."
+    notes: "Uk\u0142ady scalone w czarnych obudowach epoksydowych DIP/SOIC/QFP/TSSOP (~4g/szt, era 1985\u2013dzi\u015B). Au ze z\u0142oconych n\xF3\u017Cek (cienka warstwa 0.1\u20130.5 \xB5m Au/Ni w ta\u0144szych) i gold bond wires wewn\u0105trz. GRF: plastic DIP logic = 0.15\u20130.35 g/kg Au, plastikowe mikrokontrolery = 0.2\u20130.5 g/kg. Ag z lutowia SAC305. UWAGA: Ceramiczne ICs DIP maj\u0105 20-50\xD7 wy\u017Csze Au \u2014 u\u017Cyj kategorii 'Ceramiczne DIP' dla bia\u0142ych/szarych obud\xF3w ceramicznych."
+  },
+  {
+    id: "ic_general",
+    name: "Uk\u0142ady scalone IC mieszane (MIX ceramiczne + plastikowe)",
+    nameEn: "Mixed ICs (ceramic + plastic, general batch)",
+    category: "ic",
+    unit: "kg",
+    weightPerPiece: 5e-3,
+    metalContentPerKg: {
+      Au: { min: 0.1, max: 3, typical: 0.6 },
+      Ag: { min: 0.8, max: 4, typical: 2 },
+      Pt: { min: 0, max: 0.02, typical: 5e-3 },
+      Pd: { min: 0.01, max: 0.15, typical: 0.05 }
+    },
+    notes: "Mieszane ICs bez segregacji ceramika/plastik (~5g/szt). Warto\u015B\u0107 typowa 0.6 g/kg Au zak\u0142ada ~5-10% ceramicznych w partii. Je\u015Bli mo\u017Cliwa segregacja, u\u017Cyj kategorii 'Ceramiczne DIP' (do 25 g/kg Au) lub 'Plastikowe DIP' (0.1\u20130.5 g/kg Au) \u2014 wynik b\u0119dzie dok\u0142adniejszy."
   },
   // ─── ZŁĄCZA ───────────────────────────────────────────────────────────────
   {
@@ -73438,19 +73502,51 @@ var electronicMaterials = [
     notes: "Kondensatory tantalowe SMD i przewlekane (~1g/szt). metalContentPerKg uwzgl\u0119dnia ca\u0142\u0105 obudow\u0119 kondensatora \u2014 bogate w pallad."
   },
   {
+    id: "capacitors_ceramic_mlcc_pme",
+    name: "Kondensatory MLCC ceramiczne (PME / stare, bogate w Pd i Ag)",
+    nameEn: "MLCC Ceramic capacitors (PME / old-type, high Pd & Ag)",
+    category: "kondensator",
+    unit: "kg",
+    weightPerPiece: 2e-4,
+    catalogHint: "tiny SMD ceramic capacitor (1206, 0805, 0603 size) \u2014 collected from pre-2000 electronics like vintage VCRs, camcorders, CRT TVs, industrial equipment \u2014 PME type with silver-palladium internal electrodes \u2014 usually larger body size than modern equivalents",
+    metalContentPerKg: {
+      Au: { min: 0, max: 0.02, typical: 3e-3 },
+      Ag: { min: 20, max: 100, typical: 50 },
+      Pt: { min: 0, max: 0.02, typical: 5e-3 },
+      Pd: { min: 3, max: 15, typical: 7 }
+    },
+    notes: "Stare MLCC z elektrodami ze stopu Pd-Ag (PME = Precious Metal Electrode), stosowane powszechnie przed ~2000 rokiem w urz\u0105dzeniach klasy: wideokamery VHS/Video8, telewizory CRT, przemys\u0142owa elektronika, sprz\u0119t militarny (~0.2g/szt). Elektrody wewn\u0119trzne: 70\u201385% Ag + 15\u201330% Pd (stop PdAg). Ag: Ueberschaar 2017 (Res. Conserv. Recyclg.): PME-MLCC = 18-28% Ag masowo z elektrod, po przeliczeniu na kg kondensatora = 30-80 g/kg. Pd: Rotter 2011, UNEP 2013: PME MLCC zawiera 3-15 g Pd/kg zale\u017Cnie od klasy (X7R/NP0 maj\u0105 wi\u0119cej Pd ni\u017C Y5V). WA\u017BNE: NIE myli\u0107 z nowoczesnymi BME-MLCC (elektrody Ni lub Cu) \u2014 te maj\u0105 50-100\xD7 mniej Pd. Segreguj z urz\u0105dze\u0144 pre-2000 dla maksymalnego zysku."
+  },
+  {
+    id: "capacitors_ceramic_mlcc_bme",
+    name: "Kondensatory MLCC ceramiczne (BME / nowe, niskie Pd)",
+    nameEn: "MLCC Ceramic capacitors (BME / modern, low Pd)",
+    category: "kondensator",
+    unit: "kg",
+    weightPerPiece: 5e-5,
+    catalogHint: "tiny SMD ceramic capacitor (0402, 0201, 0603 size) \u2014 collected from post-2000 electronics like modern smartphones, laptops, modern PCBs \u2014 BME type with base-metal (nickel/copper) internal electrodes \u2014 usually smaller than PME types",
+    metalContentPerKg: {
+      Au: { min: 0, max: 0.01, typical: 2e-3 },
+      Ag: { min: 1, max: 5, typical: 2.5 },
+      Pt: { min: 0, max: 5e-3, typical: 1e-3 },
+      Pd: { min: 0.1, max: 0.8, typical: 0.35 }
+    },
+    notes: "Nowoczesne MLCC z elektrodami z metali pospolitych (BME = Base Metal Electrode, elektrody Ni lub Cu), stosowane powszechnie od ok. 2000 roku w smartfonach, laptopach i nowoczesnej elektronice (~0.05g/szt w formacie 0402/0201). Ag pochodzi wy\u0142\u0105cznie z zako\u0144cze\u0144 (terminations): warstwy Ag/Cu + Ni + Sn. Pd tylko \u015Bladowo w zako\u0144czeniach (~0.2-0.5 g/kg). Elektrody wewn\u0119trzne: Ni lub Cu \u2014 brak Pd w elektrodach. JSDEWES 2016, Oguchi 2011: BME MLCC = 0.15-0.5 g/kg Pd. Zdecydowanie mniej op\u0142acalne ni\u017C PME. Warto przetwarza\u0107 jako cz\u0119\u015B\u0107 PCB, nie oddzielnie."
+  },
+  {
     id: "capacitors_ceramic_mlcc",
-    name: "Kondensatory ceramiczne MLCC (preselekcjonowane)",
-    nameEn: "MLCC Ceramic capacitors (preselected)",
+    name: "Kondensatory MLCC ceramiczne (MIX PME+BME, nieznany typ)",
+    nameEn: "MLCC Ceramic capacitors (mixed PME+BME, unknown type)",
     category: "kondensator",
     unit: "kg",
     weightPerPiece: 2e-4,
     metalContentPerKg: {
-      Au: { min: 0, max: 0.02, typical: 5e-3 },
-      Ag: { min: 1, max: 5, typical: 2.5 },
-      Pt: { min: 0, max: 0.01, typical: 5e-3 },
-      Pd: { min: 0.2, max: 2, typical: 1 }
+      Au: { min: 0, max: 0.02, typical: 3e-3 },
+      Ag: { min: 1, max: 50, typical: 8 },
+      Pt: { min: 0, max: 0.01, typical: 2e-3 },
+      Pd: { min: 0.2, max: 8, typical: 1.5 }
     },
-    notes: "Wielowarstwowe kondensatory ceramiczne MLCC (~0.2g/szt). metalContentPerKg uwzgl\u0119dnia ceramik\u0119, elektrody i pokrywy razem \u2014 znaczna zawarto\u015B\u0107 Ag i Pd."
+    notes: "Mieszane kondensatory MLCC bez identyfikacji PME/BME (~0.2g/szt). Warto\u015B\u0107 typowa 1.5 g/kg Pd i 8 g/kg Ag zak\u0142ada ~15-20% PME w partii. Dla lepszego wyniku: rozr\xF3\u017Cnij typ \u2014 'MLCC PME (stare, bogate w Pd)' dla urz\u0105dze\u0144 pre-2000 lub 'MLCC BME (nowe, niskie Pd)' dla post-2000."
   },
   // ─── INNE ─────────────────────────────────────────────────────────────────
   {
