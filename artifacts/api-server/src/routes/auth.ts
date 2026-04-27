@@ -147,7 +147,7 @@ router.post("/register", async (req: Request, res: Response) => {
     expiresAt: expires,
   });
 
-  const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
+  const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
   const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
 
   let emailError: string | null = null;
@@ -224,7 +224,7 @@ router.post("/resend-verification", async (req: Request, res: Response) => {
     expiresAt: expires,
   });
 
-  const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
+  const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
   const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
 
   let emailError: string | null = null;

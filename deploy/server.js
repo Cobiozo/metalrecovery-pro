@@ -67057,7 +67057,7 @@ var init_auth2 = __esm({
         token: verToken,
         expiresAt: expires
       });
-      const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
+      const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
       const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
       let emailError = null;
       try {
@@ -67113,7 +67113,7 @@ var init_auth2 = __esm({
         token: verToken,
         expiresAt: expires
       });
-      const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
+      const siteUrl = (await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online").replace(/\/+$/, "");
       const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
       let emailError = null;
       try {
