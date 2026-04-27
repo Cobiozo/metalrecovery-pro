@@ -109,7 +109,13 @@ IMPORTANT — the following ARE electronic waste (e-waste) with recoverable prec
       – NAS devices (QNAP, Synology, NetApp) — classify as "NAS (sieciowy zasób dyskowy, bez dysków)"
       – SAN/fiber channel equipment — classify as "Przełącznik sieciowy enterprise"
   • Any device with a circuit board, connectors or microchips
+  • LAPTOP DOCKING STATIONS — ALWAYS e-waste with recoverable Au/Ag/Pd:
+      – Dell WD-series (WD15, WD19, WD22, D6000, D3100) — classify as "Stacja dokująca do laptopa (Dell WD, HP, Lenovo ThinkPad)"
+      – HP docks (Thunderbolt Dock G2/G4/G5, HP UltraSlim, HP E24x, HP USB-C Dock) — same category
+      – Lenovo ThinkPad (Ultra Dock, USB-C Dock, Thunderbolt 3 Dock, Hybrid Dock) — same category
+      – Generic/Anker/UGREEN USB hubs with 4+ ports — classify as "Hub USB / replikator portów (niemarkowy, biurowy)"
 CRITICAL RULE — NEVER classify server equipment as "Nieelektroniczne". Rack servers, blade servers, switches, NAS, SANs are ALWAYS e-waste with recoverable precious metals. A Dell PowerEdge, HP ProLiant, or any device with a 19-inch rack form factor IS ALWAYS e-waste.
+CRITICAL RULE — NEVER classify LAPTOP DOCKING STATIONS as "Nieelektroniczne". A docking station is a flat rectangular device covered in USB/DP/HDMI/RJ45 ports. Even without a laptop connected, IT IS ALWAYS e-waste with recoverable gold. If you see a pile of flat devices with many ports on the back/sides and black plastic housing — those are DOCKING STATIONS, NOT non-electronic scrap.
 DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings, clothing, non-electronic mechanical parts are NOT e-waste.
 Non-e-waste → materialType = "Nieelektroniczne — [Polish name]", all metal values = 0.0, quantity = 0.
 
@@ -131,7 +137,8 @@ CRITICAL VISUAL SHAPE GUIDE — read before identifying:
   Standard DIP IC sockets: tiny black plastic socket (8-40 pins), two rows of silver/tin contact pins — very low gold content — common repair-shop items.
   TELECOM backplane connectors (HIGH VALUE): ONLY from telephone exchange racks (AXE, EWSD, DMS) — massive blocks 150mm+ packed with hundreds of dense DIN/Metral pins — INDUSTRIAL TELECOM EQUIPMENT ONLY.
   GOLD-PLATED CONNECTOR PINS / CONTACTS (HIGH VALUE — "grubo złocone piny"): loose pile of bare metallic pins, springs, or bent contact leads with a UNIFORM GOLDEN SURFACE — thin wire-like or bent metallic pieces 5–30mm long — NO plastic housing visible — entire surface is golden (NOT just the tips) — extracted from multi-pin connectors, IC packages, or industrial components — when the whole piece looks gold (not silver/nickel), classify as "Piny/styki złącz elektronicznych (grubo złocone, bez plastiku)" with Au 2–8 g/kg.
-  CROSSBAR RELAY CONTACTS (VERY HIGH VALUE — "styki krzyżownicy"): flat spring strips or contact assemblies specifically from old mechanical telephone exchange racks (Ericsson ARF/ARM, Siemens EMD, Strowger crossbar) — may appear similar to above but come from identifiable telecom mechanical relay matrix — Au 3–10 g/kg, Ag 1–8 g/kg, Pd 0.1–1.5 g/kg.
+  CROSSBAR RELAY CONTACTS ("styki krzyżownicy"): flat spring strips or contact assemblies specifically from old mechanical telephone exchange racks (Ericsson ARF/ARM, Siemens EMD, Strowger crossbar) — these are Pd-Ag ALLOY contacts (60% Pd + 40% Ag), NOT gold — Au trace only 0.1–2 g/kg, Ag 5–30 g/kg, Pd 1–8 g/kg.
+  LAPTOP DOCKING STATION (E-WASTE — "stacja dokująca"): flat rectangular block (150-250mm × 80-200mm × 20-50mm tall), entirely covered in ports on the back/sides — typically 4-8× USB-A, 1-2× USB-C, 1-2× DisplayPort or HDMI, 1× RJ45 Ethernet, audio jack, power input — brands: Dell (WD/D-series), HP (Thunderbolt/UltraSlim), Lenovo (ThinkPad dock) — black or dark grey plastic housing — when a pile of identical flat devices with many ports is visible in a cardboard box, these are docking stations — ALWAYS E-WASTE.
 
 STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above — do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".

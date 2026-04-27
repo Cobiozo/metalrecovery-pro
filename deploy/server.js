@@ -72785,6 +72785,49 @@ var electronicMaterials = [
     },
     notes: "Ma\u0142e wyspecjalizowane p\u0142ytki z wn\u0119trza laptop\xF3w (~20g/szt): p\u0142ytki USB, audio, zasilania, touchpada, czytnika kart SD, kamer itp. Podobny sk\u0142ad do PCB klasy B, nieco wy\u017Csze Au ze z\u0142oconych z\u0142\u0105czy FPC/FFC i USB."
   },
+  // ─── STACJE DOKUJĄCE / HUB USB ───────────────────────────────────────────
+  {
+    id: "laptop_dock",
+    name: "Stacja dokuj\u0105ca do laptopa (Dell WD, HP, Lenovo ThinkPad)",
+    nameEn: "Laptop docking station (Dell WD, HP, Lenovo ThinkPad)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.35,
+    chemFraction: 0.6,
+    requiresCleaning: false,
+    catalogHint: "laptop docking station \u2014 rectangular flat block (150-250mm \xD7 80-200mm \xD7 20-50mm), multiple ports on the back/sides: several USB-A and USB-C, 1-2 DisplayPort or HDMI, RJ45 Ethernet, audio jack, power connector \u2014 brands: Dell (WD15, WD19, WD22, D6000), HP (Thunderbolt Dock G2/G4/G5, UltraSlim), Lenovo (ThinkPad Ultra Dock, ThinkPad USB-C Dock), HP E24x dock \u2014 typically black or dark grey plastic housing \u2014 ALL LAPTOP DOCKING STATIONS ARE E-WASTE",
+    metalContentPerKg: {
+      /** Au from gold-plated ports: USB-A (4 contacts/port × 4-8 ports), USB-C (24 contacts),
+       *  DisplayPort (20 pins), HDMI (19 pins), RJ45 (8 contacts), audio (3 contacts).
+       *  Gold thickness: 15-30 µin on USB, 15 µin on video connectors.
+       *  Source: IPC-4552 connector plating standards, Hagelüken 2014 connector data.
+       *  Typical dock has 10-15 connectors → dense Au source relative to mass. */
+      Au: { min: 0.15, max: 0.55, typical: 0.28 },
+      /** Ag from SAC305 solder paste on dense SMD PCB. Source: Forti et al. 2020 WEEE Monitor. */
+      Ag: { min: 0.4, max: 2, typical: 0.9 },
+      Pt: { min: 0, max: 3e-3, typical: 1e-3 },
+      /** Pd from BME-MLCC (modern components). */
+      Pd: { min: 0.02, max: 0.12, typical: 0.05 }
+    },
+    notes: "Stacja dokuj\u0105ca do laptopa (Dell WD-series, HP Thunderbolt Dock, HP UltraSlim, Lenovo ThinkPad Dock, HP E24x \u2014 ~350g/szt bez zasilacza). JEST Z\u0141OMEM ELEKTRONICZNYM \u2014 zawiera PCB z wieloma z\u0142oconymi portami (USB, DP, HDMI, RJ45). chemFraction=0.60 \u2014 ~40% masy to plastikowa obudowa, ok. 60% to PCB + z\u0142\u0105cza. Au pochodzi ze styk\xF3w port\xF3w USB (15-30 \xB5in Au/Ni), DisplayPort (20-pin), HDMI (19-pin), RJ45 (8 kontakty). Ag z lutowia SAC305. Pd z BME-MLCC. Por\xF3wnaj: podobne do p\u0142yty laptopowej, ale wi\u0119cej port\xF3w \u2192 nieco wy\u017Csze Au/kg od sumy z\u0142\u0105czy. \u0179r\xF3d\u0142a: IPC-4552, Hagel\xFCken 2014, dane skup\xF3w PL."
+  },
+  {
+    id: "usb_hub_replikator",
+    name: "Hub USB / replikator port\xF3w (niemarkowy, biurowy)",
+    nameEn: "USB hub / port replicator (generic, office)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.12,
+    chemFraction: 0.55,
+    catalogHint: "small USB hub or port replicator \u2014 compact box (80-140mm \xD7 40-80mm) with 4-13 USB-A ports on sides, possibly HDMI or RJ45, USB cable or detachable cable, plastic housing \u2014 generic brands or Anker, Aukey, j5create, UGREEN, Baseus \u2014 smaller and simpler than a business docking station",
+    metalContentPerKg: {
+      Au: { min: 0.1, max: 0.35, typical: 0.18 },
+      Ag: { min: 0.2, max: 1.2, typical: 0.6 },
+      Pt: { min: 0, max: 2e-3, typical: 1e-3 },
+      Pd: { min: 0.01, max: 0.08, typical: 0.03 }
+    },
+    notes: "Ma\u0142e huby USB i replikatory port\xF3w biurowych (~120g/szt). Skromna zawarto\u015B\u0107 Au \u2014 tylko ze z\u0142oconych port\xF3w USB-A/C i ewentualnie HDMI/RJ45. Mniej g\u0119ste PCB ni\u017C stacja dokuj\u0105ca. Ag z lutowia SAC305. Pd z BME-MLCC. chemFraction=0.55 \u2014 ok. 45% to plastik obudowy."
+  },
   {
     id: "adapter_socket_cpu",
     name: "Adaptery gniazda CPU / programatory BGA (kwadratowe p\u0142ytki)",
@@ -82363,7 +82406,13 @@ IMPORTANT \u2014 the following ARE electronic waste (e-waste) with recoverable p
       \u2013 NAS devices (QNAP, Synology, NetApp) \u2014 classify as "NAS (sieciowy zas\xF3b dyskowy, bez dysk\xF3w)"
       \u2013 SAN/fiber channel equipment \u2014 classify as "Prze\u0142\u0105cznik sieciowy enterprise"
   \u2022 Any device with a circuit board, connectors or microchips
+  \u2022 LAPTOP DOCKING STATIONS \u2014 ALWAYS e-waste with recoverable Au/Ag/Pd:
+      \u2013 Dell WD-series (WD15, WD19, WD22, D6000, D3100) \u2014 classify as "Stacja dokuj\u0105ca do laptopa (Dell WD, HP, Lenovo ThinkPad)"
+      \u2013 HP docks (Thunderbolt Dock G2/G4/G5, HP UltraSlim, HP E24x, HP USB-C Dock) \u2014 same category
+      \u2013 Lenovo ThinkPad (Ultra Dock, USB-C Dock, Thunderbolt 3 Dock, Hybrid Dock) \u2014 same category
+      \u2013 Generic/Anker/UGREEN USB hubs with 4+ ports \u2014 classify as "Hub USB / replikator port\xF3w (niemarkowy, biurowy)"
 CRITICAL RULE \u2014 NEVER classify server equipment as "Nieelektroniczne". Rack servers, blade servers, switches, NAS, SANs are ALWAYS e-waste with recoverable precious metals. A Dell PowerEdge, HP ProLiant, or any device with a 19-inch rack form factor IS ALWAYS e-waste.
+CRITICAL RULE \u2014 NEVER classify LAPTOP DOCKING STATIONS as "Nieelektroniczne". A docking station is a flat rectangular device covered in USB/DP/HDMI/RJ45 ports. Even without a laptop connected, IT IS ALWAYS e-waste with recoverable gold. If you see a pile of flat devices with many ports on the back/sides and black plastic housing \u2014 those are DOCKING STATIONS, NOT non-electronic scrap.
 DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings, clothing, non-electronic mechanical parts are NOT e-waste.
 Non-e-waste \u2192 materialType = "Nieelektroniczne \u2014 [Polish name]", all metal values = 0.0, quantity = 0.
 
@@ -82385,7 +82434,8 @@ CRITICAL VISUAL SHAPE GUIDE \u2014 read before identifying:
   Standard DIP IC sockets: tiny black plastic socket (8-40 pins), two rows of silver/tin contact pins \u2014 very low gold content \u2014 common repair-shop items.
   TELECOM backplane connectors (HIGH VALUE): ONLY from telephone exchange racks (AXE, EWSD, DMS) \u2014 massive blocks 150mm+ packed with hundreds of dense DIN/Metral pins \u2014 INDUSTRIAL TELECOM EQUIPMENT ONLY.
   GOLD-PLATED CONNECTOR PINS / CONTACTS (HIGH VALUE \u2014 "grubo z\u0142ocone piny"): loose pile of bare metallic pins, springs, or bent contact leads with a UNIFORM GOLDEN SURFACE \u2014 thin wire-like or bent metallic pieces 5\u201330mm long \u2014 NO plastic housing visible \u2014 entire surface is golden (NOT just the tips) \u2014 extracted from multi-pin connectors, IC packages, or industrial components \u2014 when the whole piece looks gold (not silver/nickel), classify as "Piny/styki z\u0142\u0105cz elektronicznych (grubo z\u0142ocone, bez plastiku)" with Au 2\u20138 g/kg.
-  CROSSBAR RELAY CONTACTS (VERY HIGH VALUE \u2014 "styki krzy\u017Cownicy"): flat spring strips or contact assemblies specifically from old mechanical telephone exchange racks (Ericsson ARF/ARM, Siemens EMD, Strowger crossbar) \u2014 may appear similar to above but come from identifiable telecom mechanical relay matrix \u2014 Au 3\u201310 g/kg, Ag 1\u20138 g/kg, Pd 0.1\u20131.5 g/kg.
+  CROSSBAR RELAY CONTACTS ("styki krzy\u017Cownicy"): flat spring strips or contact assemblies specifically from old mechanical telephone exchange racks (Ericsson ARF/ARM, Siemens EMD, Strowger crossbar) \u2014 these are Pd-Ag ALLOY contacts (60% Pd + 40% Ag), NOT gold \u2014 Au trace only 0.1\u20132 g/kg, Ag 5\u201330 g/kg, Pd 1\u20138 g/kg.
+  LAPTOP DOCKING STATION (E-WASTE \u2014 "stacja dokuj\u0105ca"): flat rectangular block (150-250mm \xD7 80-200mm \xD7 20-50mm tall), entirely covered in ports on the back/sides \u2014 typically 4-8\xD7 USB-A, 1-2\xD7 USB-C, 1-2\xD7 DisplayPort or HDMI, 1\xD7 RJ45 Ethernet, audio jack, power input \u2014 brands: Dell (WD/D-series), HP (Thunderbolt/UltraSlim), Lenovo (ThinkPad dock) \u2014 black or dark grey plastic housing \u2014 when a pile of identical flat devices with many ports is visible in a cardboard box, these are docking stations \u2014 ALWAYS E-WASTE.
 
 STEP 2 \u2014 For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above \u2014 do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".

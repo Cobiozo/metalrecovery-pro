@@ -760,6 +760,50 @@ export const electronicMaterials = [
     },
     notes: "Małe wyspecjalizowane płytki z wnętrza laptopów (~20g/szt): płytki USB, audio, zasilania, touchpada, czytnika kart SD, kamer itp. Podobny skład do PCB klasy B, nieco wyższe Au ze złoconych złączy FPC/FFC i USB.",
   },
+
+  // ─── STACJE DOKUJĄCE / HUB USB ───────────────────────────────────────────
+  {
+    id: "laptop_dock",
+    name: "Stacja dokująca do laptopa (Dell WD, HP, Lenovo ThinkPad)",
+    nameEn: "Laptop docking station (Dell WD, HP, Lenovo ThinkPad)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.35,
+    chemFraction: 0.60,
+    requiresCleaning: false,
+    catalogHint: "laptop docking station — rectangular flat block (150-250mm × 80-200mm × 20-50mm), multiple ports on the back/sides: several USB-A and USB-C, 1-2 DisplayPort or HDMI, RJ45 Ethernet, audio jack, power connector — brands: Dell (WD15, WD19, WD22, D6000), HP (Thunderbolt Dock G2/G4/G5, UltraSlim), Lenovo (ThinkPad Ultra Dock, ThinkPad USB-C Dock), HP E24x dock — typically black or dark grey plastic housing — ALL LAPTOP DOCKING STATIONS ARE E-WASTE",
+    metalContentPerKg: {
+      /** Au from gold-plated ports: USB-A (4 contacts/port × 4-8 ports), USB-C (24 contacts),
+       *  DisplayPort (20 pins), HDMI (19 pins), RJ45 (8 contacts), audio (3 contacts).
+       *  Gold thickness: 15-30 µin on USB, 15 µin on video connectors.
+       *  Source: IPC-4552 connector plating standards, Hagelüken 2014 connector data.
+       *  Typical dock has 10-15 connectors → dense Au source relative to mass. */
+      Au: { min: 0.15, max: 0.55, typical: 0.28 },
+      /** Ag from SAC305 solder paste on dense SMD PCB. Source: Forti et al. 2020 WEEE Monitor. */
+      Ag: { min: 0.40, max: 2.00, typical: 0.90 },
+      Pt: { min: 0.0, max: 0.003, typical: 0.001 },
+      /** Pd from BME-MLCC (modern components). */
+      Pd: { min: 0.02, max: 0.12, typical: 0.05 },
+    },
+    notes: "Stacja dokująca do laptopa (Dell WD-series, HP Thunderbolt Dock, HP UltraSlim, Lenovo ThinkPad Dock, HP E24x — ~350g/szt bez zasilacza). JEST ZŁOMEM ELEKTRONICZNYM — zawiera PCB z wieloma złoconymi portami (USB, DP, HDMI, RJ45). chemFraction=0.60 — ~40% masy to plastikowa obudowa, ok. 60% to PCB + złącza. Au pochodzi ze styków portów USB (15-30 µin Au/Ni), DisplayPort (20-pin), HDMI (19-pin), RJ45 (8 kontakty). Ag z lutowia SAC305. Pd z BME-MLCC. Porównaj: podobne do płyty laptopowej, ale więcej portów → nieco wyższe Au/kg od sumy złączy. Źródła: IPC-4552, Hagelüken 2014, dane skupów PL.",
+  },
+  {
+    id: "usb_hub_replikator",
+    name: "Hub USB / replikator portów (niemarkowy, biurowy)",
+    nameEn: "USB hub / port replicator (generic, office)",
+    category: "karta",
+    unit: "kg",
+    weightPerPiece: 0.12,
+    chemFraction: 0.55,
+    catalogHint: "small USB hub or port replicator — compact box (80-140mm × 40-80mm) with 4-13 USB-A ports on sides, possibly HDMI or RJ45, USB cable or detachable cable, plastic housing — generic brands or Anker, Aukey, j5create, UGREEN, Baseus — smaller and simpler than a business docking station",
+    metalContentPerKg: {
+      Au: { min: 0.10, max: 0.35, typical: 0.18 },
+      Ag: { min: 0.20, max: 1.20, typical: 0.60 },
+      Pt: { min: 0.0, max: 0.002, typical: 0.001 },
+      Pd: { min: 0.01, max: 0.08, typical: 0.03 },
+    },
+    notes: "Małe huby USB i replikatory portów biurowych (~120g/szt). Skromna zawartość Au — tylko ze złoconych portów USB-A/C i ewentualnie HDMI/RJ45. Mniej gęste PCB niż stacja dokująca. Ag z lutowia SAC305. Pd z BME-MLCC. chemFraction=0.55 — ok. 45% to plastik obudowy.",
+  },
   {
     id: "adapter_socket_cpu",
     name: "Adaptery gniazda CPU / programatory BGA (kwadratowe płytki)",
