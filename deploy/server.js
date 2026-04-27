@@ -74738,8 +74738,7 @@ function computeCompareResult(batch, processId, metalPrices, electricityPricePer
   const electricityCost = process2.electricityKwhPerKg * chemMassKg * electricityPricePerKwh;
   const totalCostPln = Math.round((chemistryCost + electricityCost) * 100) / 100;
   const netProfitPln = Math.round((totalRevenuePln - totalCostPln) * 100) / 100;
-  const profitMargin = totalRevenuePln > 0 ? netProfitPln / totalRevenuePln : -1;
-  const profitabilityRating = profitMargin > 0.5 ? "very_profitable" : profitMargin > 0.2 ? "profitable" : profitMargin > 0 ? "marginal" : "not_profitable";
+  const profitabilityRating = netProfitPln > 400 ? "very_profitable" : netProfitPln >= 100 ? "profitable" : netProfitPln >= 0 ? "marginal" : "not_profitable";
   const avgTimePerKg = (process2.timePerKgMin + process2.timePerKgMax) / 2;
   const estimatedTimeHours = Math.round(avgTimePerKg * chemMassKg * 10) / 10;
   return {
@@ -74911,21 +74910,20 @@ router5.post("/calculator/estimate", async (req, res) => {
   );
   const totalCostPln = Math.round((totalChemistryCostPln + electricityCostPln) * 100) / 100;
   const netProfitPln = Math.round((totalRevenuePln - totalCostPln) * 100) / 100;
-  const profitMargin = totalRevenuePln > 0 ? netProfitPln / totalRevenuePln : -1;
   let profitabilityRating;
   let profitabilityNote;
-  if (profitMargin > 0.5) {
+  if (netProfitPln > 400) {
     profitabilityRating = "very_profitable";
-    profitabilityNote = `Bardzo op\u0142acalne! Mar\u017Ca ${Math.round(profitMargin * 100)}%. Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
-  } else if (profitMargin > 0.2) {
+    profitabilityNote = `Bardzo op\u0142acalne! Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
+  } else if (netProfitPln >= 100) {
     profitabilityRating = "profitable";
-    profitabilityNote = `Op\u0142acalne. Mar\u017Ca ${Math.round(profitMargin * 100)}%. Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
-  } else if (profitMargin > 0) {
+    profitabilityNote = `Op\u0142acalne. Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
+  } else if (netProfitPln >= 0) {
     profitabilityRating = "marginal";
-    profitabilityNote = `Marginalna op\u0142acalno\u015B\u0107. Mar\u017Ca tylko ${Math.round(profitMargin * 100)}%. Rozwa\u017C inny proces lub wsad.`;
+    profitabilityNote = `Niezbyt op\u0142acalne. Zysk netto tylko ${netProfitPln.toFixed(2)} PLN. Rozwa\u017C wi\u0119kszy wsad lub inny proces.`;
   } else {
     profitabilityRating = "not_profitable";
-    profitabilityNote = `Nieop\u0142acalne. Koszty chemii (${totalCostPln.toFixed(2)} PLN) przekraczaj\u0105 warto\u015B\u0107 odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwi\u0119ksz materia\u0142 wsadu lub zmie\u0144 proces.`;
+    profitabilityNote = `Nieop\u0142acalne. Koszty (${totalCostPln.toFixed(2)} PLN) przekraczaj\u0105 warto\u015B\u0107 odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwi\u0119ksz materia\u0142 wsadu lub zmie\u0144 proces.`;
   }
   const avgTimePerKg = (process2.timePerKgMin + process2.timePerKgMax) / 2;
   let estimatedTimeHours = avgTimePerKg * chemMassKg;

@@ -1014,9 +1014,9 @@ export function CalculatorPage() {
                 const finalProfit = result.netProfitPln - purchaseCost;
                 const hasPurchaseCost = purchaseCost > 0;
                 const finalRating = hasPurchaseCost
-                  ? (finalProfit > result.totalRevenuePln * 0.3 ? 'very_profitable'
-                    : finalProfit > 0 ? 'profitable'
-                    : finalProfit > -result.totalRevenuePln * 0.1 ? 'marginal'
+                  ? (finalProfit > 400 ? 'very_profitable'
+                    : finalProfit >= 100 ? 'profitable'
+                    : finalProfit >= 0 ? 'marginal'
                     : 'not_profitable')
                   : result.profitabilityRating;
                 return (
@@ -1035,7 +1035,7 @@ export function CalculatorPage() {
                           {{
                             very_profitable: 'Bardzo opłacalne',
                             profitable: 'Opłacalne',
-                            marginal: 'Marginalna opłacalność',
+                            marginal: 'Niezbyt opłacalne',
                             not_profitable: 'Nieopłacalne',
                           }[finalRating] ?? finalRating}
                         </div>

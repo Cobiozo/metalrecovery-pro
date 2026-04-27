@@ -547,13 +547,12 @@ function computeCompareResult(
   const totalCostPln = Math.round((chemistryCost + electricityCost) * 100) / 100;
   const netProfitPln = Math.round((totalRevenuePln - totalCostPln) * 100) / 100;
 
-  const profitMargin = totalRevenuePln > 0 ? netProfitPln / totalRevenuePln : -1;
   const profitabilityRating =
-    profitMargin > 0.5
+    netProfitPln > 400
       ? "very_profitable"
-      : profitMargin > 0.2
+      : netProfitPln >= 100
         ? "profitable"
-        : profitMargin > 0
+        : netProfitPln >= 0
           ? "marginal"
           : "not_profitable";
 
@@ -805,22 +804,21 @@ router.post("/calculator/estimate", async (req, res) => {
   const totalCostPln = Math.round((totalChemistryCostPln + electricityCostPln) * 100) / 100;
   const netProfitPln = Math.round((totalRevenuePln - totalCostPln) * 100) / 100;
 
-  const profitMargin = totalRevenuePln > 0 ? netProfitPln / totalRevenuePln : -1;
   let profitabilityRating: string;
   let profitabilityNote: string;
 
-  if (profitMargin > 0.5) {
+  if (netProfitPln > 400) {
     profitabilityRating = "very_profitable";
-    profitabilityNote = `Bardzo opłacalne! Marża ${Math.round(profitMargin * 100)}%. Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
-  } else if (profitMargin > 0.2) {
+    profitabilityNote = `Bardzo opłacalne! Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
+  } else if (netProfitPln >= 100) {
     profitabilityRating = "profitable";
-    profitabilityNote = `Opłacalne. Marża ${Math.round(profitMargin * 100)}%. Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
-  } else if (profitMargin > 0) {
+    profitabilityNote = `Opłacalne. Zysk netto ${netProfitPln.toFixed(2)} PLN.`;
+  } else if (netProfitPln >= 0) {
     profitabilityRating = "marginal";
-    profitabilityNote = `Marginalna opłacalność. Marża tylko ${Math.round(profitMargin * 100)}%. Rozważ inny proces lub wsad.`;
+    profitabilityNote = `Niezbyt opłacalne. Zysk netto tylko ${netProfitPln.toFixed(2)} PLN. Rozważ większy wsad lub inny proces.`;
   } else {
     profitabilityRating = "not_profitable";
-    profitabilityNote = `Nieopłacalne. Koszty chemii (${totalCostPln.toFixed(2)} PLN) przekraczają wartość odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwiększ materiał wsadu lub zmień proces.`;
+    profitabilityNote = `Nieopłacalne. Koszty (${totalCostPln.toFixed(2)} PLN) przekraczają wartość odzysku (${totalRevenuePln.toFixed(2)} PLN). Zwiększ materiał wsadu lub zmień proces.`;
   }
 
   const avgTimePerKg = (process.timePerKgMin + process.timePerKgMax) / 2;
