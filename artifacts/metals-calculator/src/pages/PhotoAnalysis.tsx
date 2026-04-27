@@ -1152,26 +1152,26 @@ export function PhotoAnalysisPage() {
       {result && !loading && preview && (
         <div>
           <PhotoWithDetections photoUrl={preview} items={result.items} />
-          {user && (
-            <div className="max-w-2xl mx-auto mt-2 px-1">
+          <div className="max-w-2xl mx-auto mt-2 px-1">
               <button
                 type="button"
-                onClick={() => setAnalysisCorrectionOpen(true)}
+                onClick={() => user ? setAnalysisCorrectionOpen(true) : navigate("/login")}
                 className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-orange-400 transition-colors py-1"
               >
                 <Flag className="w-3 h-3" />
                 Zgłoś błędną analizę
               </button>
-              <CorrectionDialog
-                open={analysisCorrectionOpen}
-                onClose={() => setAnalysisCorrectionOpen(false)}
-                aiMaterialType={result.items.map((i) => i.materialType).join(", ")}
-                imageDescription={result.items.map((i) => i.description).join(" | ")}
-                authHeaders={authHeaders}
-                toast={toast}
-              />
+              {user && (
+                <CorrectionDialog
+                  open={analysisCorrectionOpen}
+                  onClose={() => setAnalysisCorrectionOpen(false)}
+                  aiMaterialType={result.items.map((i) => i.materialType).join(", ")}
+                  imageDescription={result.items.map((i) => i.description).join(" | ")}
+                  authHeaders={authHeaders}
+                  toast={toast}
+                />
+              )}
             </div>
-          )}
         </div>
       )}
 
