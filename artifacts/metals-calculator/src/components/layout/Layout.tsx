@@ -186,7 +186,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Shield className="w-4 h-4" />
           </Link>
         )}
-        {!authLoading && user && (
+        {!authLoading && user && user.role !== "admin" && (
           <Link href="/panel" className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <LayoutDashboard className="w-4 h-4" />
           </Link>
