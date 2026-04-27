@@ -472,20 +472,33 @@ function SingleMode({
               Posiadana ilość (opcjonalnie)
             </Label>
             <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Input
-                  type="number"
-                  min="1"
-                  step="1"
-                  placeholder="np. 89"
-                  value={quantityGrams ?? ""}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setQuantityGrams(v === "" ? null : Math.max(1, parseInt(v, 10) || 1));
-                  }}
-                  className="pr-9 bg-background"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none">g</span>
+              <div className="flex items-center gap-1 flex-1">
+                <button
+                  type="button"
+                  className="w-7 h-9 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40 shrink-0"
+                  onClick={() => setQuantityGrams(q => q != null ? Math.max(1, q - 10) : null)}
+                  disabled={quantityGrams == null || quantityGrams <= 1}
+                >−</button>
+                <div className="relative flex-1">
+                  <Input
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="np. 89"
+                    value={quantityGrams ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setQuantityGrams(v === "" ? null : Math.max(1, parseInt(v, 10) || 1));
+                    }}
+                    className="pr-9 bg-background text-center"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none">g</span>
+                </div>
+                <button
+                  type="button"
+                  className="w-7 h-9 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors shrink-0"
+                  onClick={() => setQuantityGrams(q => (q ?? 0) + 10)}
+                >+</button>
               </div>
               {quantityGrams != null && (
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -702,19 +715,38 @@ function BatchRowItem({
             placeholder="Wybierz materiał..."
           />
         </div>
-        <div className="relative w-28 shrink-0">
-          <Input
-            type="number"
-            min="0.001"
-            step="0.001"
-            placeholder="0.000"
-            value={row.quantityKg}
-            onChange={(e) => onChangeQty(e.target.value)}
-            className="pr-7 font-mono text-sm"
-          />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
-            kg
-          </span>
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            type="button"
+            className="w-6 h-9 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40 shrink-0"
+            onClick={() => {
+              const cur = parseFloat(row.quantityKg) || 0;
+              onChangeQty(String(Math.max(0, Math.round((cur - 0.001) * 1000) / 1000)));
+            }}
+            disabled={!row.quantityKg || parseFloat(row.quantityKg) <= 0}
+          >−</button>
+          <div className="relative w-24">
+            <Input
+              type="number"
+              min="0.001"
+              step="0.001"
+              placeholder="0.000"
+              value={row.quantityKg}
+              onChange={(e) => onChangeQty(e.target.value)}
+              className="pr-6 font-mono text-sm text-center"
+            />
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+              kg
+            </span>
+          </div>
+          <button
+            type="button"
+            className="w-6 h-9 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors shrink-0"
+            onClick={() => {
+              const cur = parseFloat(row.quantityKg) || 0;
+              onChangeQty(String(Math.round((cur + 0.001) * 1000) / 1000));
+            }}
+          >+</button>
         </div>
       </div>
       {requiresCleaning && (

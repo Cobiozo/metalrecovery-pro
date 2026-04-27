@@ -590,16 +590,29 @@ export function CalculatorPage() {
                       />
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto items-end">
-                      <div className="flex-1 sm:w-28">
+                      <div className="flex-1 sm:w-auto">
                         <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Ilość</label>
-                        <Input
-                          type="number"
-                          min="0.001"
-                          step={getEffectiveUnit(item) === 'piece' ? "1" : "0.01"}
-                          value={item.quantity}
-                          onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
-                          className="bg-background font-mono"
-                        />
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            className="w-7 h-9 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40 shrink-0"
+                            onClick={() => handleBatchQuantityChange(item.id, Math.max(0, item.quantity - (getEffectiveUnit(item) === 'piece' ? 1 : 0.01)))}
+                            disabled={item.quantity <= 0}
+                          >−</button>
+                          <Input
+                            type="number"
+                            min="0.001"
+                            step={getEffectiveUnit(item) === 'piece' ? "1" : "0.01"}
+                            value={item.quantity}
+                            onChange={(e) => handleBatchQuantityChange(item.id, parseFloat(e.target.value) || 0)}
+                            className="bg-background font-mono w-20 text-center"
+                          />
+                          <button
+                            type="button"
+                            className="w-7 h-9 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors shrink-0"
+                            onClick={() => handleBatchQuantityChange(item.id, item.quantity + (getEffectiveUnit(item) === 'piece' ? 1 : 0.01))}
+                          >+</button>
+                        </div>
                         {item.materialId && getEffectiveUnit(item) === 'piece' && (
                           <p className="text-xs text-muted-foreground mt-1">
                             ≈ {(item.quantity * getWeightPerPiece(item)).toFixed(2)} kg

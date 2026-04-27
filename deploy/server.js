@@ -71973,6 +71973,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 0.75,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.18, Ag: 1.18, Pt: 1.18, Pd: 1.18 },
     metalContentPerKg: {
       Au: { min: 0.18, max: 0.8, typical: 0.4 },
       Ag: { min: 0.3, max: 1.8, typical: 0.9 },
@@ -71988,6 +71990,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 0.7,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.18, Ag: 1.18, Pt: 1.18, Pd: 1.18 },
     metalContentPerKg: {
       Au: { min: 0.12, max: 0.55, typical: 0.32 },
       Ag: { min: 0.25, max: 1.5, typical: 0.75 },
@@ -72003,6 +72007,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 0.35,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
     metalContentPerKg: {
       Au: { min: 0.03, max: 0.12, typical: 0.06 },
       Ag: { min: 0.4, max: 1.8, typical: 0.9 },
@@ -72018,6 +72024,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 0.5,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
     metalContentPerKg: {
       Au: { min: 0.06, max: 0.2, typical: 0.11 },
       Ag: { min: 0.6, max: 2.5, typical: 1.3 },
@@ -72033,6 +72041,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 0.6,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.15, Ag: 1.15, Pt: 1.15, Pd: 1.15 },
     metalContentPerKg: {
       Au: { min: 0.09, max: 0.3, typical: 0.16 },
       Ag: { min: 0.8, max: 3, typical: 1.7 },
@@ -72048,6 +72058,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 1.5,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.2, Ag: 1.2, Pt: 1.2, Pd: 1.2 },
     metalContentPerKg: {
       Au: { min: 0.3, max: 1.5, typical: 0.65 },
       Ag: { min: 0.8, max: 3, typical: 1.6 },
@@ -72064,6 +72076,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 0.2,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.12, Ag: 1.12, Pt: 1.12, Pd: 1.12 },
     metalContentPerKg: {
       Au: { min: 0.12, max: 0.45, typical: 0.26 },
       Ag: { min: 0.2, max: 1.5, typical: 0.8 },
@@ -72079,6 +72093,8 @@ var electronicMaterials = [
     category: "plyty_glowne",
     unit: "kg",
     weightPerPiece: 0.15,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.1, Ag: 1.1, Pt: 1.1, Pd: 1.1 },
     metalContentPerKg: {
       Au: { min: 0.04, max: 0.15, typical: 0.08 },
       Ag: { min: 0.4, max: 2, typical: 1 },
