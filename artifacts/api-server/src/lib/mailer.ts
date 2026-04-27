@@ -19,11 +19,18 @@ export async function createTransporter() {
     throw new Error("SMTP nie jest skonfigurowany. Skonfiguruj go w panelu administratora.");
   }
 
+  const port = parseInt(s[SETTINGS_KEYS.SMTP_PORT] ?? "587", 10);
+  const secure = s[SETTINGS_KEYS.SMTP_SECURE] === "true";
+
   return nodemailer.createTransport({
     host,
-    port: parseInt(s[SETTINGS_KEYS.SMTP_PORT] ?? "587", 10),
-    secure: s[SETTINGS_KEYS.SMTP_SECURE] === "true",
+    port,
+    secure,
     auth: { user, pass },
+    tls: {
+      rejectUnauthorized: false,
+    },
+    ...(port === 587 && !secure ? { requireTLS: true } : {}),
   });
 }
 

@@ -66889,11 +66889,17 @@ async function createTransporter() {
   if (!host || !user || !pass) {
     throw new Error("SMTP nie jest skonfigurowany. Skonfiguruj go w panelu administratora.");
   }
+  const port2 = parseInt(s[SETTINGS_KEYS.SMTP_PORT] ?? "587", 10);
+  const secure = s[SETTINGS_KEYS.SMTP_SECURE] === "true";
   return import_nodemailer.default.createTransport({
     host,
-    port: parseInt(s[SETTINGS_KEYS.SMTP_PORT] ?? "587", 10),
-    secure: s[SETTINGS_KEYS.SMTP_SECURE] === "true",
-    auth: { user, pass }
+    port: port2,
+    secure,
+    auth: { user, pass },
+    tls: {
+      rejectUnauthorized: false
+    },
+    ...port2 === 587 && !secure ? { requireTLS: true } : {}
   });
 }
 async function sendVerificationEmail(to, name2, link) {
@@ -67082,6 +67088,45 @@ var init_auth2 = __esm({
       await db.update(usersTable).set({ emailVerified: true }).where(eq(usersTable.id, verification.userId));
       await db.delete(emailVerificationsTable).where(eq(emailVerificationsTable.id, verification.id));
       res.redirect("/logowanie?verified=1");
+    });
+    router7.post("/resend-verification", async (req, res) => {
+      const { email: email3 } = req.body ?? {};
+      if (!email3) {
+        res.status(400).json({ error: "Podaj adres email." });
+        return;
+      }
+      const users = await db.select().from(usersTable).where(eq(usersTable.email, email3.toLowerCase().trim())).limit(1);
+      const user = users[0];
+      if (!user) {
+        res.json({ ok: true, message: "Je\u015Bli konto istnieje, email weryfikacyjny zostanie wys\u0142any." });
+        return;
+      }
+      if (user.emailVerified) {
+        res.json({ ok: true, message: "Konto jest ju\u017C zweryfikowane. Mo\u017Cesz si\u0119 zalogowa\u0107." });
+        return;
+      }
+      await db.delete(emailVerificationsTable).where(eq(emailVerificationsTable.userId, user.id));
+      const verToken = generateToken(32);
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1e3);
+      await db.insert(emailVerificationsTable).values({
+        userId: user.id,
+        token: verToken,
+        expiresAt: expires
+      });
+      const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
+      const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
+      let emailError = null;
+      try {
+        await sendVerificationEmail(user.email, user.name ?? user.email, verificationLink);
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : String(err);
+        console.error("[AUTH] resend-verification email failed:", emailError);
+      }
+      if (emailError) {
+        res.status(500).json({ error: `Wysy\u0142ka emaila nie powiod\u0142a si\u0119: ${emailError}` });
+      } else {
+        res.json({ ok: true, message: "Email weryfikacyjny zosta\u0142 wys\u0142any. Sprawd\u017A swoj\u0105 skrzynk\u0119." });
+      }
     });
     auth_default = router7;
   }

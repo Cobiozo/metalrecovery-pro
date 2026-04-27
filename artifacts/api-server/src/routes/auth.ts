@@ -191,4 +191,55 @@ router.get("/verify-email/:token", async (req: Request, res: Response) => {
   res.redirect("/logowanie?verified=1");
 });
 
+router.post("/resend-verification", async (req: Request, res: Response) => {
+  const { email } = req.body ?? {};
+  if (!email) {
+    res.status(400).json({ error: "Podaj adres email." });
+    return;
+  }
+
+  const users = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.email, (email as string).toLowerCase().trim()))
+    .limit(1);
+
+  const user = users[0];
+  if (!user) {
+    res.json({ ok: true, message: "Jeśli konto istnieje, email weryfikacyjny zostanie wysłany." });
+    return;
+  }
+  if (user.emailVerified) {
+    res.json({ ok: true, message: "Konto jest już zweryfikowane. Możesz się zalogować." });
+    return;
+  }
+
+  await db.delete(emailVerificationsTable).where(eq(emailVerificationsTable.userId, user.id));
+
+  const verToken = generateToken(32);
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await db.insert(emailVerificationsTable).values({
+    userId: user.id,
+    token: verToken,
+    expiresAt: expires,
+  });
+
+  const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
+  const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
+
+  let emailError: string | null = null;
+  try {
+    await sendVerificationEmail(user.email, user.name ?? user.email, verificationLink);
+  } catch (err) {
+    emailError = err instanceof Error ? err.message : String(err);
+    console.error("[AUTH] resend-verification email failed:", emailError);
+  }
+
+  if (emailError) {
+    res.status(500).json({ error: `Wysyłka emaila nie powiodła się: ${emailError}` });
+  } else {
+    res.json({ ok: true, message: "Email weryfikacyjny został wysłany. Sprawdź swoją skrzynkę." });
+  }
+});
+
 export default router;

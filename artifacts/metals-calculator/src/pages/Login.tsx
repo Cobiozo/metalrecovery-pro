@@ -20,6 +20,7 @@ export function LoginPage() {
   const [name, setName] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
 
   const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const verified = params.get("verified") === "1";
@@ -44,12 +45,39 @@ export function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setShowResend(false);
     try {
       await login(email, password);
       navigate("/");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Błąd logowania";
+      const isVerificationError = msg.includes("potwierdzony") || msg.includes("weryfikacyjny");
       toast({ title: "Błąd logowania", description: msg, variant: "destructive" });
+      if (isVerificationError) setShowResend(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) {
+      toast({ title: "Podaj email", description: "Wpisz adres email powyżej.", variant: "destructive" });
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch(`${getAuthApiBase()}/auth/resend-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Błąd wysyłki");
+      toast({ title: "Gotowe", description: data.message });
+      setShowResend(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Błąd wysyłki";
+      toast({ title: "Błąd wysyłki emaila", description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -115,6 +143,7 @@ export function LoginPage() {
           </h2>
 
           {mode === "login" ? (
+            <>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1.5">
@@ -167,6 +196,22 @@ export function LoginPage() {
                 {loading ? "Logowanie..." : "Zaloguj się"}
               </button>
             </form>
+
+            {showResend && (
+              <div className="mt-3 p-3 rounded-md bg-amber-500/10 border border-amber-500/30">
+                <p className="text-xs text-amber-400 mb-2">Email weryfikacyjny nie dotarł?</p>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleResend}
+                  className="w-full py-2 rounded-md bg-amber-500/20 text-amber-300 text-xs font-medium hover:bg-amber-500/30 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? <Loader2 className="w-3 h-3 animate-spin inline mr-1" /> : null}
+                  Wyślij link weryfikacyjny ponownie
+                </button>
+              </div>
+            )}
+            </>
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
