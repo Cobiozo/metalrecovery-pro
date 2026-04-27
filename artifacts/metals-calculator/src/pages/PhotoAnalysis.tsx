@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -640,6 +641,7 @@ export function PhotoAnalysisPage() {
   const [, navigate] = useLocation();
   const { add } = useCustomMaterials();
   const { toast } = useToast();
+  const { authHeaders } = useAuth();
   const { data: apiMaterials } = useGetElectronicMaterials();
 
   function resolveItemMaterial(item: VisionItem): string {
@@ -819,6 +821,7 @@ export function PhotoAnalysisPage() {
 
       const response = await fetch(`${getVisionApiBase()}/vision/analyze`, {
         method: "POST",
+        headers: authHeaders(),
         body: formData,
       });
 
