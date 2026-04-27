@@ -14,7 +14,6 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useCustomMaterials } from "@/lib/useCustomMaterials";
@@ -244,14 +243,19 @@ function CorrectionDialog({
           imageDescription: imageDescription || undefined,
         }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        let errMsg = `HTTP ${res.status}`;
+        try { const j = await res.json(); if (j?.error) errMsg = j.error; } catch {}
+        throw new Error(errMsg);
+      }
       toast({ title: "Dziękujemy za zgłoszenie!", description: "Korekta zostanie sprawdzona przez administratora." });
       setSelectedCategory("");
       setCustomMaterial("");
       setNote("");
       onClose();
-    } catch {
-      toast({ title: "Błąd", description: "Nie udało się wysłać korekty. Spróbuj ponownie.", variant: "destructive" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Nieznany błąd";
+      toast({ title: "Błąd wysyłania korekty", description: msg, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -277,27 +281,35 @@ function CorrectionDialog({
             <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
               Właściwy materiał <span className="text-destructive">*</span>
             </label>
-            <Popover open={comboOpen} onOpenChange={setComboOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={comboOpen}
-                  className="w-full justify-between bg-background font-normal h-10 px-3 text-sm"
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={comboOpen}
+              onClick={() => setComboOpen(true)}
+              className="w-full justify-between bg-background font-normal h-10 px-3 text-sm"
+            >
+              <span className={selectedCategory && selectedCategory !== "__other__" ? "text-foreground truncate" : "text-muted-foreground"}>
+                {selectedCategory && selectedCategory !== "__other__" ? selectedCategory : "— wybierz lub wyszukaj kategorię —"}
+              </span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+
+            <Dialog open={comboOpen} onOpenChange={setComboOpen}>
+              <DialogContent className="max-w-sm p-0 gap-0 max-h-[80vh] flex flex-col">
+                <DialogHeader className="px-4 pt-4 pb-2 shrink-0">
+                  <DialogTitle className="text-sm font-semibold">Wybierz właściwy materiał</DialogTitle>
+                </DialogHeader>
+                <Command
+                  className="flex flex-col min-h-0 flex-1"
+                  filter={(itemValue, search) => {
+                    if (!search) return 1;
+                    return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+                  }}
                 >
-                  <span className={selectedCategory && selectedCategory !== "__other__" ? "text-foreground truncate" : "text-muted-foreground"}>
-                    {selectedCategory && selectedCategory !== "__other__" ? selectedCategory : "— wybierz lub wyszukaj kategorię —"}
-                  </span>
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]" align="start" style={{ maxHeight: "340px" }}>
-                <Command filter={(itemValue, search) => {
-                  if (!search) return 1;
-                  return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
-                }}>
-                  <CommandInput placeholder="Szukaj kategorii..." className="h-9" />
-                  <CommandList className="max-h-[280px]">
+                  <div className="px-3 pb-2 shrink-0">
+                    <CommandInput placeholder="Szukaj kategorii..." className="h-9" />
+                  </div>
+                  <CommandList className="flex-1 overflow-y-auto overscroll-contain px-1 pb-3" style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
                     <CommandEmpty>Brak wyników</CommandEmpty>
                     {CORRECTION_CATEGORIES.map((group) => (
                       <CommandGroup key={group.group} heading={<span className="text-xs font-bold uppercase tracking-wider text-amber-500">{group.group}</span>}>
@@ -324,8 +336,9 @@ function CorrectionDialog({
                     </CommandGroup>
                   </CommandList>
                 </Command>
-              </PopoverContent>
-            </Popover>
+              </DialogContent>
+            </Dialog>
+
             {selectedCategory === "__other__" && (
               <input
                 type="text"
