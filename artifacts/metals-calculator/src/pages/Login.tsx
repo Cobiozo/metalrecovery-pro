@@ -71,11 +71,14 @@ export function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Błąd rejestracji");
       toast({
-        title: "Konto utworzone",
-        description: "Sprawdź email i potwierdź rejestrację, a następnie zaloguj się.",
+        title: data.emailSent === false ? "Konto utworzone — problem z emailem" : "Konto utworzone",
+        description: data.message,
+        variant: data.emailSent === false ? "destructive" : "default",
       });
-      setMode("login");
-      setPassword("");
+      if (data.emailSent !== false) {
+        setMode("login");
+        setPassword("");
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Błąd rejestracji";
       toast({ title: "Błąd rejestracji", description: msg, variant: "destructive" });

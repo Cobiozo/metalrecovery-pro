@@ -66988,6 +66988,10 @@ var init_auth2 = __esm({
         res.status(401).json({ error: "Konto jest nieaktywne. Skontaktuj si\u0119 z administratorem." });
         return;
       }
+      if (!user.emailVerified) {
+        res.status(401).json({ error: "Adres email nie zosta\u0142 potwierdzony. Sprawd\u017A swoj\u0105 skrzynk\u0119 i kliknij link weryfikacyjny." });
+        return;
+      }
       const valid = await import_bcrypt.default.compare(password, user.passwordHash);
       if (!valid) {
         res.status(401).json({ error: "Nieprawid\u0142owy email lub has\u0142o." });
@@ -67049,11 +67053,22 @@ var init_auth2 = __esm({
       });
       const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
       const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
+      let emailError = null;
       try {
         await sendVerificationEmail(normalizedEmail, name2 ?? normalizedEmail, verificationLink);
-      } catch {
+      } catch (err) {
+        emailError = err instanceof Error ? err.message : String(err);
+        console.error("[AUTH] sendVerificationEmail failed:", emailError);
       }
-      res.status(201).json({ ok: true, message: "Konto utworzone. Sprawd\u017A email aby potwierdzi\u0107 rejestracj\u0119." });
+      if (emailError) {
+        res.status(201).json({
+          ok: true,
+          emailSent: false,
+          message: `Konto zosta\u0142o utworzone, ale wysy\u0142ka emaila weryfikacyjnego nie powiod\u0142a si\u0119 (${emailError}). Skontaktuj si\u0119 z administratorem w celu r\u0119cznego potwierdzenia konta.`
+        });
+      } else {
+        res.status(201).json({ ok: true, emailSent: true, message: "Konto utworzone. Sprawd\u017A email i kliknij link weryfikacyjny, aby aktywowa\u0107 konto." });
+      }
     });
     router7.get("/verify-email/:token", async (req, res) => {
       const token = req.params.token;

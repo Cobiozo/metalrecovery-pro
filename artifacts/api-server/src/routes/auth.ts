@@ -61,6 +61,11 @@ router.post("/login", async (req: Request, res: Response) => {
     return;
   }
 
+  if (!user.emailVerified) {
+    res.status(401).json({ error: "Adres email nie został potwierdzony. Sprawdź swoją skrzynkę i kliknij link weryfikacyjny." });
+    return;
+  }
+
   const valid = await bcrypt.compare(password as string, user.passwordHash);
   if (!valid) {
     res.status(401).json({ error: "Nieprawidłowy email lub hasło." });
@@ -145,13 +150,23 @@ router.post("/register", async (req: Request, res: Response) => {
   const siteUrl = await getSetting(SETTINGS_KEYS.SITE_URL) ?? "https://metalrecovery.online";
   const verificationLink = `${siteUrl}/api/auth/verify-email/${verToken}`;
 
+  let emailError: string | null = null;
   try {
     await sendVerificationEmail(normalizedEmail, name as string ?? normalizedEmail, verificationLink);
-  } catch {
-    // Email sending failed — user can request resend
+  } catch (err) {
+    emailError = err instanceof Error ? err.message : String(err);
+    console.error("[AUTH] sendVerificationEmail failed:", emailError);
   }
 
-  res.status(201).json({ ok: true, message: "Konto utworzone. Sprawdź email aby potwierdzić rejestrację." });
+  if (emailError) {
+    res.status(201).json({
+      ok: true,
+      emailSent: false,
+      message: `Konto zostało utworzone, ale wysyłka emaila weryfikacyjnego nie powiodła się (${emailError}). Skontaktuj się z administratorem w celu ręcznego potwierdzenia konta.`,
+    });
+  } else {
+    res.status(201).json({ ok: true, emailSent: true, message: "Konto utworzone. Sprawdź email i kliknij link weryfikacyjny, aby aktywować konto." });
+  }
 });
 
 router.get("/verify-email/:token", async (req: Request, res: Response) => {
