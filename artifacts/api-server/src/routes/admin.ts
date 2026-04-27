@@ -4,8 +4,9 @@ import { db } from "@workspace/db";
 import {
   usersTable, sessionsTable, systemSettingsTable, SETTINGS_KEYS,
   systemStatsTable, STAT_METRICS, aiAnalysisLogsTable, visitLogsTable,
+  visionCorrectionsTable, visionPromptRulesTable,
 } from "@workspace/db/schema";
-import { eq, desc, ne, sql } from "drizzle-orm";
+import { eq, desc, ne, sql, asc } from "drizzle-orm";
 import { requireRole, type AuthRequest } from "../middlewares/auth";
 import { getStatsLastDays } from "../lib/stats";
 import { testSmtpConnection } from "../lib/mailer";
@@ -181,6 +182,105 @@ router.put("/settings", adminOnly, async (req: AuthRequest, res: Response) => {
   }
   res.json({ ok: true });
 });
+
+// ── Vision Corrections (AI Learning) ─────────────────────────────────────────
+
+router.get("/vision-corrections", adminOnly, async (_req: AuthRequest, res: Response) => {
+  const rows = await db
+    .select()
+    .from(visionCorrectionsTable)
+    .orderBy(desc(visionCorrectionsTable.createdAt))
+    .limit(200);
+  res.json(rows);
+});
+
+router.patch("/vision-corrections/:id", adminOnly, async (req: AuthRequest, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  const { status } = req.body ?? {};
+  if (!["pending", "dismissed"].includes(status as string)) {
+    res.status(400).json({ error: "Nieprawidłowy status. Dozwolone: pending, dismissed." });
+    return;
+  }
+  await db
+    .update(visionCorrectionsTable)
+    .set({ status: status as string })
+    .where(eq(visionCorrectionsTable.id, id));
+  res.json({ ok: true });
+});
+
+router.post("/vision-corrections/:id/promote", adminOnly, async (req: AuthRequest, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  const { title, ruleText } = req.body ?? {};
+  if (!title || !ruleText) {
+    res.status(400).json({ error: "Podaj tytuł i tekst reguły." });
+    return;
+  }
+  const [rule] = await db
+    .insert(visionPromptRulesTable)
+    .values({ title: title as string, ruleText: ruleText as string, isActive: true, sortOrder: 0 })
+    .returning();
+  await db
+    .update(visionCorrectionsTable)
+    .set({ status: "promoted", promotedRuleId: rule.id })
+    .where(eq(visionCorrectionsTable.id, id));
+  res.json({ ok: true, rule });
+});
+
+// ── Vision Prompt Rules ───────────────────────────────────────────────────────
+
+router.get("/vision-rules", adminOnly, async (_req: AuthRequest, res: Response) => {
+  const rows = await db
+    .select()
+    .from(visionPromptRulesTable)
+    .orderBy(asc(visionPromptRulesTable.sortOrder), asc(visionPromptRulesTable.id));
+  res.json(rows);
+});
+
+router.post("/vision-rules", adminOnly, async (req: AuthRequest, res: Response) => {
+  const { title, ruleText, sortOrder } = req.body ?? {};
+  if (!title || !ruleText) {
+    res.status(400).json({ error: "Podaj tytuł i tekst reguły." });
+    return;
+  }
+  const [rule] = await db
+    .insert(visionPromptRulesTable)
+    .values({
+      title: title as string,
+      ruleText: ruleText as string,
+      isActive: true,
+      sortOrder: typeof sortOrder === "number" ? sortOrder : 0,
+    })
+    .returning();
+  res.json(rule);
+});
+
+router.patch("/vision-rules/:id", adminOnly, async (req: AuthRequest, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  const { title, ruleText, isActive, sortOrder } = req.body ?? {};
+  const updates: Record<string, unknown> = {};
+  if (title !== undefined) updates.title = title;
+  if (ruleText !== undefined) updates.ruleText = ruleText;
+  if (isActive !== undefined) updates.isActive = Boolean(isActive);
+  if (sortOrder !== undefined) updates.sortOrder = Number(sortOrder);
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "Brak pól do aktualizacji." });
+    return;
+  }
+  const [rule] = await db
+    .update(visionPromptRulesTable)
+    .set(updates)
+    .where(eq(visionPromptRulesTable.id, id))
+    .returning();
+  res.json(rule);
+});
+
+router.delete("/vision-rules/:id", adminOnly, async (req: AuthRequest, res: Response) => {
+  const id = parseInt(req.params.id, 10);
+  await db.delete(visionPromptRulesTable).where(eq(visionPromptRulesTable.id, id));
+  res.json({ ok: true });
+});
+
+// ── SMTP Test ─────────────────────────────────────────────────────────────────
 
 router.post("/settings/smtp-test", adminOnly, async (req: AuthRequest, res: Response) => {
   const { host, port, secure, user, pass } = req.body ?? {};

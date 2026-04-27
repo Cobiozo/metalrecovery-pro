@@ -9,7 +9,11 @@ import {
   Camera, Upload, ScanLine, Loader2, AlertTriangle, Info,
   FlaskConical, Star, CheckCircle2, XCircle, Sparkles,
   ChevronRight, ImageIcon, RotateCcw, ShoppingCart, Calculator, Scale,
+  Flag,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useCustomMaterials } from "@/lib/useCustomMaterials";
 import { CustomMaterialModal } from "@/components/CustomMaterialModal";
@@ -130,19 +134,134 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
+function CorrectionDialog({
+  open,
+  onClose,
+  aiMaterialType,
+  imageDescription,
+  authHeaders,
+  toast,
+}: {
+  open: boolean;
+  onClose: () => void;
+  aiMaterialType: string;
+  imageDescription?: string;
+  authHeaders: () => Record<string, string>;
+  toast: ReturnType<typeof useToast>["toast"];
+}) {
+  const [correctMaterial, setCorrectMaterial] = useState("");
+  const [note, setNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function submit() {
+    const trimmed = correctMaterial.trim();
+    if (!trimmed) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${getVisionApiBase()}/vision/correction`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({
+          aiMaterialType,
+          correctMaterialType: trimmed,
+          correctionNote: note.trim() || undefined,
+          imageDescription: imageDescription || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      toast({ title: "Dziękujemy za zgłoszenie!", description: "Korekta zostanie sprawdzona przez administratora." });
+      setCorrectMaterial("");
+      setNote("");
+      onClose();
+    } catch {
+      toast({ title: "Błąd", description: "Nie udało się wysłać korekty. Spróbuj ponownie.", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Flag className="w-4 h-4 text-orange-400" />
+            Zgłoś błędną klasyfikację
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-1">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">AI sklasyfikowało jako:</p>
+            <p className="text-sm font-medium bg-muted/50 rounded px-3 py-2 border border-border">
+              {aiMaterialType}
+            </p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
+              Właściwy materiał <span className="text-destructive">*</span>
+            </label>
+            <input
+              type="text"
+              value={correctMaterial}
+              onChange={(e) => setCorrectMaterial(e.target.value)}
+              placeholder="np. Stacja dokująca Dell WD22..."
+              className="w-full h-9 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
+              Uwagi (opcjonalnie)
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={2}
+              placeholder="Dodatkowy opis widocznych cech materiału..."
+              className="w-full px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Twoja korekta zostanie przesłana do administratora. Po weryfikacji poprawi dokładność przyszłych analiz AI.
+          </p>
+        </div>
+        <DialogFooter className="gap-2">
+          <Button variant="ghost" size="sm" onClick={onClose} disabled={submitting}>
+            Anuluj
+          </Button>
+          <Button
+            size="sm"
+            className="gap-1.5"
+            disabled={!correctMaterial.trim() || submitting}
+            onClick={submit}
+          >
+            {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Flag className="w-3.5 h-3.5" />}
+            Wyślij korektę
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function VisionResultCard({
   result,
   onSaveProfile,
   onQuantityChange,
   weightPerPieceKg,
   initialMassKg,
+  authHeaders,
+  isLoggedIn,
 }: {
   result: VisionItem;
   onSaveProfile: () => void;
   onQuantityChange: (qty: number) => void;
   weightPerPieceKg?: number;
   initialMassKg?: number | null;
+  authHeaders: () => Record<string, string>;
+  isLoggedIn: boolean;
 }) {
+  const { toast } = useToast();
+  const [correctionOpen, setCorrectionOpen] = useState(false);
   const scaleMode = initialMassKg != null && initialMassKg > 0;
   const [qty, setQty] = useState<number>(
     scaleMode ? initialMassKg : (result.quantity > 0 ? result.quantity : 0)
@@ -410,6 +529,26 @@ function VisionResultCard({
         </div>
       )}
 
+      {isLoggedIn && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full gap-2 text-orange-400/70 hover:text-orange-400 text-xs border border-orange-500/15 hover:border-orange-500/30 hover:bg-orange-500/5"
+          onClick={() => setCorrectionOpen(true)}
+        >
+          <Flag className="w-3.5 h-3.5" />
+          Zgłoś błędną klasyfikację AI
+        </Button>
+      )}
+
+      <CorrectionDialog
+        open={correctionOpen}
+        onClose={() => setCorrectionOpen(false)}
+        aiMaterialType={result.materialType}
+        imageDescription={result.description}
+        authHeaders={authHeaders}
+        toast={toast}
+      />
     </div>
   );
 }
@@ -641,7 +780,7 @@ export function PhotoAnalysisPage() {
   const [, navigate] = useLocation();
   const { add } = useCustomMaterials();
   const { toast } = useToast();
-  const { authHeaders } = useAuth();
+  const { authHeaders, user } = useAuth();
   const { data: apiMaterials } = useGetElectronicMaterials();
 
   function resolveItemMaterial(item: VisionItem): string {
@@ -1067,6 +1206,8 @@ export function PhotoAnalysisPage() {
               weightPerPieceKg={getWeightPerPieceKg(item.materialType)}
               initialMassKg={item.massGrams != null && item.massGrams > 0 ? item.massGrams / 1000 : null}
               onSaveProfile={() => setSaveItem(item)}
+              authHeaders={authHeaders}
+              isLoggedIn={!!user}
               onQuantityChange={(qty) =>
                 setEditedQuantities((prev) => {
                   const next = [...prev];

@@ -52,7 +52,7 @@ const ROLE_LABELS: Record<string, { label: string; icon: React.ElementType; colo
   user: { label: "Użytkownik", icon: UserIcon, color: "text-blue-400" },
 };
 
-type Tab = "users" | "stats" | "settings";
+type Tab = "users" | "stats" | "settings" | "vision";
 
 export function AdminPage() {
   const { user, authHeaders, isAdmin, loading } = useAuth();
@@ -83,16 +83,16 @@ export function AdminPage() {
         </div>
       </div>
 
-      <div className="flex border-b border-border pb-0">
-        {(["users", "stats", "settings"] as Tab[]).map((t) => {
-          const icons = { users: Users, stats: BarChart2, settings: Settings };
-          const labels = { users: "Użytkownicy", stats: "Statystyki", settings: "Ustawienia" };
+      <div className="flex border-b border-border pb-0 overflow-x-auto">
+        {(["users", "stats", "settings", "vision"] as Tab[]).map((t) => {
+          const icons = { users: Users, stats: BarChart2, settings: Settings, vision: Brain };
+          const labels = { users: "Użytkownicy", stats: "Statystyki", settings: "Ustawienia", vision: "Uczenie AI" };
           const Icon = icons[t];
           return (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px ${
+              className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap ${
                 tab === t
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -108,6 +108,7 @@ export function AdminPage() {
       {tab === "users" && <UsersTab authHeaders={authHeaders} toast={toast} currentUserId={user.id} />}
       {tab === "stats" && <StatsTab authHeaders={authHeaders} />}
       {tab === "settings" && <SettingsTab authHeaders={authHeaders} toast={toast} />}
+      {tab === "vision" && <VisionTab authHeaders={authHeaders} toast={toast} />}
     </div>
   );
 }
@@ -885,6 +886,500 @@ function SettingsTab({
           Zapisz wszystkie ustawienia
         </button>
       </div>
+    </div>
+  );
+}
+
+// ── Vision Learning Tab ───────────────────────────────────────────────────────
+
+type VisionCorrection = {
+  id: number;
+  createdAt: string;
+  aiMaterialType: string;
+  correctMaterialType: string;
+  correctionNote: string | null;
+  imageDescription: string | null;
+  userEmail: string | null;
+  status: string;
+  promotedRuleId: number | null;
+};
+
+type VisionRule = {
+  id: number;
+  createdAt: string;
+  title: string;
+  ruleText: string;
+  isActive: boolean;
+  sortOrder: number;
+};
+
+function VisionTab({
+  authHeaders,
+  toast,
+}: {
+  authHeaders: () => Record<string, string>;
+  toast: ReturnType<typeof useToast>["toast"];
+}) {
+  const [corrections, setCorrections] = useState<VisionCorrection[]>([]);
+  const [rules, setRules] = useState<VisionRule[]>([]);
+  const [loadingC, setLoadingC] = useState(true);
+  const [loadingR, setLoadingR] = useState(true);
+  const [section, setSection] = useState<"corrections" | "rules">("corrections");
+
+  // Promote dialog state
+  const [promoteItem, setPromoteItem] = useState<VisionCorrection | null>(null);
+  const [promoteTitle, setPromoteTitle] = useState("");
+  const [promoteText, setPromoteText] = useState("");
+  const [promoting, setPromoting] = useState(false);
+
+  // New rule form
+  const [showNewRule, setShowNewRule] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newText, setNewText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  // Edit rule
+  const [editRuleId, setEditRuleId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editText, setEditText] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+
+  const fetchCorrections = useCallback(async () => {
+    setLoadingC(true);
+    try {
+      const res = await fetch(`${getApiBase()}/admin/vision-corrections`, { headers: authHeaders() });
+      if (res.ok) setCorrections(await res.json());
+    } finally { setLoadingC(false); }
+  }, [authHeaders]);
+
+  const fetchRules = useCallback(async () => {
+    setLoadingR(true);
+    try {
+      const res = await fetch(`${getApiBase()}/admin/vision-rules`, { headers: authHeaders() });
+      if (res.ok) setRules(await res.json());
+    } finally { setLoadingR(false); }
+  }, [authHeaders]);
+
+  useEffect(() => {
+    fetchCorrections();
+    fetchRules();
+  }, [fetchCorrections, fetchRules]);
+
+  async function dismissCorrection(id: number) {
+    await fetch(`${getApiBase()}/admin/vision-corrections/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ status: "dismissed" }),
+    });
+    setCorrections((prev) => prev.map((c) => c.id === id ? { ...c, status: "dismissed" } : c));
+  }
+
+  async function restoreCorrection(id: number) {
+    await fetch(`${getApiBase()}/admin/vision-corrections/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ status: "pending" }),
+    });
+    setCorrections((prev) => prev.map((c) => c.id === id ? { ...c, status: "pending" } : c));
+  }
+
+  function openPromote(c: VisionCorrection) {
+    setPromoteItem(c);
+    setPromoteTitle(`Nie klasyfikuj "${c.aiMaterialType}" jako błędu — poprawna nazwa to "${c.correctMaterialType}"`);
+    setPromoteText(
+      `Jeśli widzisz materiał sklasyfikowany jako "${c.aiMaterialType}", sprawdź ponownie — poprawna odpowiedź to "${c.correctMaterialType}".` +
+      (c.correctionNote ? ` Wskazówka: ${c.correctionNote}` : "")
+    );
+  }
+
+  async function submitPromote() {
+    if (!promoteItem || !promoteTitle.trim() || !promoteText.trim()) return;
+    setPromoting(true);
+    try {
+      const res = await fetch(`${getApiBase()}/admin/vision-corrections/${promoteItem.id}/promote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ title: promoteTitle, ruleText: promoteText }),
+      });
+      if (!res.ok) throw new Error();
+      toast({ title: "Reguła dodana!", description: "Korekta została promowana do stałej reguły AI." });
+      setPromoteItem(null);
+      await Promise.all([fetchCorrections(), fetchRules()]);
+    } catch {
+      toast({ title: "Błąd", description: "Nie udało się promować korekty.", variant: "destructive" });
+    } finally { setPromoting(false); }
+  }
+
+  async function toggleRule(id: number, current: boolean) {
+    await fetch(`${getApiBase()}/admin/vision-rules/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ isActive: !current }),
+    });
+    setRules((prev) => prev.map((r) => r.id === id ? { ...r, isActive: !current } : r));
+  }
+
+  async function deleteRule(id: number) {
+    if (!confirm("Czy na pewno chcesz usunąć tę regułę?")) return;
+    await fetch(`${getApiBase()}/admin/vision-rules/${id}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    setRules((prev) => prev.filter((r) => r.id !== id));
+    toast({ title: "Reguła usunięta" });
+  }
+
+  async function createRule() {
+    if (!newTitle.trim() || !newText.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`${getApiBase()}/admin/vision-rules`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ title: newTitle, ruleText: newText }),
+      });
+      if (!res.ok) throw new Error();
+      toast({ title: "Reguła dodana!" });
+      setNewTitle(""); setNewText(""); setShowNewRule(false);
+      await fetchRules();
+    } catch {
+      toast({ title: "Błąd", description: "Nie udało się dodać reguły.", variant: "destructive" });
+    } finally { setSaving(false); }
+  }
+
+  async function saveEditRule() {
+    if (!editRuleId || !editTitle.trim() || !editText.trim()) return;
+    setEditSaving(true);
+    try {
+      await fetch(`${getApiBase()}/admin/vision-rules/${editRuleId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ title: editTitle, ruleText: editText }),
+      });
+      setRules((prev) => prev.map((r) => r.id === editRuleId ? { ...r, title: editTitle, ruleText: editText } : r));
+      setEditRuleId(null);
+      toast({ title: "Reguła zaktualizowana" });
+    } catch {
+      toast({ title: "Błąd", description: "Nie udało się zapisać reguły.", variant: "destructive" });
+    } finally { setEditSaving(false); }
+  }
+
+  const pending = corrections.filter((c) => c.status === "pending");
+  const other = corrections.filter((c) => c.status !== "pending");
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Brain className="w-5 h-5 text-purple-400" />
+          <h2 className="text-base font-semibold">Uczenie maszynowe AI</h2>
+        </div>
+        <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
+          <button
+            onClick={() => setSection("corrections")}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              section === "corrections" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Korekty użytkowników
+            {pending.length > 0 && (
+              <span className="ml-1.5 bg-orange-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
+                {pending.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setSection("rules")}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              section === "rules" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Reguły promptu
+            {rules.filter((r) => r.isActive).length > 0 && (
+              <span className="ml-1.5 bg-green-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
+                {rules.filter((r) => r.isActive).length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Corrections Section ── */}
+      {section === "corrections" && (
+        <div className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            Poniżej są korekty zgłoszone przez zalogowanych użytkowników. Możesz je <strong>promować do stałych reguł</strong> lub <strong>odrzucać</strong>. Oczekujące korekty są automatycznie wstrzykiwane do promptu AI jako przykłady.
+          </p>
+
+          {loadingC ? (
+            <div className="py-8 flex justify-center">
+              <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+          ) : corrections.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground text-sm">
+              Brak korekt. Gdy użytkownicy zgłoszą błędy AI, pojawią się tutaj.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {pending.length > 0 && (
+                <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider">
+                  Oczekujące ({pending.length}) — wstrzykiwane do promptu AI
+                </p>
+              )}
+              {[...pending, ...other].map((c) => (
+                <div
+                  key={c.id}
+                  className={`rounded-lg border p-3 space-y-2 ${
+                    c.status === "pending"
+                      ? "border-orange-500/30 bg-orange-500/5"
+                      : c.status === "promoted"
+                      ? "border-green-500/20 bg-green-500/5 opacity-60"
+                      : "border-border bg-muted/20 opacity-50"
+                  }`}
+                >
+                  <div className="flex items-start gap-2 flex-wrap">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-[10px] font-bold uppercase rounded px-1.5 py-0.5 ${
+                          c.status === "pending" ? "bg-orange-500/20 text-orange-400" :
+                          c.status === "promoted" ? "bg-green-500/20 text-green-400" :
+                          "bg-muted text-muted-foreground"
+                        }`}>
+                          {c.status === "pending" ? "oczekująca" : c.status === "promoted" ? "promowana" : "odrzucona"}
+                        </span>
+                        {c.userEmail && (
+                          <span className="text-[11px] text-muted-foreground">{c.userEmail}</span>
+                        )}
+                        <span className="text-[11px] text-muted-foreground ml-auto">
+                          {new Date(c.createdAt).toLocaleDateString("pl-PL")}
+                        </span>
+                      </div>
+                      <div className="text-xs space-y-0.5">
+                        <p className="text-muted-foreground">
+                          AI powiedział: <span className="font-medium text-foreground line-through decoration-red-400">{c.aiMaterialType}</span>
+                        </p>
+                        <p className="text-muted-foreground">
+                          Poprawna odpowiedź: <span className="font-semibold text-green-400">{c.correctMaterialType}</span>
+                        </p>
+                        {c.correctionNote && (
+                          <p className="text-muted-foreground italic">„{c.correctionNote}"</p>
+                        )}
+                        {c.imageDescription && (
+                          <p className="text-muted-foreground/70 text-[11px]">Opis AI: {c.imageDescription.slice(0, 120)}{c.imageDescription.length > 120 ? "…" : ""}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  {c.status === "pending" && (
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => openPromote(c)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/25 transition-colors"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                        Promuj do reguły
+                      </button>
+                      <button
+                        onClick={() => dismissCorrection(c.id)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                        Odrzuć
+                      </button>
+                    </div>
+                  )}
+                  {c.status === "dismissed" && (
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={() => restoreCorrection(c.id)}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Przywróć
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Rules Section ── */}
+      {section === "rules" && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted-foreground flex-1">
+              Stałe reguły promptu AI — aktywne reguły są zawsze wstrzykiwane do każdej analizy zdjęcia.
+            </p>
+            <button
+              onClick={() => setShowNewRule((v) => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shrink-0 ml-2"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Nowa reguła
+            </button>
+          </div>
+
+          {showNewRule && (
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
+              <p className="text-xs font-bold text-primary uppercase tracking-wider">Nowa reguła promptu</p>
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground font-medium block">Tytuł (skrótowy opis)</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="np. Stacje dokujące — zawsze e-odpad"
+                  className="w-full h-8 px-2.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-xs text-muted-foreground font-medium block">Tekst reguły (instrukcja dla AI)</label>
+                <textarea
+                  value={newText}
+                  onChange={(e) => setNewText(e.target.value)}
+                  rows={3}
+                  placeholder="Jeśli widzisz... klasyfikuj jako..."
+                  className="w-full px-2.5 py-2 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button onClick={() => setShowNewRule(false)} className="px-3 py-1.5 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80">Anuluj</button>
+                <button
+                  onClick={createRule}
+                  disabled={saving || !newTitle.trim() || !newText.trim()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {saving ? <div className="w-3.5 h-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  Dodaj regułę
+                </button>
+              </div>
+            </div>
+          )}
+
+          {loadingR ? (
+            <div className="py-8 flex justify-center">
+              <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            </div>
+          ) : rules.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground text-sm">
+              Brak reguł. Dodaj ręcznie lub promuj korekty użytkowników.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {rules.map((r) => (
+                <div key={r.id} className={`rounded-lg border p-3 space-y-2 ${r.isActive ? "border-border" : "border-border/40 opacity-50"}`}>
+                  {editRuleId === r.id ? (
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        className="w-full h-8 px-2.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <textarea
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                        rows={3}
+                        className="w-full px-2.5 py-2 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <button onClick={() => setEditRuleId(null)} className="px-3 py-1.5 text-xs rounded bg-muted text-muted-foreground">Anuluj</button>
+                        <button
+                          onClick={saveEditRule}
+                          disabled={editSaving}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                        >
+                          {editSaving ? <div className="w-3.5 h-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                          Zapisz
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start gap-2">
+                        <button
+                          onClick={() => toggleRule(r.id, r.isActive)}
+                          className="shrink-0 mt-0.5"
+                          title={r.isActive ? "Kliknij aby deaktywować" : "Kliknij aby aktywować"}
+                        >
+                          {r.isActive
+                            ? <ToggleRight className="w-5 h-5 text-green-400" />
+                            : <ToggleLeft className="w-5 h-5 text-muted-foreground" />
+                          }
+                        </button>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold">{r.title}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed whitespace-pre-line">{r.ruleText}</p>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            onClick={() => { setEditRuleId(r.id); setEditTitle(r.title); setEditText(r.ruleText); }}
+                            className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                            title="Edytuj"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => deleteRule(r.id)}
+                            className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            title="Usuń"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Promote Dialog ── */}
+      {promoteItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-background border border-border rounded-xl shadow-2xl max-w-lg w-full p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <ChevronUp className="w-4 h-4 text-green-400" />
+              <h3 className="font-semibold text-sm">Promuj do stałej reguły AI</h3>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground font-medium block">Tytuł reguły</label>
+              <input
+                type="text"
+                value={promoteTitle}
+                onChange={(e) => setPromoteTitle(e.target.value)}
+                className="w-full h-9 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground font-medium block">Tekst reguły (instrukcja dla AI)</label>
+              <textarea
+                value={promoteText}
+                onChange={(e) => setPromoteText(e.target.value)}
+                rows={4}
+                className="w-full px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={() => setPromoteItem(null)} disabled={promoting} className="px-4 py-2 text-sm rounded bg-muted text-muted-foreground hover:bg-muted/80">Anuluj</button>
+              <button
+                onClick={submitPromote}
+                disabled={promoting || !promoteTitle.trim() || !promoteText.trim()}
+                className="flex items-center gap-2 px-4 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-600/90 disabled:opacity-50"
+              >
+                {promoting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
+                Dodaj jako regułę
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

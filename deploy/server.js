@@ -50626,6 +50626,44 @@ var init_visitLogs = __esm({
   }
 });
 
+// ../../lib/db/src/schema/visionCorrections.ts
+var visionCorrectionsTable;
+var init_visionCorrections = __esm({
+  "../../lib/db/src/schema/visionCorrections.ts"() {
+    "use strict";
+    init_pg_core();
+    visionCorrectionsTable = pgTable("vision_corrections", {
+      id: serial("id").primaryKey(),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      aiMaterialType: text("ai_material_type").notNull(),
+      correctMaterialType: text("correct_material_type").notNull(),
+      correctionNote: text("correction_note"),
+      imageDescription: text("image_description"),
+      userId: integer("user_id"),
+      userEmail: text("user_email"),
+      status: text("status").notNull().default("pending"),
+      promotedRuleId: integer("promoted_rule_id")
+    });
+  }
+});
+
+// ../../lib/db/src/schema/visionPromptRules.ts
+var visionPromptRulesTable;
+var init_visionPromptRules = __esm({
+  "../../lib/db/src/schema/visionPromptRules.ts"() {
+    "use strict";
+    init_pg_core();
+    visionPromptRulesTable = pgTable("vision_prompt_rules", {
+      id: serial("id").primaryKey(),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      title: text("title").notNull(),
+      ruleText: text("rule_text").notNull(),
+      isActive: boolean("is_active").notNull().default(true),
+      sortOrder: integer("sort_order").notNull().default(0)
+    });
+  }
+});
+
 // ../../lib/db/src/schema/index.ts
 var schema_exports = {};
 __export(schema_exports, {
@@ -50639,6 +50677,8 @@ __export(schema_exports, {
   systemSettingsTable: () => systemSettingsTable,
   systemStatsTable: () => systemStatsTable,
   usersTable: () => usersTable,
+  visionCorrectionsTable: () => visionCorrectionsTable,
+  visionPromptRulesTable: () => visionPromptRulesTable,
   visitLogsTable: () => visitLogsTable
 });
 var init_schema2 = __esm({
@@ -50652,6 +50692,8 @@ var init_schema2 = __esm({
     init_emailVerifications();
     init_aiAnalysisLogs();
     init_visitLogs();
+    init_visionCorrections();
+    init_visionPromptRules();
   }
 });
 
@@ -50670,6 +50712,8 @@ __export(src_exports, {
   systemSettingsTable: () => systemSettingsTable,
   systemStatsTable: () => systemStatsTable,
   usersTable: () => usersTable,
+  visionCorrectionsTable: () => visionCorrectionsTable,
+  visionPromptRulesTable: () => visionPromptRulesTable,
   visitLogsTable: () => visitLogsTable
 });
 var Pool3, DATABASE_URL, pool, db;
@@ -66867,6 +66911,48 @@ async function ensureSchema() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS ai_analysis_logs (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ip TEXT NOT NULL,
+      user_id INTEGER,
+      user_email TEXT,
+      materials_detected TEXT,
+      item_count INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS visit_logs (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ip TEXT NOT NULL
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS vision_corrections (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ai_material_type TEXT NOT NULL,
+      correct_material_type TEXT NOT NULL,
+      correction_note TEXT,
+      image_description TEXT,
+      user_id INTEGER,
+      user_email TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      promoted_rule_id INTEGER
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS vision_prompt_rules (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      title TEXT NOT NULL,
+      rule_text TEXT NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `);
   console.log("[migrate] Schema OK");
 }
 var init_migrate = __esm({
@@ -67299,6 +67385,69 @@ var init_admin = __esm({
           set: { value: String(value), updatedAt: /* @__PURE__ */ new Date() }
         });
       }
+      res.json({ ok: true });
+    });
+    router8.get("/vision-corrections", adminOnly, async (_req, res) => {
+      const rows = await db.select().from(visionCorrectionsTable).orderBy(desc(visionCorrectionsTable.createdAt)).limit(200);
+      res.json(rows);
+    });
+    router8.patch("/vision-corrections/:id", adminOnly, async (req, res) => {
+      const id = parseInt(req.params.id, 10);
+      const { status } = req.body ?? {};
+      if (!["pending", "dismissed"].includes(status)) {
+        res.status(400).json({ error: "Nieprawid\u0142owy status. Dozwolone: pending, dismissed." });
+        return;
+      }
+      await db.update(visionCorrectionsTable).set({ status }).where(eq(visionCorrectionsTable.id, id));
+      res.json({ ok: true });
+    });
+    router8.post("/vision-corrections/:id/promote", adminOnly, async (req, res) => {
+      const id = parseInt(req.params.id, 10);
+      const { title, ruleText } = req.body ?? {};
+      if (!title || !ruleText) {
+        res.status(400).json({ error: "Podaj tytu\u0142 i tekst regu\u0142y." });
+        return;
+      }
+      const [rule] = await db.insert(visionPromptRulesTable).values({ title, ruleText, isActive: true, sortOrder: 0 }).returning();
+      await db.update(visionCorrectionsTable).set({ status: "promoted", promotedRuleId: rule.id }).where(eq(visionCorrectionsTable.id, id));
+      res.json({ ok: true, rule });
+    });
+    router8.get("/vision-rules", adminOnly, async (_req, res) => {
+      const rows = await db.select().from(visionPromptRulesTable).orderBy(asc(visionPromptRulesTable.sortOrder), asc(visionPromptRulesTable.id));
+      res.json(rows);
+    });
+    router8.post("/vision-rules", adminOnly, async (req, res) => {
+      const { title, ruleText, sortOrder } = req.body ?? {};
+      if (!title || !ruleText) {
+        res.status(400).json({ error: "Podaj tytu\u0142 i tekst regu\u0142y." });
+        return;
+      }
+      const [rule] = await db.insert(visionPromptRulesTable).values({
+        title,
+        ruleText,
+        isActive: true,
+        sortOrder: typeof sortOrder === "number" ? sortOrder : 0
+      }).returning();
+      res.json(rule);
+    });
+    router8.patch("/vision-rules/:id", adminOnly, async (req, res) => {
+      const id = parseInt(req.params.id, 10);
+      const { title, ruleText, isActive, sortOrder } = req.body ?? {};
+      const updates = {};
+      if (title !== void 0) updates.title = title;
+      if (ruleText !== void 0) updates.ruleText = ruleText;
+      if (isActive !== void 0) updates.isActive = Boolean(isActive);
+      if (sortOrder !== void 0) updates.sortOrder = Number(sortOrder);
+      if (Object.keys(updates).length === 0) {
+        res.status(400).json({ error: "Brak p\xF3l do aktualizacji." });
+        return;
+      }
+      const [rule] = await db.update(visionPromptRulesTable).set(updates).where(eq(visionPromptRulesTable.id, id)).returning();
+      res.json(rule);
+    });
+    router8.delete("/vision-rules/:id", adminOnly, async (req, res) => {
+      const id = parseInt(req.params.id, 10);
+      await db.delete(visionPromptRulesTable).where(eq(visionPromptRulesTable.id, id));
       res.json({ ok: true });
     });
     router8.post("/settings/smtp-test", adminOnly, async (req, res) => {
@@ -82375,9 +82524,36 @@ var VisionResultSchema = external_exports.object({
     displayText: external_exports.string().nullable().optional()
   }).optional()
 });
+async function fetchLearnedContext() {
+  try {
+    const [rules, corrections] = await Promise.all([
+      db.select().from(visionPromptRulesTable).where(eq(visionPromptRulesTable.isActive, true)).orderBy(asc(visionPromptRulesTable.sortOrder), asc(visionPromptRulesTable.id)),
+      db.select().from(visionCorrectionsTable).where(eq(visionCorrectionsTable.status, "pending")).orderBy(desc(visionCorrectionsTable.createdAt)).limit(15)
+    ]);
+    const parts = [];
+    if (rules.length > 0) {
+      const ruleLines = rules.map((r) => `  \u2022 [REGU\u0141A: ${r.title}] ${r.ruleText}`).join("\n");
+      parts.push(`PERMANENTNE REGU\u0141Y ADMINISTRATORA (najwy\u017Cszy priorytet \u2014 przestrzegaj bezwzgl\u0119dnie):
+${ruleLines}`);
+    }
+    if (corrections.length > 0) {
+      const correctionLines = corrections.map((c) => {
+        const note = c.correctionNote ? ` \u2014 uwaga: "${c.correctionNote}"` : "";
+        const desc2 = c.imageDescription ? ` (obraz: ${c.imageDescription})` : "";
+        return `  \u2022 AI powiedzia\u0142 "${c.aiMaterialType}" ale poprawna odpowied\u017A to "${c.correctMaterialType}"${desc2}${note}`;
+      }).join("\n");
+      parts.push(`FEEDBACK U\u017BYTKOWNIK\xD3W (przyk\u0142ady b\u0142\u0119dnych klasyfikacji do unikania):
+${correctionLines}`);
+    }
+    if (parts.length === 0) return "";
+    return "\n\n" + parts.join("\n\n");
+  } catch {
+    return "";
+  }
+}
 var ANALYSIS_PROMPT = `You are an expert in precious metal recovery from electronic waste (e-waste).
 
-{{CATALOG_SECTION}}
+{{CATALOG_SECTION}}{{LEARNED_CONTEXT_SECTION}}
 
 Analyze the uploaded photo and return a JSON object following these steps:
 
@@ -82565,7 +82741,8 @@ ${lines}
       } catch {
       }
     }
-    const prompt = ANALYSIS_PROMPT.replace("{{CATALOG_SECTION}}", catalogSection);
+    const learnedContext = await fetchLearnedContext();
+    const prompt = ANALYSIS_PROMPT.replace("{{CATALOG_SECTION}}", catalogSection).replace("{{LEARNED_CONTEXT_SECTION}}", learnedContext);
     const base643 = req.file.buffer.toString("base64");
     const dataUri = `data:${req.file.mimetype};base64,${base643}`;
     let rawContent;
@@ -82646,6 +82823,24 @@ ${lines}
     res.json(validated.data);
   }
 );
+router6.post("/correction", requireAuth, async (req, res) => {
+  const { aiMaterialType, correctMaterialType, correctionNote, imageDescription } = req.body ?? {};
+  if (!aiMaterialType || !correctMaterialType) {
+    res.status(400).json({ error: "Podaj ai_material_type i correct_material_type." });
+    return;
+  }
+  const user = req.user;
+  await db.insert(visionCorrectionsTable).values({
+    aiMaterialType: String(aiMaterialType),
+    correctMaterialType: String(correctMaterialType),
+    correctionNote: correctionNote ? String(correctionNote) : null,
+    imageDescription: imageDescription ? String(imageDescription) : null,
+    userId: user.id,
+    userEmail: user.email,
+    status: "pending"
+  });
+  res.json({ ok: true });
+});
 var vision_default = router6;
 
 // src/routes/index.ts

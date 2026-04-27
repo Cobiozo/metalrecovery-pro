@@ -56,5 +56,51 @@ export async function ensureSchema(): Promise<void> {
     )
   `);
 
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS ai_analysis_logs (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ip TEXT NOT NULL,
+      user_id INTEGER,
+      user_email TEXT,
+      materials_detected TEXT,
+      item_count INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS visit_logs (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ip TEXT NOT NULL
+    )
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS vision_corrections (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ai_material_type TEXT NOT NULL,
+      correct_material_type TEXT NOT NULL,
+      correction_note TEXT,
+      image_description TEXT,
+      user_id INTEGER,
+      user_email TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      promoted_rule_id INTEGER
+    )
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS vision_prompt_rules (
+      id SERIAL PRIMARY KEY,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      title TEXT NOT NULL,
+      rule_text TEXT NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      sort_order INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
   console.log("[migrate] Schema OK");
 }

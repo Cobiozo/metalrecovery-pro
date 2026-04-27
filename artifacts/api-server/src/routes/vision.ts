@@ -1,9 +1,9 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, aiAnalysisLogsTable } from "@workspace/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { usersTable, aiAnalysisLogsTable, visionCorrectionsTable, visionPromptRulesTable } from "@workspace/db/schema";
+import { eq, sql, desc, asc } from "drizzle-orm";
 import { incrementStat, STAT_METRICS } from "../lib/stats";
-import { resolveUser, type AuthRequest } from "../middlewares/auth";
+import { resolveUser, requireAuth, type AuthRequest } from "../middlewares/auth";
 import multer from "multer";
 import OpenAI from "openai";
 import { z } from "zod";
@@ -78,9 +78,50 @@ const VisionResultSchema = z.object({
   }).optional(),
 });
 
+async function fetchLearnedContext(): Promise<string> {
+  try {
+    const [rules, corrections] = await Promise.all([
+      db
+        .select()
+        .from(visionPromptRulesTable)
+        .where(eq(visionPromptRulesTable.isActive, true))
+        .orderBy(asc(visionPromptRulesTable.sortOrder), asc(visionPromptRulesTable.id)),
+      db
+        .select()
+        .from(visionCorrectionsTable)
+        .where(eq(visionCorrectionsTable.status, "pending"))
+        .orderBy(desc(visionCorrectionsTable.createdAt))
+        .limit(15),
+    ]);
+
+    const parts: string[] = [];
+
+    if (rules.length > 0) {
+      const ruleLines = rules.map((r) => `  • [REGUŁA: ${r.title}] ${r.ruleText}`).join("\n");
+      parts.push(`PERMANENTNE REGUŁY ADMINISTRATORA (najwyższy priorytet — przestrzegaj bezwzględnie):\n${ruleLines}`);
+    }
+
+    if (corrections.length > 0) {
+      const correctionLines = corrections
+        .map((c) => {
+          const note = c.correctionNote ? ` — uwaga: "${c.correctionNote}"` : "";
+          const desc = c.imageDescription ? ` (obraz: ${c.imageDescription})` : "";
+          return `  • AI powiedział "${c.aiMaterialType}" ale poprawna odpowiedź to "${c.correctMaterialType}"${desc}${note}`;
+        })
+        .join("\n");
+      parts.push(`FEEDBACK UŻYTKOWNIKÓW (przykłady błędnych klasyfikacji do unikania):\n${correctionLines}`);
+    }
+
+    if (parts.length === 0) return "";
+    return "\n\n" + parts.join("\n\n");
+  } catch {
+    return "";
+  }
+}
+
 const ANALYSIS_PROMPT = `You are an expert in precious metal recovery from electronic waste (e-waste).
 
-{{CATALOG_SECTION}}
+{{CATALOG_SECTION}}{{LEARNED_CONTEXT_SECTION}}
 
 Analyze the uploaded photo and return a JSON object following these steps:
 
@@ -280,7 +321,10 @@ router.post(
       }
     }
 
-    const prompt = ANALYSIS_PROMPT.replace("{{CATALOG_SECTION}}", catalogSection);
+    const learnedContext = await fetchLearnedContext();
+    const prompt = ANALYSIS_PROMPT
+      .replace("{{CATALOG_SECTION}}", catalogSection)
+      .replace("{{LEARNED_CONTEXT_SECTION}}", learnedContext);
 
     const base64 = req.file.buffer.toString("base64");
     const dataUri = `data:${req.file.mimetype};base64,${base64}`;
@@ -383,5 +427,25 @@ router.post(
     res.json(validated.data);
   },
 );
+
+// POST /vision/correction — authenticated users submit a correction for a misclassified item
+router.post("/correction", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { aiMaterialType, correctMaterialType, correctionNote, imageDescription } = req.body ?? {};
+  if (!aiMaterialType || !correctMaterialType) {
+    res.status(400).json({ error: "Podaj ai_material_type i correct_material_type." });
+    return;
+  }
+  const user = req.user!;
+  await db.insert(visionCorrectionsTable).values({
+    aiMaterialType: String(aiMaterialType),
+    correctMaterialType: String(correctMaterialType),
+    correctionNote: correctionNote ? String(correctionNote) : null,
+    imageDescription: imageDescription ? String(imageDescription) : null,
+    userId: user.id,
+    userEmail: user.email,
+    status: "pending",
+  });
+  res.json({ ok: true });
+});
 
 export default router;
