@@ -889,7 +889,7 @@ export function PhotoAnalysisPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl md:max-w-4xl mx-auto">
       <div>
         <h1 className="text-2xl font-bold font-sans tracking-tight flex items-center gap-2">
           <ScanLine className="h-6 w-6 text-primary" />
