@@ -12,6 +12,7 @@ import { PurchaseCalculatorPage } from "@/pages/PurchaseCalculator";
 import { PhotoAnalysisPage } from "@/pages/PhotoAnalysis";
 import { LoginPage } from "@/pages/Login";
 import { AdminPage } from "@/pages/Admin";
+import { UserPanelPage } from "@/pages/UserPanel";
 import { AuthProvider } from "@/hooks/useAuth";
 import { getAuthApiBase } from "@/lib/api";
 import { setBaseUrl } from "@workspace/api-client-react";
@@ -41,6 +42,7 @@ function Router() {
             <Route path="/procesy" component={ProcessesPage} />
             <Route path="/skup" component={PurchaseCalculatorPage} />
             <Route path="/analiza" component={PhotoAnalysisPage} />
+            <Route path="/panel" component={UserPanelPage} />
             <Route path="/admin" component={AdminPage} />
             <Route component={NotFound} />
           </Switch>

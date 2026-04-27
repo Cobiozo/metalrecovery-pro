@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import {
   Beaker, Calculator, Coins, Activity, Info, WifiOff,
   Download, ShoppingCart, ScanLine, Coffee, Shield, LogIn, LogOut,
-  User as UserIcon, Star,
+  User as UserIcon, Star, LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePWA } from "@/hooks/usePWA";
@@ -89,6 +89,20 @@ export function Layout({ children }: { children: ReactNode }) {
               Panel Admina
             </Link>
           )}
+          {user && user.role !== "admin" && (
+            <Link
+              href="/panel"
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-md transition-colors text-sm font-medium",
+                location === "/panel"
+                  ? "bg-primary/20 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              Mój panel
+            </Link>
+          )}
         </nav>
 
         <div className="p-4 border-t border-border mt-auto space-y-3">
@@ -170,6 +184,11 @@ export function Layout({ children }: { children: ReactNode }) {
         {!authLoading && user?.role === "admin" && (
           <Link href="/admin" className="p-1.5 rounded-md text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors">
             <Shield className="w-4 h-4" />
+          </Link>
+        )}
+        {!authLoading && user && user.role !== "admin" && (
+          <Link href="/panel" className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+            <LayoutDashboard className="w-4 h-4" />
           </Link>
         )}
         {!authLoading && (
