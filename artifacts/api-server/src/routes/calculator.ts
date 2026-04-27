@@ -96,37 +96,37 @@ const chemicalProcessesMap: Record<
       {
         name: "Kwas azotowy rozcieńczony — pre-trawienie (HNO3 25%)",
         concentration: 25,
-        amountPerKg: 1.5,
+        amountPerKg: 0.8,
         pricePerLiter: 22.0,
       },
       {
         name: "Kwas solny (HCl)",
         concentration: 35,
-        amountPerKg: 1.0,
+        amountPerKg: 0.55,
         pricePerLiter: 18.0,
       },
       {
         name: "Kwas azotowy stężony (HNO3 65%)",
         concentration: 65,
-        amountPerKg: 0.33,
+        amountPerKg: 0.18,
         pricePerLiter: 28.0,
       },
       {
         name: "Mocznik (rozkład nadmiaru HNO3)",
         concentration: 99,
-        amountPerKg: 0.05,
+        amountPerKg: 0.025,
         pricePerLiter: 4.0,
       },
       {
         name: "Wodorosiarczyn sodu — reduktor SMB (wytrącanie Au)",
         concentration: 40,
-        amountPerKg: 0.03,
+        amountPerKg: 0.018,
         pricePerLiter: 12.0,
       },
       {
         name: "Boraks (topnik do wytopu)",
         concentration: 99,
-        amountPerKg: 0.005,
+        amountPerKg: 0.004,
         pricePerLiter: 10.0,
       },
     ],
@@ -485,10 +485,18 @@ function resolveItemMetalContent(
   return base;
 }
 
-function resolveChemFraction(mat: MaterialEntry | undefined, withSeparacja: boolean): number {
-  if (!withSeparacja) return mat?.chemFraction ?? 1.0;
-  if (mat?.separacjaFraction !== undefined) return mat.separacjaFraction;
-  return (mat?.chemFraction ?? 1.0) * 0.10;
+function resolveChemFraction(
+  mat: MaterialEntry | undefined,
+  withSeparacja: boolean,
+  isCleaned = false,
+): number {
+  const base = withSeparacja
+    ? (mat?.separacjaFraction !== undefined ? mat.separacjaFraction : (mat?.chemFraction ?? 1.0) * 0.10)
+    : (mat?.chemFraction ?? 1.0);
+  // When material was physically cleaned (housing removed) before acid treatment,
+  // the inert plastic/glass bulk is already gone → ~20% less reagent needed.
+  if (isCleaned && mat?.requiresCleaning) return base * 0.80;
+  return base;
 }
 
 function computeCompareResult(
@@ -510,7 +518,7 @@ function computeCompareResult(
     if (!content) continue;
     totalMassKg += massKg;
     const mat = electronicMaterialsMap[item.materialId];
-    chemMassKg += massKg * resolveChemFraction(mat, withSeparacja);
+    chemMassKg += massKg * resolveChemFraction(mat, withSeparacja, item.isCleaned === true);
     totalMetalsG.Au += content.Au * massKg;
     totalMetalsG.Ag += content.Ag * massKg;
     totalMetalsG.Pt += content.Pt * massKg;
@@ -708,7 +716,7 @@ router.post("/calculator/estimate", async (req, res) => {
     if (!content) continue;
     totalMassKg += massKg;
     const mat = electronicMaterialsMap[item.materialId];
-    chemMassKg += massKg * resolveChemFraction(mat, body.withSeparacja ?? false);
+    chemMassKg += massKg * resolveChemFraction(mat, body.withSeparacja ?? false, item.isCleaned === true);
     totalMetalsGPerKg.Au += content.Au * massKg;
     totalMetalsGPerKg.Ag += content.Ag * massKg;
     totalMetalsGPerKg.Pt += content.Pt * massKg;
@@ -907,8 +915,9 @@ router.post("/calculator/purchase-price", async (req, res) => {
     revenuePerKg += recovered * metalPrices[metal];
   }
 
+  const chemMultiplier = (body.isCleaned && material?.requiresCleaning) ? 0.80 : 1.0;
   const chemistryCostPerKg = process.reagents.reduce(
-    (sum, r) => sum + r.amountPerKg * r.pricePerLiter,
+    (sum, r) => sum + r.amountPerKg * r.pricePerLiter * chemMultiplier,
     0,
   );
   const electricityCostPerKg = process.electricityKwhPerKg * elPrice;
