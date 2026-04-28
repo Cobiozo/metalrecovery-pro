@@ -233,7 +233,7 @@ function CorrectionDialog({
     if (!trimmed) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`${getApiBase()}/vision/correction`, {
+      const res = await fetch(`${getVisionApiBase()}/vision/correction`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
