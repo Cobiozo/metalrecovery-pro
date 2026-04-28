@@ -82625,13 +82625,40 @@ A) COUNT each type carefully: scan systematically left\u2192right, top\u2192bott
    \u2022 For a pile of RAM sticks on a table: count only the sticks whose full (or mostly full) front PCB face is visible. Do not count the narrow edges of buried sticks as extra units.
    \u2022 When you are unsure whether an edge strip is a separate module, DO NOT count it.
    \u2022 Conservative counting is required: under-count rather than over-count.
-B) IF a scale was detected in STEP 0 with a valid weight reading:
+B) MASS ESTIMATION \u2014 always required:
+   IF a scale was detected in STEP 0 with a valid weight reading:
    \u2014 scaleReading.weightGrams is the ACTUAL TOTAL MASS of all items on the scale.
    \u2014 Estimate what PERCENTAGE of that total mass belongs to each identified type.
      Example: scale shows 100g, pile is roughly 70% ZIF sockets + 30% SIMM connectors \u2192 ZIF massGrams=70, SIMM massGrams=30.
    \u2014 Set "massGrams" on each item to its share. ALL massGrams values MUST sum exactly to scaleReading.weightGrams.
    \u2014 This is more accurate than piece counts \u2014 use it as the primary quantity for calculations.
-   IF no scale was detected: set massGrams = null for all items.
+   IF no scale was detected: ESTIMATE massGrams visually for each item using these reference weights:
+   WHOLE DEVICES (estimate total device mass including chassis/housing):
+     \u2022 Large bench-top lab/test instruments (oscilloscopes, signal analyzers, spectrum analyzers, HP/Tektronix/Rohde&Schwarz equipment with CRT/LCD, metal chassis, depth >25cm): 5,000\u201315,000 g (e.g. HP 3561A ~10,500g, Tektronix 465 ~5,000g, HP 8566B ~22,000g)
+     \u2022 Small bench instruments (function generators, small multimeters, handheld LCR, small power supplies): 800\u20134,000 g
+     \u2022 Desktop PC tower (without monitor): 6,000\u201312,000 g
+     \u2022 CRT monitor 14-17": 10,000\u201318,000 g; CRT monitor 19-21": 18,000\u201330,000 g
+     \u2022 Rack server 1U (full depth, metal chassis ~60cm deep): 8,000\u201314,000 g
+     \u2022 Rack server 2U: 12,000\u201325,000 g
+     \u2022 Laptop (14-15"): 1,500\u20132,800 g; Laptop (17"): 2,500\u20133,500 g
+     \u2022 Inkjet printer (desktop A4): 3,000\u20138,000 g; Laser printer (A4): 8,000\u201318,000 g
+     \u2022 ATX power supply: 1,500\u20132,500 g
+     \u2022 Set-top box / router / modem: 300\u2013800 g
+     \u2022 Smartphone: 130\u2013240 g; Tablet 10": 400\u2013700 g
+     \u2022 VHS/camcorder: 800\u20131,800 g; Digital camera: 200\u2013600 g
+   LOOSE COMPONENTS (estimate per-piece then multiply by quantity):
+     \u2022 Full-size motherboard (ATX): 500\u2013900 g each
+     \u2022 Laptop motherboard: 200\u2013400 g each
+     \u2022 RAM DIMM stick: 25\u201345 g each; SO-DIMM: 8\u201320 g each
+     \u2022 ZIF test socket: 3\u20138 g each; SIMM connector: 4\u201310 g each
+     \u2022 CPU (desktop LGA): 50\u2013150 g each; CPU (laptop BGA bare): 5\u201320 g each
+     \u2022 GPU card with bracket: 400\u20131,200 g each
+     \u2022 PCB from CD/DVD drive: 30\u201350 g each
+   RULES:
+   \u2014 Always provide massGrams as an integer (rounded to nearest 100g for devices, 10g for small components).
+   \u2014 For WHOLE DEVICES use device mass \xD7 quantity.
+   \u2014 For LOOSE COMPONENTS use per-piece mass \xD7 quantity.
+   \u2014 NEVER set massGrams = null when you can visually identify the device type. Use null only if truly unidentifiable.
 
 STEP 4 \u2014 Estimate metal content and plating for each type.
 
@@ -82661,9 +82688,9 @@ STEP 5 \u2014 Return ONLY this JSON (no markdown, no explanation):
   "items": [
     {
       "materialType": "exact catalog name or descriptive Polish name",
-      "description": "2-3 sentences in Polish about this type and its metal characteristics",
+      "description": "2-4 sentences in Polish: (1) what the item is and its metal characteristics, (2) for WHOLE DEVICES \u2014 which components are worth removing before processing (e.g. PCBs, CPU, gold-plated connectors, memory boards) and why",
       "quantity": <integer piece count from STEP 3A; 0 only if truly impossible to count>,
-      "massGrams": <number from STEP 3B if scale detected, otherwise null>,
+      "massGrams": <estimated total mass in grams from STEP 3B \u2014 always provide a number; null ONLY if truly unidentifiable>,
       "individualBoxes": [
         { "cx": <center_x_pct>, "cy": <center_y_pct> },
         { "cx": <center_x_pct>, "cy": <center_y_pct> }

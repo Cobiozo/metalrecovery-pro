@@ -193,13 +193,40 @@ A) COUNT each type carefully: scan systematically left→right, top→bottom.
    • For a pile of RAM sticks on a table: count only the sticks whose full (or mostly full) front PCB face is visible. Do not count the narrow edges of buried sticks as extra units.
    • When you are unsure whether an edge strip is a separate module, DO NOT count it.
    • Conservative counting is required: under-count rather than over-count.
-B) IF a scale was detected in STEP 0 with a valid weight reading:
+B) MASS ESTIMATION — always required:
+   IF a scale was detected in STEP 0 with a valid weight reading:
    — scaleReading.weightGrams is the ACTUAL TOTAL MASS of all items on the scale.
    — Estimate what PERCENTAGE of that total mass belongs to each identified type.
      Example: scale shows 100g, pile is roughly 70% ZIF sockets + 30% SIMM connectors → ZIF massGrams=70, SIMM massGrams=30.
    — Set "massGrams" on each item to its share. ALL massGrams values MUST sum exactly to scaleReading.weightGrams.
    — This is more accurate than piece counts — use it as the primary quantity for calculations.
-   IF no scale was detected: set massGrams = null for all items.
+   IF no scale was detected: ESTIMATE massGrams visually for each item using these reference weights:
+   WHOLE DEVICES (estimate total device mass including chassis/housing):
+     • Large bench-top lab/test instruments (oscilloscopes, signal analyzers, spectrum analyzers, HP/Tektronix/Rohde&Schwarz equipment with CRT/LCD, metal chassis, depth >25cm): 5,000–15,000 g (e.g. HP 3561A ~10,500g, Tektronix 465 ~5,000g, HP 8566B ~22,000g)
+     • Small bench instruments (function generators, small multimeters, handheld LCR, small power supplies): 800–4,000 g
+     • Desktop PC tower (without monitor): 6,000–12,000 g
+     • CRT monitor 14-17": 10,000–18,000 g; CRT monitor 19-21": 18,000–30,000 g
+     • Rack server 1U (full depth, metal chassis ~60cm deep): 8,000–14,000 g
+     • Rack server 2U: 12,000–25,000 g
+     • Laptop (14-15"): 1,500–2,800 g; Laptop (17"): 2,500–3,500 g
+     • Inkjet printer (desktop A4): 3,000–8,000 g; Laser printer (A4): 8,000–18,000 g
+     • ATX power supply: 1,500–2,500 g
+     • Set-top box / router / modem: 300–800 g
+     • Smartphone: 130–240 g; Tablet 10": 400–700 g
+     • VHS/camcorder: 800–1,800 g; Digital camera: 200–600 g
+   LOOSE COMPONENTS (estimate per-piece then multiply by quantity):
+     • Full-size motherboard (ATX): 500–900 g each
+     • Laptop motherboard: 200–400 g each
+     • RAM DIMM stick: 25–45 g each; SO-DIMM: 8–20 g each
+     • ZIF test socket: 3–8 g each; SIMM connector: 4–10 g each
+     • CPU (desktop LGA): 50–150 g each; CPU (laptop BGA bare): 5–20 g each
+     • GPU card with bracket: 400–1,200 g each
+     • PCB from CD/DVD drive: 30–50 g each
+   RULES:
+   — Always provide massGrams as an integer (rounded to nearest 100g for devices, 10g for small components).
+   — For WHOLE DEVICES use device mass × quantity.
+   — For LOOSE COMPONENTS use per-piece mass × quantity.
+   — NEVER set massGrams = null when you can visually identify the device type. Use null only if truly unidentifiable.
 
 STEP 4 — Estimate metal content and plating for each type.
 
@@ -229,9 +256,9 @@ STEP 5 — Return ONLY this JSON (no markdown, no explanation):
   "items": [
     {
       "materialType": "exact catalog name or descriptive Polish name",
-      "description": "2-3 sentences in Polish about this type and its metal characteristics",
+      "description": "2-4 sentences in Polish: (1) what the item is and its metal characteristics, (2) for WHOLE DEVICES — which components are worth removing before processing (e.g. PCBs, CPU, gold-plated connectors, memory boards) and why",
       "quantity": <integer piece count from STEP 3A; 0 only if truly impossible to count>,
-      "massGrams": <number from STEP 3B if scale detected, otherwise null>,
+      "massGrams": <estimated total mass in grams from STEP 3B — always provide a number; null ONLY if truly unidentifiable>,
       "individualBoxes": [
         { "cx": <center_x_pct>, "cy": <center_y_pct> },
         { "cx": <center_x_pct>, "cy": <center_y_pct> }
