@@ -73110,12 +73110,12 @@ var electronicMaterials = [
     weightPerPiece: 0.17,
     chemFraction: 0.6,
     metalContentPerKg: {
-      Au: { min: 0.025, max: 0.08, typical: 0.045 },
-      Ag: { min: 0.15, max: 0.5, typical: 0.28 },
+      Au: { min: 0.12, max: 0.5, typical: 0.24 },
+      Ag: { min: 0.5, max: 2, typical: 0.95 },
       Pt: { min: 0, max: 5e-3, typical: 2e-3 },
-      Pd: { min: 8e-3, max: 0.03, typical: 0.015 }
+      Pd: { min: 0.01, max: 0.045, typical: 0.022 }
     },
-    notes: "Ca\u0142e smartfony bez baterii (~170g/szt). chemFraction=0.60 \u2014 PCB + kable flex stanowi\u0105 ~60% masy; obudowa szklana/aluminiowa nie jest trawiona."
+    notes: "Ca\u0142e smartfony bez baterii (~170g/szt). Dane: ~0.034g Au/szt przy 140g bez bat. = ~0.24 g/kg. chemFraction=0.60 \u2014 PCB + kable flex stanowi\u0105 ~60% masy; obudowa szklana/aluminiowa nie jest trawiona."
   },
   {
     id: "smartphone_z_bateria",
@@ -73126,12 +73126,12 @@ var electronicMaterials = [
     weightPerPiece: 0.2,
     chemFraction: 0.45,
     metalContentPerKg: {
-      Au: { min: 0.015, max: 0.055, typical: 0.03 },
-      Ag: { min: 0.08, max: 0.35, typical: 0.18 },
+      Au: { min: 0.08, max: 0.38, typical: 0.17 },
+      Ag: { min: 0.35, max: 1.5, typical: 0.68 },
       Pt: { min: 0, max: 3e-3, typical: 1e-3 },
-      Pd: { min: 5e-3, max: 0.02, typical: 0.01 }
+      Pd: { min: 7e-3, max: 0.03, typical: 0.015 }
     },
-    notes: "Ca\u0142e smartfony z bateriami (~200g/szt). Bateria ~35% masy \u2014 nie jest trawiona. chemFraction=0.45."
+    notes: "Ca\u0142e smartfony z bateriami (~200g/szt). Dane: ~0.034g Au/szt przy 200g = 0.17 g/kg. Bateria ~35% masy \u2014 nie jest trawiona. chemFraction=0.45."
   },
   {
     id: "phone_klawiat_bez_bat",
@@ -73144,12 +73144,12 @@ var electronicMaterials = [
     requiresCleaning: true,
     cleanedMultiplier: { Au: 1.2, Ag: 1.15, Pt: 1.1, Pd: 1.18 },
     metalContentPerKg: {
-      Au: { min: 0.05, max: 0.2, typical: 0.1 },
-      Ag: { min: 0.3, max: 1.2, typical: 0.65 },
+      Au: { min: 0.18, max: 0.65, typical: 0.35 },
+      Ag: { min: 0.7, max: 3, typical: 1.3 },
       Pt: { min: 0, max: 3e-3, typical: 1e-3 },
-      Pd: { min: 8e-3, max: 0.04, typical: 0.02 }
+      Pd: { min: 0.015, max: 0.06, typical: 0.03 }
     },
-    notes: "Stare telefony kom\xF3rkowe z klawiatur\u0105 bez baterii (~90g/szt). chemFraction=0.40 \u2014 PCB ~40% masy. Separacja PCB z obudowy daje ~18-20% wi\u0119cej odzysku."
+    notes: "Stare telefony klawiaturowe bez baterii (~90g/szt). Dane: Nokia 6310i 0.033g Au w ~60g korpusie = 0.55 g/kg; Nokia 3310 0.026g Au w ~95g = 0.27 g/kg. Typowo 0.35 g/kg. chemFraction=0.40. Separacja PCB z obudowy daje ~18-20% wi\u0119cej odzysku."
   },
   {
     id: "phone_klawiat_z_bat",
@@ -73160,12 +73160,12 @@ var electronicMaterials = [
     weightPerPiece: 0.11,
     chemFraction: 0.3,
     metalContentPerKg: {
-      Au: { min: 0.025, max: 0.1, typical: 0.05 },
-      Ag: { min: 0.15, max: 0.7, typical: 0.35 },
+      Au: { min: 0.12, max: 0.45, typical: 0.22 },
+      Ag: { min: 0.45, max: 2, typical: 0.85 },
       Pt: { min: 0, max: 2e-3, typical: 1e-3 },
-      Pd: { min: 4e-3, max: 0.02, typical: 0.01 }
+      Pd: { min: 0.01, max: 0.04, typical: 0.02 }
     },
-    notes: "Stare telefony kom\xF3rkowe z klawiatur\u0105 z bateriami (~110g/szt). chemFraction=0.30 \u2014 bateria i plastik redukuj\u0105 frakcj\u0119 elektroniczn\u0105."
+    notes: "Stare telefony klawiaturowe z bateriami (~110g/szt). Dane: Nokia 6310i ~0.033g Au w 140g (z bat.) = 0.236 g/kg; Nokia 3310 ~0.026g Au w 133g = 0.195 g/kg. Typowo 0.22 g/kg. chemFraction=0.30 \u2014 bateria redukuje frakcj\u0119 elektroniczn\u0105."
   },
   {
     id: "phone_feature",
@@ -73176,12 +73176,12 @@ var electronicMaterials = [
     weightPerPiece: 0.08,
     chemFraction: 0.4,
     metalContentPerKg: {
-      Au: { min: 0.01, max: 0.04, typical: 0.02 },
-      Ag: { min: 0.05, max: 0.2, typical: 0.12 },
+      Au: { min: 0.14, max: 0.48, typical: 0.28 },
+      Ag: { min: 0.5, max: 2.2, typical: 0.95 },
       Pt: { min: 0, max: 2e-3, typical: 1e-3 },
-      Pd: { min: 2e-3, max: 0.01, typical: 6e-3 }
+      Pd: { min: 0.012, max: 0.045, typical: 0.022 }
     },
-    notes: "Stary telefon kom\xF3rkowy \u2014 wycena na sztuki (~80g/szt). chemFraction=0.40."
+    notes: "Stary telefon kom\xF3rkowy na sztuki (~80g/szt). Dane: ~0.024g Au/szt w 80g = 0.30 g/kg. chemFraction=0.40."
   },
   {
     id: "laptop_bez_baterii",
