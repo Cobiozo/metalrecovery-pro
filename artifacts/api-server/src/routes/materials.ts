@@ -1741,6 +1741,27 @@ export const electronicMaterials = [
     notes: "Listwa PDU rack lub przełącznik KVM. Elektronika minimalna — głównie przekaźniki, bezpieczniki, podstawowe PCB sterowania. chemFraction=0.25 — PCB + złącza ~25% masy; reszta to aluminium listwa, gniazda IEC, przewody. Au bardzo niskie. Wartość głównie z recyklingu Cu (przewody) i Al.",
   },
 
+  // ─── SPRZĘT LABORATORYJNY / POMIAROWY ────────────────────────────────────
+  {
+    id: "oscyloskop_caly",
+    name: "Oscyloskop / przyrząd pomiarowy laboratoryjny (całe urządzenie)",
+    nameEn: "Oscilloscope / lab test instrument (whole device)",
+    category: "urzadzenie",
+    unit: "kg",
+    weightPerPiece: 9.0,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 3.5, Ag: 3.2, Pt: 2.5, Pd: 3.2 },
+    chemFraction: 0.28,
+    catalogHint: "oscilloscope, signal analyzer, spectrum analyzer, function generator, frequency counter, power supply (bench), network analyzer, impedance analyzer, HP Hewlett-Packard Tektronix Rohde Schwarz Keithley Fluke — any bench-top lab/test instrument with metal chassis and front-panel knobs/buttons — multiple PCB cards inside — CRT or LCD display — BNC/SMA coaxial connectors on front or rear — 5-20 kg typical — pre-1990s models are richer in Au/Pd due to ceramic ICs",
+    metalContentPerKg: {
+      Au: { min: 0.06, max: 0.25, typical: 0.12 },
+      Ag: { min: 0.12, max: 0.55, typical: 0.28 },
+      Pt: { min: 0.0, max: 0.005, typical: 0.001 },
+      Pd: { min: 0.005, max: 0.045, typical: 0.020 },
+    },
+    notes: "Oscyloskopy, analizatory sygnałów i widma, generatory, liczniki częstotliwości, zasilacze laboratoryjne, analizatory impedancji itp. (HP, Tektronix, Rohde&Schwarz, Keithley, Fluke). Masa typowa: 5–20 kg/szt (HP 3561A ~10,5 kg, Tektronix 465 ~5 kg, HP 8566B ~22 kg). chemFraction=0.28 — w urządzeniu z lat 70-90: kilka-kilkanaście kart PCB (~28% masy), reszta to stalowa/aluminiowa obudowa, transformator zasilacza, CRT i mechanika. Au: złocone złącza BNC/SMA/SMB (wiele na szt.) + ceramiczne układy scalone DIP z lat 70-80 (Intel/Motorola/NatSemi ceramic) — razem 0.10-0.18 g/kg typowe. Ag: lutowie + styki. Pd: pre-2000 MLCC PME kondensatory na PCB pomiarowych — 0.012-0.030 g/kg. cleanedMultiplier=3.5 — po oddzieleniu obudowy i zasilacza zostaje PCB (~28% masy) o Au ~0.40-0.55 g/kg. Dane: Hagelüken 2006 (Au w PCB test equipment); Ueberschaar 2017 (Au ceramic ICs); UNEP 2013 (Pd MLCC pre-2000).",
+  },
+
   // ─── INNE ─────────────────────────────────────────────────────────────────
   {
     id: "catalytic_converter",
