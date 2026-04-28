@@ -71985,6 +71985,37 @@ async function fetchFromOpenMetals(usdToPln) {
   }
   return result;
 }
+async function fetchFromStooq(usdToPln) {
+  const result = { Au: null, Ag: null, Pt: null, Pd: null };
+  const symbols = [
+    ["Ag", "xagusd"],
+    ["Pt", "xptusd"],
+    ["Pd", "xpdusd"]
+  ];
+  try {
+    const results = await Promise.allSettled(
+      symbols.map(async ([metal, sym]) => {
+        const res = await fetchWithTimeout(
+          `https://stooq.pl/q/l/?s=${sym}&f=c&e=json`
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        const close = data?.symbols?.[0]?.close;
+        if (close && close > 0) {
+          return { metal, value: close * usdToPln / 31.1035 };
+        }
+        return null;
+      })
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) {
+        result[r.value.metal] = r.value.value;
+      }
+    }
+  } catch {
+  }
+  return result;
+}
 async function fetchFromFrankfurterAPI(usdToPln) {
   const result = { Au: null, Ag: null, Pt: null, Pd: null };
   try {
@@ -72004,18 +72035,20 @@ async function fetchFromFrankfurterAPI(usdToPln) {
 async function fetchMetalPricesFromNBP() {
   const usdToPlnRate = await fetchNBPExchangeRate("usd");
   const usdToPln = usdToPlnRate ?? 4;
-  const [nbpGold, openMetals, frankfurterMetals] = await Promise.all([
+  const [nbpGold, openMetals, frankfurterMetals, stooqMetals] = await Promise.all([
     fetchNBPGoldPerGram(),
     fetchFromOpenMetals(usdToPln),
-    fetchFromFrankfurterAPI(usdToPln)
+    fetchFromFrankfurterAPI(usdToPln),
+    fetchFromStooq(usdToPln)
   ]);
   const auPerGram = nbpGold ?? openMetals.Au ?? frankfurterMetals.Au ?? 550;
-  const agPerGram = openMetals.Ag ?? frankfurterMetals.Ag ?? auPerGram / 90;
-  const ptPerGram = openMetals.Pt ?? auPerGram * 0.22;
-  const pdPerGram = openMetals.Pd ?? auPerGram * 0.22;
+  const agPerGram = stooqMetals.Ag ?? openMetals.Ag ?? frankfurterMetals.Ag ?? auPerGram / 57;
+  const ptPerGram = stooqMetals.Pt ?? openMetals.Pt ?? auPerGram * 0.47;
+  const pdPerGram = stooqMetals.Pd ?? openMetals.Pd ?? auPerGram * 0.35;
   const sources = [];
-  if (nbpGold !== null) sources.push("NBP (z\u0142oto)");
-  if (openMetals.Ag !== null) sources.push("open.er-api.com (Ag/Pt/Pd)");
+  if (nbpGold !== null) sources.push("NBP (Au)");
+  if (stooqMetals.Ag !== null || stooqMetals.Pt !== null || stooqMetals.Pd !== null) sources.push("stooq.pl (Ag/Pt/Pd)");
+  else if (openMetals.Ag !== null) sources.push("open.er-api.com (Ag/Pt/Pd)");
   else if (frankfurterMetals.Ag !== null) sources.push("frankfurter.dev (Ag)");
   if (sources.length === 0) sources.push("Warto\u015Bci szacunkowe (brak po\u0142\u0105czenia z API)");
   return {

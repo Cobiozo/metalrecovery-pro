@@ -100,6 +100,38 @@ async function fetchFromOpenMetals(usdToPln: number): Promise<PerMetalPrices> {
   return result;
 }
 
+async function fetchFromStooq(usdToPln: number): Promise<PerMetalPrices> {
+  const result: PerMetalPrices = { Au: null, Ag: null, Pt: null, Pd: null };
+  const symbols: Array<[keyof PerMetalPrices, string]> = [
+    ["Ag", "xagusd"],
+    ["Pt", "xptusd"],
+    ["Pd", "xpdusd"],
+  ];
+  try {
+    const results = await Promise.allSettled(
+      symbols.map(async ([metal, sym]) => {
+        const res = await fetchWithTimeout(
+          `https://stooq.pl/q/l/?s=${sym}&f=c&e=json`,
+        );
+        if (!res.ok) return null;
+        const data = (await res.json()) as { symbols?: Array<{ close?: number }> };
+        const close = data?.symbols?.[0]?.close;
+        if (close && close > 0) {
+          return { metal, value: (close * usdToPln) / 31.1035 };
+        }
+        return null;
+      }),
+    );
+    for (const r of results) {
+      if (r.status === "fulfilled" && r.value) {
+        result[r.value.metal] = r.value.value;
+      }
+    }
+  } catch {
+  }
+  return result;
+}
+
 async function fetchFromFrankfurterAPI(usdToPln: number): Promise<PerMetalPrices> {
   const result: PerMetalPrices = { Au: null, Ag: null, Pt: null, Pd: null };
   try {
@@ -121,10 +153,11 @@ async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
   const usdToPlnRate = await fetchNBPExchangeRate("usd");
   const usdToPln = usdToPlnRate ?? 4.0;
 
-  const [nbpGold, openMetals, frankfurterMetals] = await Promise.all([
+  const [nbpGold, openMetals, frankfurterMetals, stooqMetals] = await Promise.all([
     fetchNBPGoldPerGram(),
     fetchFromOpenMetals(usdToPln),
     fetchFromFrankfurterAPI(usdToPln),
+    fetchFromStooq(usdToPln),
   ]);
 
   const auPerGram: number =
@@ -134,21 +167,25 @@ async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
     550.0;
 
   const agPerGram: number =
+    stooqMetals.Ag ??
     openMetals.Ag ??
     frankfurterMetals.Ag ??
-    (auPerGram / 90.0);
+    (auPerGram / 57.0);
 
   const ptPerGram: number =
+    stooqMetals.Pt ??
     openMetals.Pt ??
-    (auPerGram * 0.22);
+    (auPerGram * 0.47);
 
   const pdPerGram: number =
+    stooqMetals.Pd ??
     openMetals.Pd ??
-    (auPerGram * 0.22);
+    (auPerGram * 0.35);
 
   const sources: string[] = [];
-  if (nbpGold !== null) sources.push("NBP (złoto)");
-  if (openMetals.Ag !== null) sources.push("open.er-api.com (Ag/Pt/Pd)");
+  if (nbpGold !== null) sources.push("NBP (Au)");
+  if (stooqMetals.Ag !== null || stooqMetals.Pt !== null || stooqMetals.Pd !== null) sources.push("stooq.pl (Ag/Pt/Pd)");
+  else if (openMetals.Ag !== null) sources.push("open.er-api.com (Ag/Pt/Pd)");
   else if (frankfurterMetals.Ag !== null) sources.push("frankfurter.dev (Ag)");
   if (sources.length === 0) sources.push("Wartości szacunkowe (brak połączenia z API)");
 
