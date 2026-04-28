@@ -460,6 +460,7 @@ function PageControls({ page, total, onChange }: { page: number; total: number; 
 }
 
 function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }) {
+  const { toast } = useToast();
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiLogs, setAiLogs] = useState<AiLogRow[]>([]);
