@@ -41,6 +41,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   zasilacz: "Zasilacze i ładowarki",
   ic: "Układy scalone IC",
   zlacza: "Złącza",
+  styki: "Styki elektryczne",
   kondensator: "Kondensatory",
   inne: "Inne",
   wlasne: "Własne profile",
@@ -48,7 +49,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CATEGORY_ORDER = [
   "plyty_glowne", "pcb", "procesor", "pamiec", "karta",
-  "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "kondensator", "inne", "wlasne",
+  "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "styki", "kondensator", "inne", "wlasne",
 ];
 
 type Mode = "single" | "batch";

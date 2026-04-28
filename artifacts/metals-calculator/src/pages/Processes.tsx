@@ -48,11 +48,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   zasilacz: "Zasilacze i ładowarki",
   ic: "Układy scalone IC",
   zlacza: "Złącza",
+  styki: "Styki elektryczne",
   kondensator: "Kondensatory",
   inne: "Inne / Mieszane",
 };
 
-const CATEGORY_ORDER = ["plyty_glowne", "pcb", "procesor", "pamiec", "karta", "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "kondensator", "inne"];
+const CATEGORY_ORDER = ["plyty_glowne", "pcb", "procesor", "pamiec", "karta", "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "styki", "kondensator", "inne"];
 
 export function ProcessesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
