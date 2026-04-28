@@ -148,6 +148,11 @@ router.get("/ai-logs", adminOnly, async (_req: AuthRequest, res: Response) => {
   res.json(logs);
 });
 
+router.delete("/ai-logs", adminOnly, async (_req: AuthRequest, res: Response) => {
+  const result = await db.delete(aiAnalysisLogsTable).returning({ id: aiAnalysisLogsTable.id });
+  res.json({ deleted: result.length });
+});
+
 router.get("/visit-logs", adminOnly, async (_req: AuthRequest, res: Response) => {
   const logs = await db
     .select()
@@ -155,6 +160,11 @@ router.get("/visit-logs", adminOnly, async (_req: AuthRequest, res: Response) =>
     .orderBy(desc(visitLogsTable.createdAt))
     .limit(200);
   res.json(logs);
+});
+
+router.delete("/visit-logs", adminOnly, async (_req: AuthRequest, res: Response) => {
+  const result = await db.delete(visitLogsTable).returning({ id: visitLogsTable.id });
+  res.json({ deleted: result.length });
 });
 
 router.get("/settings", adminOnly, async (_req: AuthRequest, res: Response) => {

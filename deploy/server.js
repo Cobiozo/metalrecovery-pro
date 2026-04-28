@@ -67363,9 +67363,17 @@ var init_admin = __esm({
       const logs = await db.select().from(aiAnalysisLogsTable).orderBy(desc(aiAnalysisLogsTable.createdAt)).limit(100);
       res.json(logs);
     });
+    router8.delete("/ai-logs", adminOnly, async (_req, res) => {
+      const result = await db.delete(aiAnalysisLogsTable).returning({ id: aiAnalysisLogsTable.id });
+      res.json({ deleted: result.length });
+    });
     router8.get("/visit-logs", adminOnly, async (_req, res) => {
       const logs = await db.select().from(visitLogsTable).orderBy(desc(visitLogsTable.createdAt)).limit(200);
       res.json(logs);
+    });
+    router8.delete("/visit-logs", adminOnly, async (_req, res) => {
+      const result = await db.delete(visitLogsTable).returning({ id: visitLogsTable.id });
+      res.json({ deleted: result.length });
     });
     router8.get("/settings", adminOnly, async (_req, res) => {
       const rows = await db.select().from(systemSettingsTable);

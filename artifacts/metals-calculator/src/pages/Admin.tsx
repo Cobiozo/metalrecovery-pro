@@ -468,6 +468,30 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
   const [visitLogsLoading, setVisitLogsLoading] = useState(true);
   const [aiLogsPage, setAiLogsPage] = useState(0);
   const [visitLogsPage, setVisitLogsPage] = useState(0);
+  const [clearingAiLogs, setClearingAiLogs] = useState(false);
+  const [clearingVisitLogs, setClearingVisitLogs] = useState(false);
+
+  const handleClearAiLogs = useCallback(async () => {
+    if (!window.confirm(`Usunąć wszystkie ${aiLogs.length} logów analiz AI? Tej operacji nie można cofnąć.`)) return;
+    setClearingAiLogs(true);
+    try {
+      const res = await fetch(`${getApiBase()}/admin/ai-logs`, { method: "DELETE", headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { setAiLogs([]); setAiLogsPage(0); toast({ title: `Wyczyszczono ${data.deleted} logów AI` }); }
+      else toast({ title: "Błąd", description: data.error, variant: "destructive" });
+    } finally { setClearingAiLogs(false); }
+  }, [aiLogs.length, authHeaders, toast]);
+
+  const handleClearVisitLogs = useCallback(async () => {
+    if (!window.confirm(`Usunąć wszystkie ${visitLogs.length} logów wizyt? Tej operacji nie można cofnąć.`)) return;
+    setClearingVisitLogs(true);
+    try {
+      const res = await fetch(`${getApiBase()}/admin/visit-logs`, { method: "DELETE", headers: authHeaders() });
+      const data = await res.json();
+      if (res.ok) { setVisitLogs([]); setVisitLogsPage(0); toast({ title: `Wyczyszczono ${data.deleted} logów wizyt` }); }
+      else toast({ title: "Błąd", description: data.error, variant: "destructive" });
+    } finally { setClearingVisitLogs(false); }
+  }, [visitLogs.length, authHeaders, toast]);
 
   useEffect(() => {
     fetch(`${getApiBase()}/admin/stats`, { headers: authHeaders() })
@@ -547,9 +571,21 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
         <div className="flex items-center gap-2 mb-4">
           <List className="w-4 h-4 text-purple-400" />
           <h3 className="text-sm font-semibold">Logi analiz AI</h3>
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {aiLogs.length > 0 ? `${aiLogs.length} wpisów` : "ostatnie 100"}
           </span>
+          {aiLogs.length > 0 && (
+            <button
+              onClick={handleClearAiLogs}
+              disabled={clearingAiLogs}
+              className="ml-auto flex items-center gap-1 text-xs text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors px-2 py-1 rounded border border-red-400/30 hover:border-red-400/60"
+            >
+              {clearingAiLogs
+                ? <><div className="w-3 h-3 border border-red-400/50 border-t-red-400 rounded-full animate-spin" />Czyszczenie…</>
+                : <><Trash2 className="w-3 h-3" />Wyczyść logi</>
+              }
+            </button>
+          )}
         </div>
         {logsLoading ? (
           <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
@@ -610,9 +646,21 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
         <div className="flex items-center gap-2 mb-4">
           <Globe className="w-4 h-4 text-cyan-400" />
           <h3 className="text-sm font-semibold">Logi wizyt</h3>
-          <span className="ml-auto text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {visitLogs.length > 0 ? `${visitLogs.length} wpisów` : "ostatnie 200"}
           </span>
+          {visitLogs.length > 0 && (
+            <button
+              onClick={handleClearVisitLogs}
+              disabled={clearingVisitLogs}
+              className="ml-auto flex items-center gap-1 text-xs text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors px-2 py-1 rounded border border-red-400/30 hover:border-red-400/60"
+            >
+              {clearingVisitLogs
+                ? <><div className="w-3 h-3 border border-red-400/50 border-t-red-400 rounded-full animate-spin" />Czyszczenie…</>
+                : <><Trash2 className="w-3 h-3" />Wyczyść logi</>
+              }
+            </button>
+          )}
         </div>
         {visitLogsLoading ? (
           <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
