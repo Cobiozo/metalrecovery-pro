@@ -134,7 +134,15 @@ If a scale display is visible:
   • This is the ACTUAL MEASURED WEIGHT of all the items on the scale — use it to calibrate quantities.
 If no scale is visible: scaleReading.detected = false, scaleReading.weightGrams = null, scaleReading.confidence = "low".
 
-STEP 1 — IDENTIFY distinct material types.
+STEP 1 — IDENTIFY ALL distinct material types. SCAN THE ENTIRE IMAGE BEFORE WRITING ANY JSON.
+⚠️ CRITICAL MULTI-ITEM RULE: DO NOT stop after finding the first item. A cardboard box, crate, or pile of e-waste ALWAYS contains MULTIPLE distinct material types. If you find only 1–2 types in a mixed pile, you have NOT finished scanning — look again.
+  • Scan systematically: top-left → top-right → middle-left → middle-right → bottom-left → bottom-right.
+  • EVERY distinct component type visible in the image gets its OWN separate entry in "items".
+  • Typical mixed e-waste box contains 3–8 different categories: e.g. motherboard + industrial PCBs + DIN-rail modules + cables — each MUST be a separate item.
+  • DO NOT group unrelated items into a single generic "Mix PCB" entry unless they are truly unidentifiable fragments. If you can identify a type, use the specific category.
+  • CABLES, WIRES, and HARNESSES visible in the photo must be included as a separate item if they make up a visible portion of the pile.
+  • INDUSTRIAL DIN-RAIL MODULES (white/grey plastic rectangular housing ~70×50×30mm, clip-on DIN rail mount, screw terminals on top/bottom, brand labels like Siemens, ABB, Schneider, Phoenix, WAGO, Finder) — these contain PCBs, relays, and precious metal contacts — classify as "Stara elektronika (ogólna)" or "Elektronika przemysłowa / sterowniki PLC" — NEVER ignore them.
+  • SMALL INDUSTRIAL PCBs (green/blue board 50–200mm, with screw terminals, relays, optocouplers, industrial connectors) from control panels, motor drives, PLCs — classify separately from consumer motherboards.
 Are there different component types (e.g. motherboards AND CPUs AND RAM)? Each distinct type → separate item in "items".
 IMPORTANT — the following ARE electronic waste (e-waste) with recoverable precious metals:
   • Cameras and camcorders (VHS, Video8, Hi8, Super 8, digital, analog) — contain PCBs, gold-plated connectors, ICs

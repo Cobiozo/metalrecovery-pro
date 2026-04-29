@@ -74083,6 +74083,38 @@ var electronicMaterials = [
     notes: "Ceramiczny rdze\u0144 katalizatora samochodowego (~2 kg/szt bez obudowy). Bardzo bogaty w Pt i Pd \u2014 metalContentPerKg dla samego rdzenia ceramicznego."
   },
   {
+    id: "elektronika_przemyslowa_plc",
+    name: "Elektronika przemys\u0142owa / sterowniki PLC",
+    nameEn: "Industrial electronics / PLC controllers / DIN-rail modules",
+    category: "inne",
+    unit: "kg",
+    catalogHint: "White or grey plastic rectangular DIN-rail modules (~70\xD750\xD730mm) with screw terminals on top/bottom \u2014 energy meters, motor drives, soft-starters, relay modules, industrial timers, PLC I/O modules \u2014 brands: Siemens, ABB, Schneider Electric, Phoenix Contact, WAGO, Finder, Eaton \u2014 also small green/blue industrial PCBs (50\u2013200mm) from control panels with screw terminals, optocouplers, relays, industrial connectors \u2014 contains PCBs with gold-plated contacts",
+    metalContentPerKg: {
+      Au: { min: 0.02, max: 0.12, typical: 0.05 },
+      Ag: { min: 0.5, max: 5, typical: 1.5 },
+      Pt: { min: 0, max: 0.01, typical: 2e-3 },
+      Pd: { min: 0, max: 0.05, typical: 0.015 }
+    },
+    chemFraction: 0.35,
+    notes: "Modu\u0142y DIN-rail, sterowniki PLC, modu\u0142y I/O, regulatory przemys\u0142owe \u2014 plastikowe obudowy z PCB wewn\u0105trz. chemFraction=0.35 \u2014 PCB i styki to ~35% masy; reszta to plastikowa obudowa i z\u0142\u0105cza \u015Brubowe."
+  },
+  {
+    id: "kable_miedziane_wiazki",
+    name: "Kable / wi\u0105zki przewod\xF3w (bez metali szlachetnych)",
+    nameEn: "Cables / wire bundles (no precious metals)",
+    category: "inne",
+    unit: "kg",
+    catalogHint: "Bundles of electrical cables, wire harnesses, power cords, data cables \u2014 mixed copper-core cables with plastic insulation \u2014 no significant precious metal content \u2014 mainly copper and plastic",
+    metalContentPerKg: {
+      Au: { min: 0, max: 1e-3, typical: 0 },
+      Ag: { min: 0, max: 0.05, typical: 0 },
+      Pt: { min: 0, max: 0, typical: 0 },
+      Pd: { min: 0, max: 0, typical: 0 }
+    },
+    chemFraction: 0,
+    notes: "Kable elektryczne, wi\u0105zki przewod\xF3w, kable zasilaj\u0105ce, kable danych \u2014 mied\u017A + plastik. Brak metali szlachetnych. Warto\u015B\u0107 z odzysku miedzi: 10\u201325 z\u0142/kg surowych kabli. Nie trawimy \u2014 poza zakresem kalkulatora metali szlachetnych."
+  },
+  {
     id: "ufo_mix",
     name: "Mix PCB \u2014 Elektronika Mieszana",
     nameEn: "Mixed PCB \u2014 Unknown/Mixed Electronics",
@@ -82729,7 +82761,15 @@ If a scale display is visible:
   \u2022 This is the ACTUAL MEASURED WEIGHT of all the items on the scale \u2014 use it to calibrate quantities.
 If no scale is visible: scaleReading.detected = false, scaleReading.weightGrams = null, scaleReading.confidence = "low".
 
-STEP 1 \u2014 IDENTIFY distinct material types.
+STEP 1 \u2014 IDENTIFY ALL distinct material types. SCAN THE ENTIRE IMAGE BEFORE WRITING ANY JSON.
+\u26A0\uFE0F CRITICAL MULTI-ITEM RULE: DO NOT stop after finding the first item. A cardboard box, crate, or pile of e-waste ALWAYS contains MULTIPLE distinct material types. If you find only 1\u20132 types in a mixed pile, you have NOT finished scanning \u2014 look again.
+  \u2022 Scan systematically: top-left \u2192 top-right \u2192 middle-left \u2192 middle-right \u2192 bottom-left \u2192 bottom-right.
+  \u2022 EVERY distinct component type visible in the image gets its OWN separate entry in "items".
+  \u2022 Typical mixed e-waste box contains 3\u20138 different categories: e.g. motherboard + industrial PCBs + DIN-rail modules + cables \u2014 each MUST be a separate item.
+  \u2022 DO NOT group unrelated items into a single generic "Mix PCB" entry unless they are truly unidentifiable fragments. If you can identify a type, use the specific category.
+  \u2022 CABLES, WIRES, and HARNESSES visible in the photo must be included as a separate item if they make up a visible portion of the pile.
+  \u2022 INDUSTRIAL DIN-RAIL MODULES (white/grey plastic rectangular housing ~70\xD750\xD730mm, clip-on DIN rail mount, screw terminals on top/bottom, brand labels like Siemens, ABB, Schneider, Phoenix, WAGO, Finder) \u2014 these contain PCBs, relays, and precious metal contacts \u2014 classify as "Stara elektronika (og\xF3lna)" or "Elektronika przemys\u0142owa / sterowniki PLC" \u2014 NEVER ignore them.
+  \u2022 SMALL INDUSTRIAL PCBs (green/blue board 50\u2013200mm, with screw terminals, relays, optocouplers, industrial connectors) from control panels, motor drives, PLCs \u2014 classify separately from consumer motherboards.
 Are there different component types (e.g. motherboards AND CPUs AND RAM)? Each distinct type \u2192 separate item in "items".
 IMPORTANT \u2014 the following ARE electronic waste (e-waste) with recoverable precious metals:
   \u2022 Cameras and camcorders (VHS, Video8, Hi8, Super 8, digital, analog) \u2014 contain PCBs, gold-plated connectors, ICs
