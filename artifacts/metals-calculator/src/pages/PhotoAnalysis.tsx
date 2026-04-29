@@ -1294,13 +1294,13 @@ export function PhotoAnalysisPage() {
       {result && !loading && preview && (
         <div>
           <PhotoWithDetections photoUrl={preview} items={result.items} />
-          <div className="max-w-2xl mx-auto mt-2 px-1">
+          <div className="max-w-2xl mx-auto mt-4 px-1 flex justify-center">
               <button
                 type="button"
                 onClick={() => user ? setAnalysisCorrectionOpen(true) : navigate("/login")}
-                className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-orange-400 transition-colors py-1"
+                className="flex items-center justify-center gap-2 text-sm font-medium text-orange-400 border border-orange-400/40 hover:border-orange-400 hover:bg-orange-400/10 transition-all rounded-lg px-5 py-2.5"
               >
-                <Flag className="w-3 h-3" />
+                <Flag className="w-4 h-4" />
                 Zgłoś błędną analizę
               </button>
               {user && (
