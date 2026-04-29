@@ -82809,6 +82809,19 @@ CRITICAL RULE \u2014 NEVER classify LAPTOP DOCKING STATIONS as "Nieelektroniczne
 DO NOT force-fit non-electronics: decorative buttons, coins, brass fittings, clothing, non-electronic mechanical parts are NOT e-waste.
 Non-e-waste \u2192 materialType = "Nieelektroniczne \u2014 [Polish name]", all metal values = 0.0, quantity = 0.
 
+\u26A0\uFE0F CRITICAL FALLBACK RULE \u2014 READ BEFORE CLASSIFYING ANYTHING AS "Nieelektroniczne":
+If an item HAS any of the following \u2192 it IS e-waste, NEVER "Nieelektroniczne":
+  \u2022 A printed circuit board (PCB) \u2014 green, blue, yellow, or brown substrate with components
+  \u2022 Microchips / ICs / transistors / capacitors soldered on a board
+  \u2022 Electronic connectors, ports (USB, VGA, RJ45, HDMI, edge connectors)
+  \u2022 A power supply unit, transformer, or switching converter
+  \u2022 Any device that plugs into mains power or runs on batteries
+  \u2022 Wiring harnesses or cables connected to electronic components
+  \u2022 A motor with electronics attached
+  \u2022 Relay, contactor, solenoid, or electromechanical actuator with electronic control
+If you cannot identify the specific type BUT the item is clearly electronic \u2192 use "Mix PCB \u2014 Elektronika Mieszana" as the fallback, NEVER "Nieelektroniczne".
+"Nieelektroniczne" is ONLY for: decorative items, coins, purely mechanical parts with ZERO electronic content, clothing, wood, stone, plain metal scraps with no electronic function.
+
 CRITICAL VISUAL SHAPE GUIDE \u2014 read before identifying:
   RACK SERVER (1U/2U) \u2014 ALWAYS e-waste: Metal chassis with height exactly 1U (44mm) or 2U (88mm) \xD7 ~430-480mm wide \xD7 ~600-800mm deep \u2014 designed to slide into a 19-inch server rack \u2014 front face shows USB ports, VGA, drive bay slots (blank or with 2.5"/3.5" drive caddies), power button, LCD status display, or just blank drive bays \u2014 DELL branding (PowerEdge 1950/2950/R610/R620/R630/R720/R730/R740), HP (ProLiant DL360/DL380/DL580), IBM (x3550/x3650), CISCO (UCS) \u2014 if you see "Dell PowerEdge", "ProLiant", "iDRAC" or a 19-inch rack-mount chassis, it IS ALWAYS e-waste, NEVER "Nieelektroniczne". Select "Serwer rack 1U" or "Serwer rack 2U".
   BLADE SERVER MODULE: Slim rectangular compute module (~70mm\xD7250mm\xD734mm) with a small front face showing only a handle/latch and status LEDs \u2014 slides horizontally into a blade enclosure \u2014 no external ports visible \u2014 brands: Dell M-series, HP BL-series, IBM BladeCenter HS. Very high PCB density.
