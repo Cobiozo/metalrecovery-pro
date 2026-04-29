@@ -38,8 +38,28 @@ export async function getStatsLastDays(days = 30): Promise<Record<string, Record
   return result;
 }
 
+/**
+ * Normalise IP address:
+ * - Strips IPv6-mapped IPv4 prefix (::ffff:1.2.3.4 → 1.2.3.4)
+ * - Removes surrounding brackets from IPv6 literals
+ * - Falls back to "unknown"
+ */
+function normalizeIp(raw: string): string {
+  if (!raw || raw === "unknown") return "unknown";
+  let ip = raw.trim();
+  // Remove surrounding IPv6 brackets (e.g. [::1] → ::1)
+  if (ip.startsWith("[") && ip.endsWith("]")) ip = ip.slice(1, -1);
+  // Convert IPv4-mapped IPv6 addresses to plain IPv4
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
+  if (mapped) return mapped[1]!;
+  return ip;
+}
+
 // In-memory fast-path cache: date -> Set<IP>
 const seenToday = new Map<string, Set<string>>();
+
+// In-flight set: IPs currently being processed — prevents concurrent race condition
+const inFlight = new Set<string>();
 
 function getMemSet(date: string): Set<string> {
   if (!seenToday.has(date)) {
@@ -49,32 +69,40 @@ function getMemSet(date: string): Set<string> {
   return seenToday.get(date)!;
 }
 
-export async function trackUniqueVisit(ip: string): Promise<void> {
+export async function trackUniqueVisit(rawIp: string): Promise<void> {
+  const ip = normalizeIp(rawIp);
   const date = todayDate();
   const memSet = getMemSet(date);
 
   // Fast path: already seen this session
   if (memSet.has(ip)) return;
 
-  // Slow path: check DB — survives server restarts
-  const { db, visitLogsTable } = await import("@workspace/db");
-  const { and, eq } = await import("drizzle-orm");
+  // Prevent race condition: if another async call for the same IP is in progress, skip
+  const inflightKey = `${date}:${ip}`;
+  if (inFlight.has(inflightKey)) return;
+  inFlight.add(inflightKey);
 
-  const existing = await db
-    .select({ id: visitLogsTable.id })
-    .from(visitLogsTable)
-    .where(and(eq(visitLogsTable.ip, ip), eq(visitLogsTable.date, date)))
-    .limit(1);
+  try {
+    // Reserve spot in memory immediately to block other concurrent calls
+    memSet.add(ip);
 
-  if (existing.length > 0) {
-    memSet.add(ip); // populate cache so next call is fast
-    return;
+    // Slow path: upsert into DB — ON CONFLICT DO NOTHING handles any remaining races
+    const { db, visitLogsTable } = await import("@workspace/db");
+    const { sql } = await import("drizzle-orm");
+
+    const inserted = await db
+      .insert(visitLogsTable)
+      .values({ ip, date })
+      .onConflictDoNothing()
+      .returning({ id: visitLogsTable.id });
+
+    // Only increment counter if we actually inserted a new row
+    if (inserted.length > 0) {
+      await incrementStat(STAT_METRICS.PAGE_VISITS);
+    }
+  } finally {
+    inFlight.delete(inflightKey);
   }
-
-  // New unique visit — insert and count
-  memSet.add(ip);
-  await db.insert(visitLogsTable).values({ ip, date });
-  await incrementStat(STAT_METRICS.PAGE_VISITS);
 }
 
 export { STAT_METRICS, todayDate };

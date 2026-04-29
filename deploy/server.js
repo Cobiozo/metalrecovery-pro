@@ -50766,6 +50766,14 @@ async function getStatsLastDays(days = 30) {
   }
   return result;
 }
+function normalizeIp(raw) {
+  if (!raw || raw === "unknown") return "unknown";
+  let ip = raw.trim();
+  if (ip.startsWith("[") && ip.endsWith("]")) ip = ip.slice(1, -1);
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
+  if (mapped) return mapped[1];
+  return ip;
+}
 function getMemSet(date6) {
   if (!seenToday.has(date6)) {
     seenToday.clear();
@@ -50773,27 +50781,33 @@ function getMemSet(date6) {
   }
   return seenToday.get(date6);
 }
-async function trackUniqueVisit(ip) {
+async function trackUniqueVisit(rawIp) {
+  const ip = normalizeIp(rawIp);
   const date6 = todayDate();
   const memSet = getMemSet(date6);
   if (memSet.has(ip)) return;
-  const { db: db2, visitLogsTable: visitLogsTable2 } = await Promise.resolve().then(() => (init_src(), src_exports));
-  const { and: and2, eq: eq2 } = await Promise.resolve().then(() => (init_drizzle_orm(), drizzle_orm_exports));
-  const existing = await db2.select({ id: visitLogsTable2.id }).from(visitLogsTable2).where(and2(eq2(visitLogsTable2.ip, ip), eq2(visitLogsTable2.date, date6))).limit(1);
-  if (existing.length > 0) {
+  const inflightKey = `${date6}:${ip}`;
+  if (inFlight.has(inflightKey)) return;
+  inFlight.add(inflightKey);
+  try {
     memSet.add(ip);
-    return;
+    const { db: db2, visitLogsTable: visitLogsTable2 } = await Promise.resolve().then(() => (init_src(), src_exports));
+    const { sql: sql2 } = await Promise.resolve().then(() => (init_drizzle_orm(), drizzle_orm_exports));
+    const inserted = await db2.insert(visitLogsTable2).values({ ip, date: date6 }).onConflictDoNothing().returning({ id: visitLogsTable2.id });
+    if (inserted.length > 0) {
+      await incrementStat(STAT_METRICS.PAGE_VISITS);
+    }
+  } finally {
+    inFlight.delete(inflightKey);
   }
-  memSet.add(ip);
-  await db2.insert(visitLogsTable2).values({ ip, date: date6 });
-  await incrementStat(STAT_METRICS.PAGE_VISITS);
 }
-var seenToday;
+var seenToday, inFlight;
 var init_stats = __esm({
   "src/lib/stats.ts"() {
     "use strict";
     init_schema2();
     seenToday = /* @__PURE__ */ new Map();
+    inFlight = /* @__PURE__ */ new Set();
   }
 });
 
@@ -66926,8 +66940,24 @@ async function ensureSchema() {
     CREATE TABLE IF NOT EXISTS visit_logs (
       id SERIAL PRIMARY KEY,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      ip TEXT NOT NULL
+      ip TEXT NOT NULL,
+      date TEXT NOT NULL DEFAULT ''
     )
+  `);
+  await db.execute(sql`
+    ALTER TABLE visit_logs ADD COLUMN IF NOT EXISTS date TEXT NOT NULL DEFAULT ''
+  `);
+  await db.execute(sql`
+    UPDATE visit_logs SET date = to_char(created_at, 'YYYY-MM-DD') WHERE date = ''
+  `);
+  await db.execute(sql`
+    DELETE FROM visit_logs
+    WHERE id NOT IN (
+      SELECT MIN(id) FROM visit_logs GROUP BY ip, date
+    )
+  `);
+  await db.execute(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS visit_logs_ip_date_uidx ON visit_logs (ip, date)
   `);
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS vision_corrections (

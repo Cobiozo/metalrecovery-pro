@@ -72,8 +72,32 @@ export async function ensureSchema(): Promise<void> {
     CREATE TABLE IF NOT EXISTS visit_logs (
       id SERIAL PRIMARY KEY,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      ip TEXT NOT NULL
+      ip TEXT NOT NULL,
+      date TEXT NOT NULL DEFAULT ''
     )
+  `);
+
+  // Add date column if missing (for existing installations)
+  await db.execute(sql`
+    ALTER TABLE visit_logs ADD COLUMN IF NOT EXISTS date TEXT NOT NULL DEFAULT ''
+  `);
+
+  // Backfill date from created_at for existing rows
+  await db.execute(sql`
+    UPDATE visit_logs SET date = to_char(created_at, 'YYYY-MM-DD') WHERE date = ''
+  `);
+
+  // Remove duplicate (ip, date) pairs — keep only the oldest entry per pair
+  await db.execute(sql`
+    DELETE FROM visit_logs
+    WHERE id NOT IN (
+      SELECT MIN(id) FROM visit_logs GROUP BY ip, date
+    )
+  `);
+
+  // Add unique index to prevent future duplicates
+  await db.execute(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS visit_logs_ip_date_uidx ON visit_logs (ip, date)
   `);
 
   await db.execute(sql`
