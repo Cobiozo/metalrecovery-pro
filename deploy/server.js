@@ -74088,15 +74088,18 @@ var electronicMaterials = [
     nameEn: "Industrial electronics / PLC controllers / DIN-rail modules",
     category: "inne",
     unit: "kg",
+    weightPerPiece: 0.15,
+    requiresCleaning: true,
+    cleanedMultiplier: { Au: 1.55, Ag: 1.5, Pt: 1.55, Pd: 1.55 },
     catalogHint: "White or grey plastic rectangular DIN-rail modules (~70\xD750\xD730mm) with screw terminals on top/bottom \u2014 energy meters, motor drives, soft-starters, relay modules, industrial timers, PLC I/O modules \u2014 brands: Siemens, ABB, Schneider Electric, Phoenix Contact, WAGO, Finder, Eaton \u2014 also small green/blue industrial PCBs (50\u2013200mm) from control panels with screw terminals, optocouplers, relays, industrial connectors \u2014 contains PCBs with gold-plated contacts",
     metalContentPerKg: {
       Au: { min: 0.02, max: 0.12, typical: 0.05 },
-      Ag: { min: 0.5, max: 5, typical: 1.5 },
+      Ag: { min: 0.5, max: 8, typical: 2.5 },
       Pt: { min: 0, max: 0.01, typical: 2e-3 },
-      Pd: { min: 0, max: 0.05, typical: 0.015 }
+      Pd: { min: 0, max: 0.2, typical: 0.03 }
     },
-    chemFraction: 0.35,
-    notes: "Modu\u0142y DIN-rail, sterowniki PLC, modu\u0142y I/O, regulatory przemys\u0142owe \u2014 plastikowe obudowy z PCB wewn\u0105trz. chemFraction=0.35 \u2014 PCB i styki to ~35% masy; reszta to plastikowa obudowa i z\u0142\u0105cza \u015Brubowe."
+    chemFraction: 0.28,
+    notes: "Modu\u0142y DIN-rail, sterowniki PLC, modu\u0142y I/O, regulatory przemys\u0142owe \u2014 plastikowe obudowy z PCB wewn\u0105trz. Masa typowa ~150g/szt. chemFraction=0.28 \u2014 PCB + styki srebrne przeka\u017Anik\xF3w \u2248 28% masy ca\u0142o\u015Bci; obudowa ABS/PC (~45%) i zaciski \u015Brubowe Cu (~27%) nie s\u0105 trawione kwasem. Ag pochodzi ze styk\xF3w AgCdO/AgSnO\u2082 wewn\u0105trz przeka\u017Anik\xF3w (0.3\u20130.8g/styk, 2\u20136 styk\xF3w/modu\u0142): modu\u0142y przeka\u017Anikowe 5\u20138 g/kg Ag, liczniki energii i timery 0.5\u20131.5 g/kg Ag, sterowniki PLC I/O bez przeka\u017Anik\xF3w 0.5\u20131 g/kg Ag. Au z p\u0142ytek PCB ENIG (0.03\u20130.08 g/kg ca\u0142o\u015Bci). Pd z kondensator\xF3w ceramicznych MLCC: starsze (pre-2002) 0.05\u20130.2 g/kg, nowsze 0.01\u20130.05 g/kg. cleanedMultiplier=1.55 \u2014 usuni\u0119cie obudowy plastikowej (\u224845% masy) zostawia ~55% jako cenny frakcja \u2192 koncentracja metali \xD71.55/kg oczyszczonego. \u0179r\xF3d\u0142a: Hagel\xFCken 2014 UNEP; Meskers 2009 IMM; badania assayer\xF3w polskich skup\xF3w e-z\u0142omu."
   },
   {
     id: "kable_miedziane_wiazki",
@@ -74112,7 +74115,7 @@ var electronicMaterials = [
       Pd: { min: 0, max: 0, typical: 0 }
     },
     chemFraction: 0,
-    notes: "Kable elektryczne, wi\u0105zki przewod\xF3w, kable zasilaj\u0105ce, kable danych \u2014 mied\u017A + plastik. Brak metali szlachetnych. Warto\u015B\u0107 z odzysku miedzi: 10\u201325 z\u0142/kg surowych kabli. Nie trawimy \u2014 poza zakresem kalkulatora metali szlachetnych."
+    notes: "Kable elektryczne, wi\u0105zki przewod\xF3w, kable zasilaj\u0105ce, kable danych \u2014 rdze\u0144 Cu + izolacja PVC/PE. Brak metali szlachetnych \u2014 nie trawimy kwasem (chemFraction=0). Warto\u015B\u0107 handlowa: mied\u017A w kablach 10\u201325 z\u0142/kg ca\u0142o\u015Bci (granulat miedziany 65\u201380% masy, reszta plastik). Kable wysokocz\u0119stotliwo\u015Bciowe (koaksjalne, HDMI, USB 3.x) mog\u0105 mie\u0107 z\u0142ocone wtyczki \u2014 ok. 0.001 g Au/szt wtyczki \u2014 pomijalnie ma\u0142o w kontek\u015Bcie odzysku wsadowego."
   },
   {
     id: "ufo_mix",
