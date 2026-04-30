@@ -292,6 +292,24 @@ export const electronicMaterials = [
   },
 
   {
+    id: "tranzystory_metal_can",
+    name: "Tranzystory w metalowych puszkach (stare, TO-3/TO-5/TO-18)",
+    nameEn: "Old metal-can transistors (TO-3, TO-5, TO-18, TO-72 bulk)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.004,
+    chemFraction: 1.0,
+    catalogHint: "loose pile of old transistors with shiny silver/gold metal can housings — TO-3 = large diamond-shaped flat metal can ~20×20mm with 2–3 wire leads — TO-5 = small round metal hat ~9mm diameter with 3 wire leads — TO-18 = tiny round metal can ~5mm diameter with 3 leads — all-metal body with NO plastic, shiny metallic surface — manufactured 1960s–1980s, military or industrial grade — NOT modern black plastic transistors (TO-92, SOT-23)",
+    metalContentPerKg: {
+      Au: { min: 0.5, max: 5.0, typical: 1.5 },
+      Ag: { min: 0.1, max: 1.5, typical: 0.40 },
+      Pt: { min: 0.0, max: 0.05, typical: 0.003 },
+      Pd: { min: 0.0, max: 0.30, typical: 0.035 },
+    },
+    notes: "Stare tranzystory w metalowych puszkach Kovar/stalowych z lat 1960-1980 (~3.5g/szt avg dla mieszanego złomu). TO-3 ~20g (duże romboidalne — np. 2N3055, OC26, BDX34), TO-5 ~2g (małe okrągłe ~9mm — np. 2N2222, BC107), TO-18 ~0.8g (maleńkie ~5mm — np. BC182, 2N3904 stare). Złoto pochodzi z: złoconych headerów Kovar (grube złocenie mil-spec, 1-3 µm), gold bond wires łączących kryształ z leadami, złoconych leadów. Au typical 1.5 g/kg (zakres 0.5-5.0). Ag z lutowia i niektórych die attach. Pd w militarnych typach (rzadko). chemFraction=1.0 — same metalowe komponenty, zero plastiku. Wartość znacznie wyższa niż nowoczesne tranzystory SMD (które mają 0 metali szlachetnych).",
+  },
+
+  {
     id: "telecom_crossbar_contacts",
     name: "Releje / styki krzyżownicy (centrale elektromechaniczne)",
     nameEn: "Crossbar switch relay contacts (electromechanical exchanges)",
