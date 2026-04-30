@@ -72891,6 +72891,82 @@ var electronicMaterials = [
     },
     notes: "Procesory AMD Ryzen AM4/AM5 (~38g/szt). Pomiary: Ryzen 5 5600X \u2248 35g, Ryzen 7 5800X \u2248 37g, Ryzen 9 5950X \u2248 40g. Warto\u015B\u0107 38g jako typowe dla AM4/AM5. metalContentPerKg obliczone dla ca\u0142ego procesora z IHS."
   },
+  // ─── PROCESORY — WPISY ZBIORCZE (FALLBACK AI) ─────────────────────────────
+  {
+    id: "cpu_ceramic_mix",
+    name: "Procesory CPU ceramiczne",
+    nameEn: "Ceramic CPUs (mixed types)",
+    category: "procesor",
+    unit: "kg",
+    weightPerPiece: 0.028,
+    metalContentPerKg: {
+      Au: { min: 1.2, max: 14, typical: 4.4 },
+      Ag: { min: 0.5, max: 6, typical: 2 },
+      Pt: { min: 0, max: 0.12, typical: 0.04 },
+      Pd: { min: 0.015, max: 0.5, typical: 0.13 }
+    },
+    notes: "Zbiorcza kategoria ceramicznych procesor\xF3w gdy AI nie rozr\xF3\u017Cnia konkretnego typu (~28g/szt typowe). Warto\u015Bci obliczone jako \u015Brednia wa\u017Cona mas\u0105 wszystkich typ\xF3w ceramicznych w katalogu: 486 (Au 7.0, 24g), 2-stronne (Au 6.0, 32g), 1-stronne (Au 4.0, 26g), n\xF3\u017Cki (Au 2.2, 26g), n\xF3\u017Cki z blaszk\u0105 (Au 3.0, 34g). Waga avg = 28g, Au avg = 4.4 g/kg, Ag avg = 2.0 g/kg, Pd avg = 0.13 g/kg (wszystkie GRF-potwierdzone). Dla precyzyjniejszej wyceny u\u017Cyj konkretnego wpisu ceramicznego."
+  },
+  {
+    id: "cpu_z_pinami_mix",
+    name: "Procesory z pinami",
+    nameEn: "CPUs with pins (mixed PGA types)",
+    category: "procesor",
+    unit: "kg",
+    weightPerPiece: 0.03,
+    metalContentPerKg: {
+      Au: { min: 0.07, max: 14, typical: 0.5 },
+      Ag: { min: 0.2, max: 6, typical: 0.75 },
+      Pt: { min: 0, max: 0.12, typical: 8e-3 },
+      Pd: { min: 4e-3, max: 0.35, typical: 0.022 }
+    },
+    notes: "Zbiorcza kategoria procesor\xF3w z widocznymi n\xF3\u017Ckami/pinami PGA (~30g/szt typowe) \u2014 mix zielonych P4/Celeron z pinami, czarnych plastikowych AMD, ewentualnie ceramicznych. Zak\u0142adaj\u0105c typowy z\u0142om: 75% zielone P4/Celeron (Au 0.15) + 20% czarne plastikowe AMD (Au 2.0) + 5% ceramiczne (Au 4.4) \u2192 Au avg \u2248 0.50 g/kg. Ag avg \u2248 0.75 g/kg (lutowie+MLCC). Pd z MLCC epoki (starsze kondensatory PME). Dla precyzyjnej wyceny sortuj na: zielone z pinami / czarne plastikowe / ceramiczne."
+  },
+  {
+    id: "cpu_bez_pinow_mix",
+    name: "Procesory bez pin\xF3w",
+    nameEn: "CPUs without pins (LGA / IHS, mixed modern types)",
+    category: "procesor",
+    unit: "kg",
+    weightPerPiece: 0.03,
+    metalContentPerKg: {
+      Au: { min: 0.05, max: 0.5, typical: 0.2 },
+      Ag: { min: 0.2, max: 2, typical: 0.7 },
+      Pt: { min: 0, max: 0.01, typical: 3e-3 },
+      Pd: { min: 3e-3, max: 0.025, typical: 0.01 }
+    },
+    notes: "Zbiorcza kategoria procesor\xF3w bez widocznych pin\xF3w (LGA / flip-chip z IHS) ~30g/szt. Typowy mix: 60% Core 2 Duo LGA775 (Au 0.12), 25% Intel Core i-series LGA1151/1200 (Au 0.30), 15% AMD AM4/AM5 z IHS (Au 0.25) \u2192 Au avg \u2248 0.20 g/kg. Ag z lutowia SAC305 i MLCC BME (0.55-1.0 g/kg). Pd z BME-MLCC (niskie, <0.015 g/kg). Dla precyzyjnej wyceny sortuj na: C2D / nowsze Intel LGA / AMD AM4-AM5."
+  },
+  {
+    id: "cpu_zielone_z_pinami",
+    name: "Procesory zielone z pinami",
+    nameEn: "Green CPUs with PGA pins (P4/Celeron/AthlonXP)",
+    category: "procesor",
+    unit: "kg",
+    weightPerPiece: 0.031,
+    metalContentPerKg: {
+      Au: { min: 0.07, max: 1.1, typical: 0.3 },
+      Ag: { min: 0.2, max: 1.2, typical: 0.65 },
+      Pt: { min: 0, max: 0.012, typical: 4e-3 },
+      Pd: { min: 4e-3, max: 0.035, typical: 0.016 }
+    },
+    notes: "Zielone procesory organiczne z widocznymi n\xF3\u017Ckami PGA (~31g/szt): P4 Celeron PGA478, Pentium III FCPGA (Socket 370), AMD Athlon XP Socket A. Mix 50% P3/P4 (Au 0.65 g/kg, 32g) + 50% P4/Celeron z n\xF3\u017Ckami (Au 0.15 g/kg, 30g) \u2192 Au avg \u2248 0.30 g/kg. Ag z lutowia i MLCC epoki (0.60-0.70 g/kg). Pd z MLCC (niskie, PME dla starszych)."
+  },
+  {
+    id: "cpu_zielone_laminat",
+    name: "CPU z zielonego laminatu",
+    nameEn: "Green laminate CPUs (generic mix, all eras)",
+    category: "procesor",
+    unit: "kg",
+    weightPerPiece: 0.032,
+    metalContentPerKg: {
+      Au: { min: 0.05, max: 1.1, typical: 0.35 },
+      Ag: { min: 0.2, max: 1.2, typical: 0.68 },
+      Pt: { min: 0, max: 0.015, typical: 5e-3 },
+      Pd: { min: 3e-3, max: 0.035, typical: 0.016 }
+    },
+    notes: "Zbiorcza kategoria wszystkich zielonych procesor\xF3w organicznych (laminat FR4) z r\xF3\u017Cnych epok (~32g/szt avg). Szacunkowy mix z\u0142omu: 30% P3/P4 (Au 0.65), 30% P4/Celeron z pinami (Au 0.15), 30% C2D bez pin\xF3w (Au 0.12), 10% SLOT1 (Au 0.55) \u2192 Au avg \u2248 0.35 g/kg. Ag z lutowia Pb-Sn/SAC i MLCC (0.60-0.75 g/kg). Pd z MLCC (ro\u015Bnie dla starszych). Dla precyzyjniejszej wyceny sortuj na grupy: ceramiczne / zielone z pinami / zielone bez pin\xF3w."
+  },
   // ─── PAMIĘCI RAM ──────────────────────────────────────────────────────────
   {
     id: "ram_srebrne",
@@ -72970,6 +73046,23 @@ var electronicMaterials = [
       Pd: { min: 5e-3, max: 0.04, typical: 0.015 }
     },
     notes: "Serwer ECC DIMM DDR3/DDR4 (~48g/szt, RDIMM/LR-DIMM). Pomiary: DDR3 RDIMM 16GB \u2248 40-50g; DDR4 RDIMM 32GB \u2248 45-55g; LR-DIMM z dodatkowym buffer chip \u2248 48-58g; \u015Brednia ~48g. Styki BME z cienkim z\u0142oceniem (6-10 \xB5in). Ag z lutowia RoHS SAC305 (3% Ag) i MLCC. Pd z BME-MLCC (niskie). Skup: 100-200 z\u0142/kg."
+  },
+  // ─── PAMIĘCI RAM — WPIS ZBIORCZY (FALLBACK AI) ────────────────────────────
+  {
+    id: "ram_dimm_mix",
+    name: "RAM sticks (DIMM/SO-DIMM)",
+    nameEn: "RAM sticks (DIMM/SO-DIMM, mixed)",
+    category: "pamiec",
+    unit: "kg",
+    weightPerPiece: 0.025,
+    catalogHint: "DIMM or SO-DIMM memory sticks \u2014 long thin rectangular boards (133mm desktop DIMM or 67mm SO-DIMM), memory chips in a single row, edge contacts at the bottom \u2014 may be gold or silver contacts, mixed lot",
+    metalContentPerKg: {
+      Au: { min: 0.02, max: 3, typical: 0.31 },
+      Ag: { min: 0.1, max: 1.5, typical: 0.5 },
+      Pt: { min: 0, max: 8e-3, typical: 1e-3 },
+      Pd: { min: 0, max: 0.2, typical: 0.02 }
+    },
+    notes: "Zbiorcza kategoria pami\u0119ci RAM gdy AI nie rozr\xF3\u017Cnia z\u0142otych od srebrnych styk\xF3w (~25g/szt avg DIMM). Warto\u015Bci dla typowego z\u0142omu e-waste: ~70% srebrne DDR3/DDR4 (Au 0.06 g/kg, 30g/szt) + 20% z\u0142ote DDR1/DDR2 (Au 1.30 g/kg, 20g/szt) + 10% SO-DIMM (Au 0.06 g/kg, 8g/szt) \u2192 Au avg \u2248 0.31 g/kg. Ag avg \u2248 0.50 g/kg (lutowie SAC305+MLCC). Pd z BME-MLCC nowszych DDR3/4 (niskie). Waga avg ~25g/szt. Dla precyzyjniejszej wyceny sortuj na: srebrne (DDR3/DDR4) vs z\u0142ote (DDR1/DDR2)."
   },
   // ─── KARTY GRAFICZNE / DŹWIĘKOWE ─────────────────────────────────────────
   // ─── KARTY ROZSZERZEŃ LAPTOPOWE / MINI-FORM-FACTOR ───────────────────────
