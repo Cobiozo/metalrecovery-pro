@@ -133,8 +133,9 @@ const chemicalProcessesMap: Record<
     timePerKgMin: 4,
     timePerKgMax: 10,
     temperatureOptimal: 70,
-    yieldPercent: { Au: 95, Ag: 80, Pt: 85, Pd: 80 },
+    yieldPercent: { Au: 95, Ag: 88, Pt: 85, Pd: 78 },
     // Grzałka laboratoryjna 500W utrzymująca 70°C (~150–250W śr.) przez ~7h/kg
+    // Ag 88% (zakres 85-95% wg The Refiners blueprint); Pd 78% (zakres 70-85%)
     electricityKwhPerKg: 1.5,
   },
   hno3_dilute: {

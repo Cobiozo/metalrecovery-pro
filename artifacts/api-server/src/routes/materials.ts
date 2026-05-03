@@ -292,6 +292,60 @@ export const electronicMaterials = [
   },
 
   {
+    id: "connector_pins_standard",
+    name: "Piny/styki złącz (cienkie złocenie, standard, bez plastiku)",
+    nameEn: "Connector pins/contacts (standard thin gold plating, no plastic)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.001,
+    chemFraction: 1.0,
+    catalogHint: "loose pile of small metallic pins or contact leads 5–30mm long — mixed golden and brass/copper colored — thin gold plating visible mainly at contact tips, rest may show brass or oxidized copper — extracted from consumer electronics connectors (computer, office, household appliances) — NOT uniformly deep gold like military grade — may include slightly tarnished or oxidized pieces",
+    metalContentPerKg: {
+      Au: { min: 0.15, max: 1.2, typical: 0.55 },
+      Ag: { min: 0.05, max: 0.5, typical: 0.18 },
+      Pt: { min: 0.0, max: 0.005, typical: 0.001 },
+      Pd: { min: 0.0, max: 0.05, typical: 0.01 },
+    },
+    notes: "Standardowe piny/styki ze złączy elektroniki konsumenckiej i biurowej — cienkie złocenie galwaniczne (0.1–0.5 µm Au) na podłożu Cu/mosiądz. Źródła: złącza D-sub, złącza IDC, gniazda RJ45/RJ11, złącza USB/HDMI/VGA (same metalowe styki), złącza ATX. Dane: The Refiners blueprint (2025): 300–800 g/t Au = 0.30–0.80 g/kg dla mieszanej frakcji pinów z e-odpadów konsumenckich. NIE mylić z grubozłoconymi pinami wojskowymi (kategoria: 'grubo złocone'). chemFraction=1.0 — sam metal, zero plastiku.",
+  },
+
+  {
+    id: "spring_contacts",
+    name: "Styki sprężynowe / klipsy kontaktowe (z urządzeń elektronicznych)",
+    nameEn: "Spring contacts / contact clips (from electronic devices)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.0005,
+    chemFraction: 1.0,
+    catalogHint: "small curved or coiled metallic spring-shaped contact pieces — typically 3–15mm long — gold or silver colored — distinctive C-shape, S-shape, coil, or flat spring form — extracted from battery contacts, keyboard contacts, relay contacts, PCB edge connectors, push-button contacts — NOT straight cylindrical pins — often found in batches from keyboards, calculators, battery holders",
+    metalContentPerKg: {
+      Au: { min: 0.05, max: 0.5, typical: 0.20 },
+      Ag: { min: 0.10, max: 2.0, typical: 0.60 },
+      Pt: { min: 0.0, max: 0.01, typical: 0.002 },
+      Pd: { min: 0.0, max: 0.08, typical: 0.015 },
+    },
+    notes: "Styki sprężynowe, klipsy kontaktowe, blachy kontaktowe z urządzeń elektronicznych — klawisze, przekaźniki, gniazda baterii, styki ślizgowe. Au: 100–300 g/t = 0.1–0.3 g/kg wg The Refiners blueprint. Ag wyższe niż w pinach złączowych — część styków (przekaźniki Ag-Ni, Ag-Pd) ma warstwę Ag jako metal kontaktowy. Forma sprężynowa odróżnia tę kategorię od prostych pinów cylindrycznych. chemFraction=1.0 — sam metal.",
+  },
+
+  {
+    id: "mixed_pins_ic_header",
+    name: "Piny IC / headery PCB (2.54mm, mieszane, niskozłocone)",
+    nameEn: "IC header pins / PCB headers (2.54mm pitch, mixed, low gold)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 0.0003,
+    chemFraction: 0.90,
+    catalogHint: "loose bulk of very short straight thin pins (2.54mm pitch) — typically 6–12mm long — silver or slightly golden colored — uniform square or round cross-section — from Arduino headers, jumper blocks, PCB pin headers, DuPont connectors, IC socket pins, SIP/DIP header strips — very regular uniform appearance in bulk — NOT the longer curved or gold-heavy connector pins",
+    metalContentPerKg: {
+      Au: { min: 0.02, max: 0.25, typical: 0.10 },
+      Ag: { min: 0.02, max: 0.15, typical: 0.06 },
+      Pt: { min: 0.0, max: 0.002, typical: 0.0 },
+      Pd: { min: 0.0, max: 0.01, typical: 0.003 },
+    },
+    notes: "Piny headerów PCB, piny złączy IDC/SIL/DIL (raster 2.54mm) — Arduino, jumper blocks, listwy goldpin. Cienkie lub zerowe złocenie (często tylko cynowanie Sn lub nikiel). Dane: The Refiners blueprint: Mixed Pins/IC Header 50–200 g/t Au = 0.05–0.20 g/kg. Wartość odzysku bardzo niska — materiał opłacalny tylko w dużych ilościach (>10 kg). chemFraction=0.90 — metalowe piny ~90% (mały udział plastiku z nieodłączonych tulei).",
+  },
+
+  {
     id: "tranzystory_metal_can",
     name: "Tranzystory w metalowych puszkach (stare, TO-3/TO-5/TO-18)",
     nameEn: "Old metal-can transistors (TO-3, TO-5, TO-18, TO-72 bulk)",

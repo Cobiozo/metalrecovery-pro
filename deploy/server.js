@@ -72542,6 +72542,57 @@ var electronicMaterials = [
     notes: "Luzem wysypane piny / styki kontaktowe wyci\u0105gni\u0119te ze z\u0142\u0105czy wielostykowych, IC, przeka\u017Anik\xF3w lub innej elektroniki \u2014 w ca\u0142o\u015Bci metaliczne (bez plastiku/ceramiki). Grube z\u0142ocenie (>1 \xB5m Au na pod\u0142o\u017Cu Cu, mosi\u0105dz lub kowar). Typowe \u017Ar\xF3d\u0142a: militarne/przemys\u0142owe z\u0142\u0105cza ARINC/MIL-DTL/DIN, n\xF3\u017Cki ceramicznych IC, styki DIN41612. chemFraction=1.0 \u2014 sam metal, zero plastiku w tym wsadzie."
   },
   {
+    id: "connector_pins_standard",
+    name: "Piny/styki z\u0142\u0105cz (cienkie z\u0142ocenie, standard, bez plastiku)",
+    nameEn: "Connector pins/contacts (standard thin gold plating, no plastic)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 1e-3,
+    chemFraction: 1,
+    catalogHint: "loose pile of small metallic pins or contact leads 5\u201330mm long \u2014 mixed golden and brass/copper colored \u2014 thin gold plating visible mainly at contact tips, rest may show brass or oxidized copper \u2014 extracted from consumer electronics connectors (computer, office, household appliances) \u2014 NOT uniformly deep gold like military grade \u2014 may include slightly tarnished or oxidized pieces",
+    metalContentPerKg: {
+      Au: { min: 0.15, max: 1.2, typical: 0.55 },
+      Ag: { min: 0.05, max: 0.5, typical: 0.18 },
+      Pt: { min: 0, max: 5e-3, typical: 1e-3 },
+      Pd: { min: 0, max: 0.05, typical: 0.01 }
+    },
+    notes: "Standardowe piny/styki ze z\u0142\u0105czy elektroniki konsumenckiej i biurowej \u2014 cienkie z\u0142ocenie galwaniczne (0.1\u20130.5 \xB5m Au) na pod\u0142o\u017Cu Cu/mosi\u0105dz. \u0179r\xF3d\u0142a: z\u0142\u0105cza D-sub, z\u0142\u0105cza IDC, gniazda RJ45/RJ11, z\u0142\u0105cza USB/HDMI/VGA (same metalowe styki), z\u0142\u0105cza ATX. Dane: The Refiners blueprint (2025): 300\u2013800 g/t Au = 0.30\u20130.80 g/kg dla mieszanej frakcji pin\xF3w z e-odpad\xF3w konsumenckich. NIE myli\u0107 z gruboz\u0142oconymi pinami wojskowymi (kategoria: 'grubo z\u0142ocone'). chemFraction=1.0 \u2014 sam metal, zero plastiku."
+  },
+  {
+    id: "spring_contacts",
+    name: "Styki spr\u0119\u017Cynowe / klipsy kontaktowe (z urz\u0105dze\u0144 elektronicznych)",
+    nameEn: "Spring contacts / contact clips (from electronic devices)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 5e-4,
+    chemFraction: 1,
+    catalogHint: "small curved or coiled metallic spring-shaped contact pieces \u2014 typically 3\u201315mm long \u2014 gold or silver colored \u2014 distinctive C-shape, S-shape, coil, or flat spring form \u2014 extracted from battery contacts, keyboard contacts, relay contacts, PCB edge connectors, push-button contacts \u2014 NOT straight cylindrical pins \u2014 often found in batches from keyboards, calculators, battery holders",
+    metalContentPerKg: {
+      Au: { min: 0.05, max: 0.5, typical: 0.2 },
+      Ag: { min: 0.1, max: 2, typical: 0.6 },
+      Pt: { min: 0, max: 0.01, typical: 2e-3 },
+      Pd: { min: 0, max: 0.08, typical: 0.015 }
+    },
+    notes: "Styki spr\u0119\u017Cynowe, klipsy kontaktowe, blachy kontaktowe z urz\u0105dze\u0144 elektronicznych \u2014 klawisze, przeka\u017Aniki, gniazda baterii, styki \u015Blizgowe. Au: 100\u2013300 g/t = 0.1\u20130.3 g/kg wg The Refiners blueprint. Ag wy\u017Csze ni\u017C w pinach z\u0142\u0105czowych \u2014 cz\u0119\u015B\u0107 styk\xF3w (przeka\u017Aniki Ag-Ni, Ag-Pd) ma warstw\u0119 Ag jako metal kontaktowy. Forma spr\u0119\u017Cynowa odr\xF3\u017Cnia t\u0119 kategori\u0119 od prostych pin\xF3w cylindrycznych. chemFraction=1.0 \u2014 sam metal."
+  },
+  {
+    id: "mixed_pins_ic_header",
+    name: "Piny IC / headery PCB (2.54mm, mieszane, niskoz\u0142ocone)",
+    nameEn: "IC header pins / PCB headers (2.54mm pitch, mixed, low gold)",
+    category: "pcb",
+    unit: "kg",
+    weightPerPiece: 3e-4,
+    chemFraction: 0.9,
+    catalogHint: "loose bulk of very short straight thin pins (2.54mm pitch) \u2014 typically 6\u201312mm long \u2014 silver or slightly golden colored \u2014 uniform square or round cross-section \u2014 from Arduino headers, jumper blocks, PCB pin headers, DuPont connectors, IC socket pins, SIP/DIP header strips \u2014 very regular uniform appearance in bulk \u2014 NOT the longer curved or gold-heavy connector pins",
+    metalContentPerKg: {
+      Au: { min: 0.02, max: 0.25, typical: 0.1 },
+      Ag: { min: 0.02, max: 0.15, typical: 0.06 },
+      Pt: { min: 0, max: 2e-3, typical: 0 },
+      Pd: { min: 0, max: 0.01, typical: 3e-3 }
+    },
+    notes: "Piny header\xF3w PCB, piny z\u0142\u0105czy IDC/SIL/DIL (raster 2.54mm) \u2014 Arduino, jumper blocks, listwy goldpin. Cienkie lub zerowe z\u0142ocenie (cz\u0119sto tylko cynowanie Sn lub nikiel). Dane: The Refiners blueprint: Mixed Pins/IC Header 50\u2013200 g/t Au = 0.05\u20130.20 g/kg. Warto\u015B\u0107 odzysku bardzo niska \u2014 materia\u0142 op\u0142acalny tylko w du\u017Cych ilo\u015Bciach (>10 kg). chemFraction=0.90 \u2014 metalowe piny ~90% (ma\u0142y udzia\u0142 plastiku z nieod\u0142\u0105czonych tulei)."
+  },
+  {
     id: "tranzystory_metal_can",
     name: "Tranzystory w metalowych puszkach (stare, TO-3/TO-5/TO-18)",
     nameEn: "Old metal-can transistors (TO-3, TO-5, TO-18, TO-72 bulk)",
@@ -74871,8 +74922,9 @@ var chemicalProcessesMap = {
     timePerKgMin: 4,
     timePerKgMax: 10,
     temperatureOptimal: 70,
-    yieldPercent: { Au: 95, Ag: 80, Pt: 85, Pd: 80 },
+    yieldPercent: { Au: 95, Ag: 88, Pt: 85, Pd: 78 },
     // Grzałka laboratoryjna 500W utrzymująca 70°C (~150–250W śr.) przez ~7h/kg
+    // Ag 88% (zakres 85-95% wg The Refiners blueprint); Pd 78% (zakres 70-85%)
     electricityKwhPerKg: 1.5
   },
   hno3_dilute: {
