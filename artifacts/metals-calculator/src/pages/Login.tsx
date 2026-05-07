@@ -102,7 +102,7 @@ export function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("common.error"));
       toast({
-        title: data.emailSent === false ? "Konto utworzone — problem z emailem" : "Konto utworzone",
+        title: data.emailSent === false ? t("login.accountCreatedEmailError") : t("login.accountCreated"),
         description: data.message,
         variant: data.emailSent === false ? "destructive" : "default",
       });

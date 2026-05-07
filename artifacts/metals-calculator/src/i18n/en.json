@@ -268,6 +268,32 @@
     "higherConcLessVol": "higher conc. = less volume",
     "processSteps": "Process steps",
     "fromGramsTimesYield": "from {{grams}} g × {{yield}}%",
+    "processTime": "Time: {{min}}–{{max}} h/kg",
+    "processTemp": "Temp: {{temp}}°C",
+    "aquaRegiaPreEtch": "⚠ HNO3 Pre-etch required",
+    "aquaRegiaWarning": "BEFORE process: Pre-etch feed in dilute HNO3 (25–30%, 40°C, 1–2 h/kg) to remove Cu, Zn, Ni and base metals. Skipping this reduces Au recovery purity.",
+    "descriptions": {
+      "aqua_regia": "Classic two-stage Au/Ag/PGM recovery from e-waste. Stage 1: HNO3 25% pre-etch removes base metals (Cu, Ni, Pb) and dissolves Ag. Stage 2: Aqua Regia (HCl:HNO3 3:1) dissolves Au, Pt, Pd from cleaned residue. Silver is recovered from HNO3 filtrate by NaCl precipitation.",
+      "hno3_dilute": "Selective silver and base metal recovery. Dilute HNO3 dissolves Cu, Ni, Pb and Ag while Au remains unreacted in the residue — available for further Aqua Regia processing.",
+      "hno3_concentrated": "Aggressive method for copper- and silver-rich feeds. Concentrated HNO3 rapidly dissolves base metals, Ag and Pd. Au and Pt remain in the residue for Aqua Regia follow-up. Requires NaCl to precipitate AgCl and zinc for silver reduction.",
+      "hcl_h2o2": "HCl/hydrogen peroxide acid etching — an Aqua Regia alternative that generates chlorine in-situ without NOx fumes. Dissolves Au and Pd; gold precipitated by SMB (sodium metabisulfite) and smelted with borax flux.",
+      "nitrate_boat": "Historical jeweller's refining method. Sodium nitrate + sulfuric acid generates nitric acid in-situ. Effective for cleaning gold alloys. Requires NaCl for AgCl precipitation and SMB to precipitate Au from solution.",
+      "electrolysis": "Selective electrolytic gold refining. Au transfers from anode to cathode as pure 999+ metal. Requires pre-melting feed into an anode with borax flux. Electrolyte: 10% HNO3 + gold nitrate Au(NO3)3.",
+      "wohlwill_process": "Industrial electrolytic process for highest gold purity (999.9). Gold chloride (AuCl3) in HCl electrolyte. Mint and refinery standard. Requires pre-melted anodes. Economical only for feeds with >90% Au.",
+      "miller_process": "Industrial pyrometallurgical gold refining by chlorine injection into molten metal in an induction furnace. Impurities (Ag, Cu, Pb, Zn) react with Cl2 forming chlorides that float as slag. Gold remains at 99.0–99.5%. Requires Cl2 scrubbing installation (NaOH). For certified refineries only.",
+      "cementation_zinc": "Classic gold cementation from solution. Zinc displaces Au/Ag from solution; gold precipitates as powder. Zinc then dissolved in dilute HCl, leaving clean gold/silver powder for smelting."
+    },
+    "safety": {
+      "aqua_regia": "WARNING: Emits toxic NOx and HCl fumes. Work ONLY under active carbon-filtered ventilation. Equipment: ABEK P3 respirator, acid-resistant gloves (nitrile/neoprene), acid-resistant apron, safety goggles. Never add water to concentrated acid!",
+      "hno3_dilute": "Emits NO2/NO fumes (brown/colourless). Work under fume hood. Acid-resistant gloves required. During HCl stage: generates H2 gas on contact with zinc — no sparks!",
+      "hno3_concentrated": "HIGHLY DANGEROUS. Intense NOx fumes (brown smoke). Active carbon-filtered fume hood required. ABEK P3 respirator, acid-resistant gloves, goggles. Add feed very slowly in small portions — violent reaction!",
+      "hcl_h2o2": "No NOx fumes, but generates chlorine gas (yellow-green). Work under fume hood. Acid-resistant gloves, goggles. Add H2O2 very carefully in small portions — exothermic reaction!",
+      "nitrate_boat": "VERY HIGH TEMPERATURE + NOx fumes. Concentrated H2SO4 is violently exothermic with water — never add water to concentrated H2SO4! ABEK P3 respirator, heat-resistant acid-proof gloves, apron, goggles. Ventilation mandatory.",
+      "electrolysis": "Electrolysis itself is relatively safe. Electrolyte (10% HNO3) is corrosive — nitrile gloves and goggles required. Anode smelting stage requires burner (>1064°C) — use appropriate fire-protection equipment.",
+      "wohlwill_process": "Electrolyte at high temperature (65–70°C). HCl fumes — active ventilation mandatory. Acid-resistant gloves, goggles. Anode smelting requires burner (>1064°C) — thermal shield. AuCl3 is very expensive — only economical for high-purity feeds.",
+      "miller_process": "EXTREMELY DANGEROUS — chlorine gas is highly toxic (lethal at 430 mg/m³). REQUIRED: certified Cl2 scrubbing system with NaOH, full-face ABEK P3 respirator, acid-resistant suit, industrial ventilation. Minimum two-person operation. NOT for amateurs.",
+      "cementation_zinc": "CRITICAL if using NaCN — cyanides are highly toxic (lethal)! Always work at pH > 10 (alkaline). NEVER mix NaCN with acid (generates HCN gas!). HCl stage for zinc removal is safer but generates H2 — no sparks."
+    },
     "names": {
       "aqua_regia": "Aqua Regia (HCl + HNO3)",
       "hno3_dilute": "Dilute Nitric Acid (HNO3 25-30%)",
@@ -297,7 +323,6 @@
     "analyzingButton": "Analyzing photo...",
     "analysisRunning": "Analyzing photo...",
     "analysisDesc": "AI identifies the material and estimates metal content (3–8 sec.)",
-    "scanning": "AI scanning image…",
     "preview": "Preview",
     "errorTitle": "Analysis error",
     "analyzing": "Analyzing...",
@@ -326,7 +351,6 @@
     "noAiTitle": "AI feature unavailable on this server",
     "noAiDesc": "Photo analysis requires an OpenAI API key. Contact the service administrator.",
     "profileSaved": "Profile saved",
-    "profileSavedDesc": "\"{{name}}\" added to custom profiles",
     "massLabel": "Mass (kg):",
     "qtyLabel": "Quantity (pcs):",
     "decreaseMass": "Decrease mass",
@@ -442,7 +466,9 @@
     "emailVerifiedDesc": "Your account has been activated. You can now log in.",
     "linkExpired": "Verification link expired",
     "linkExpiredDesc": "This link is no longer valid or has expired. Log in below and use the resend option.",
-    "passwordMinLength": "Password must be at least 8 characters."
+    "passwordMinLength": "Password must be at least 8 characters.",
+    "accountCreated": "Account created",
+    "accountCreatedEmailError": "Account created — email issue"
   },
   "userPanel": {
     "title": "My Dashboard",
@@ -595,6 +621,7 @@
       "statusDismissed": "dismissed",
       "pendingLabel": "Pending ({{count}}) — injected into AI prompt",
       "ruleTitleLabel": "Title (brief description)",
+      "ruleTitlePlaceholder": "e.g. Docking stations — always e-waste",
       "ruleTextLabel": "Rule text (AI instruction)",
       "promoteDialogTitle": "Promote to permanent AI rule",
       "promoteSuccessDesc": "Correction promoted to a permanent rule.",

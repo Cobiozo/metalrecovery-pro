@@ -140,7 +140,7 @@ function StarRating({ value }: { value: number }) {
   );
 }
 
-const CORRECTION_CATEGORIES = [
+const CORRECTION_CATEGORIES_PL = [
   { group: "Płyty główne i podzespoły PC", items: [
     "Płyta główna laptopa",
     "Płyta główna desktopa (ATX/mATX)",
@@ -209,6 +209,80 @@ const CORRECTION_CATEGORIES = [
     "Nieelektroniczne — plastik/mechanika",
   ]},
 ];
+
+const CORRECTION_CATEGORIES_EN = [
+  { group: "Motherboards & PC Components", items: [
+    "Laptop motherboard",
+    "Desktop motherboard (ATX/mATX)",
+    "GPU graphics card",
+    "Network card / ISA/PCI expansion card",
+    "RAM DDR memory chips",
+    "SSD / NVMe (board)",
+    "HDD hard drive",
+  ]},
+  { group: "CPUs & Integrated Circuits", items: [
+    "Ceramic processor (vintage CPU — high Au content)",
+    "Plastic processor (modern CPU)",
+    "Ceramic DIP ICs (EPROMs, vintage CPUs — white/grey ceramic)",
+    "Plastic ICs (DIP/SOIC/QFP)",
+  ]},
+  { group: "Connectors & Contacts", items: [
+    "Electronic connector pins (thick gold-plated, no plastic)",
+    "Crossbar switch contacts (Pd-Ag from telephone exchanges)",
+    "Telecom backplane connectors (TELECOM, industrial)",
+    "ZIF / IC test sockets (precision IC sockets)",
+    "SIMM memory slot connectors",
+    "Standard DIP IC sockets (low-value)",
+  ]},
+  { group: "Servers & Networking", items: [
+    "Rack server 1U (complete, with chassis)",
+    "Rack server 2U (complete, with chassis)",
+    "Blade server module",
+    "Blade chassis enclosure",
+    "Tower server (complete, with chassis)",
+    "Enterprise network switch (Cisco, HP ProCurve)",
+    "NAS (network attached storage, no drives)",
+  ]},
+  { group: "Docking Stations & Hubs", items: [
+    "Laptop docking station (Dell WD, HP, Lenovo ThinkPad)",
+    "USB hub / port replicator (generic, office)",
+  ]},
+  { group: "Capacitors", items: [
+    "MLCC capacitors PRE-2000 (high Pd content)",
+    "MLCC capacitors POST-2000 (low value)",
+    "SMD tantalum capacitors",
+  ]},
+  { group: "Cameras & Photography", items: [
+    "VHS video camera (complete)",
+    "Hi8 / Video8 camera (complete)",
+    "Digital camera / photo camera",
+    "Super 8 film camera",
+  ]},
+  { group: "Consumer Electronics", items: [
+    "Retro gaming console (Atari, Nintendo, Sega, PlayStation)",
+    "Printer (laser/inkjet)",
+    "Audio/video equipment (hi-fi, amplifier, player)",
+    "Oscilloscope / signal analyzer (test equipment)",
+    "Phone / smartphone",
+    "Tablet / iPad",
+    "Laptop (complete)",
+    "LCD/CRT monitor",
+  ]},
+  { group: "Electronics Mix", items: [
+    "PCB mix — Mixed Electronics",
+    "Vintage electronics (general)",
+    "mini PCIe / M.2 WiFi/BT cards",
+    "Laptop sub-boards (USB, audio, touchpad)",
+  ]},
+  { group: "Non-electronic", items: [
+    "Non-electronic — metal (steel, aluminium, brass)",
+    "Non-electronic — plastic/mechanical",
+  ]},
+];
+
+function getCorrectionCategories() {
+  return i18next.language === "en" ? CORRECTION_CATEGORIES_EN : CORRECTION_CATEGORIES_PL;
+}
 
 function CorrectionDialog({
   open,
@@ -318,7 +392,7 @@ function CorrectionDialog({
                   </div>
                   <CommandList className="flex-1 overflow-y-auto overscroll-contain px-1 pb-3" style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
                     <CommandEmpty>{t("analysis.correction.noResults")}</CommandEmpty>
-                    {CORRECTION_CATEGORIES.map((group) => (
+                    {getCorrectionCategories().map((group) => (
                       <CommandGroup key={group.group} heading={<span className="text-xs font-bold uppercase tracking-wider text-amber-500">{group.group}</span>}>
                         {group.items.map((item) => (
                           <CommandItem

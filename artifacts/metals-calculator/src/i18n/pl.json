@@ -268,6 +268,32 @@
     "recalculatedFrom": "Przeliczono z",
     "higherConcLessVol": "wyższe stęż. = mniej obj.",
     "fromGramsTimesYield": "z {{grams}} g × {{yield}}%",
+    "processTime": "Czas: {{min}}–{{max}} h/kg",
+    "processTemp": "Temp: {{temp}}°C",
+    "aquaRegiaPreEtch": "⚠ Wymagane pre-trawienie HNO3",
+    "aquaRegiaWarning": "PRZED procesem: Przetraw wsad w rozcieńczonym HNO3 (25–30%, 40°C, 1–2 h/kg) aby usunąć Cu, Zn, Ni i metale nieszlachetne. Pominięcie tego kroku obniży czystość odzysku Au.",
+    "descriptions": {
+      "aqua_regia": "Klasyczna metoda odzysku Au, Ag i platynowców z e-odpadów. Proces dwuetapowy: (1) Pre-trawienie HNO3 25% usuwa Cu, Ni, Pb i rozpuszcza Ag. (2) Woda królewska HCl:HNO3 3:1 rozpuszcza Au, Pt, Pd z oczyszczonego osadu. Srebro odzyskiwane z filtratu HNO3 przez strącenie NaCl.",
+      "hno3_dilute": "Selektywna metoda odzysku srebra i metali pospolitych (Cu, Ni, Pb). Złoto nie reaguje z rozcieńczonym HNO3 i pozostaje w osadzie jako cenny produkt do dalszej obróbki wodą królewską.",
+      "hno3_concentrated": "Agresywna metoda do wsadów bogatych w miedź i srebro. Stężony HNO3 szybko rozpuszcza metale nieszlachetne, Ag i Pd, pozostawiając Au i Pt w osadzie. Wymaga NaCl do wytrącenia AgCl i cynku do redukcji srebra metalicznego.",
+      "hcl_h2o2": "Alternatywna metoda dla wody królewskiej. Kwas solny z nadtlenkiem wodoru tworzy chlor in-situ, który rozpuszcza złoto. Bezpieczniejsza alternatywa — bez oparów NOx. Na koniec złoty proszek przetapiany z boraksem.",
+      "nitrate_boat": "Stara metoda rafinacyjna stosowana przez jubilerów. Mieszanina azotanu sodu i kwasu siarkowego tworzy kwas azotowy in-situ. Skuteczna do oczyszczania stopów złota. Wymaga NaCl do wytrącenia Ag i SMB do wytrącenia Au z roztworu.",
+      "electrolysis": "Selektywna metoda rafinacji złota. Złoto z anody przechodzi do katody jako czysty metal 999+. Wymaga wstępnego stopienia wsadu w anodę (z boraksem jako topnikiem). Elektrolit: HNO3 10% + Au(NO3)3.",
+      "wohlwill_process": "Przemysłowy proces elektrolityczny dla złota najwyższej czystości (999.9). Elektrolit na bazie chlorku złota (AuCl3) w HCl. Standard dla mennic i rafinerii. Wymaga wstępnego wytopu anod z boraksem jako topnikiem.",
+      "miller_process": "Przemysłowa metoda oczyszczania złota przez nadmuch chloru do stopionego metalu w piecu indukcyjnym. Zanieczyszczenia (Ag, Cu, Pb, Zn) reagują z Cl2, tworząc chlorki które pływają na powierzchni. Złoto pozostaje czyste (99.0-99.5%). WYMAGA instalacji neutralizacji Cl2 (NaOH).",
+      "cementation_zinc": "Klasyczna metoda wytrącania złota z roztworu (np. cyjanku lub chlorku) przez dodanie cynku. Cynk wypiera złoto z roztworu — cementacja. Po cementacji cynk rozpuszcza się w HCl, a złoto pozostaje jako proszek."
+    },
+    "safety": {
+      "aqua_regia": "UWAGA: Wydziela trujące opary NOx i HCl. Praca WYŁĄCZNIE pod sprawnym wyciągiem z aktywnym węglem. Wyposażenie: maska z filtrem ABEK P3, rękawice kwasoodporne (nitril/neopren), fartuch kwasoodporny, gogle ochronne. Nigdy nie wlewaj wody do stężonego kwasu!",
+      "hno3_dilute": "Wydziela opary NO2/NO (brunatne/bezbarwne). Praca pod wyciągiem. Rękawice kwasoodporne obowiązkowe. Uwaga przy etapie HCl — wydziela gaz H2 przy kontakcie z cynkiem (brak iskier!).",
+      "hno3_concentrated": "BARDZO NIEBEZPIECZNY. Intensywne opary NOx (brunatny dym). Wymagany sprawny wyciąg z aktywnym węglem. Maska ABEK P3, rękawice kwasoodporne, gogle. Reakcja gwałtowna — dodawaj wsad bardzo powoli i małymi porcjami!",
+      "hcl_h2o2": "Brak oparów NOx, ale wydziela chlor gazowy (żółtozielony). Praca pod wyciągiem. Rękawice kwasoodporne, gogle. H2O2 dodawaj bardzo ostrożnie — reakcja egzotermiczna; nigdy nie dodawaj dużej porcji naraz.",
+      "nitrate_boat": "BARDZO WYSOKA TEMPERATURA + opary NOx. H2SO4 98% jest silnie egzotermiczny z wodą — nigdy nie dodawaj wody do stężonego H2SO4! Maska ABEK P3, rękawice kwasoodporne termooodporne (neopren), fartuch, gogle. Wyciąg obowiązkowy.",
+      "electrolysis": "Elektroliza sama w sobie jest stosunkowo bezpieczna. Jednak elektrolit (HNO3 10%) jest żrący — rękawice nitrylowe i gogle. Etap wytopu anody wymaga palnika (>1064°C) — środki ochrony p.poż.",
+      "wohlwill_process": "Wysoka temperatura elektrolitu (65-70°C). Opary HCl — wyciąg obowiązkowy. Rękawice kwasoodporne, gogle. Etap wytopu anod wymaga palnika (>1064°C) — osłona termiczna. Koszt AuCl3 bardzo wysoki — opłacalny tylko dla wsadów z >90% Au.",
+      "miller_process": "EKSTREMALNIE NIEBEZPIECZNY — chlor gazowy jest silnie toksyczny (LC50=430 mg/m³). WYMAGANY szczelny system z pełną instalacją scrubberową NaOH. Tylko dla profesjonalnych rafinerii z certyfikowanym wyposażeniem, systemem wentylacji i szkolonym personelem. NIE dla amatorów.",
+      "cementation_zinc": "KRYTYCZNE przy NaCN — cyjanki są silnie toksyczne (śmiertelne)! Pracuj ZAWSZE przy pH > 10 (zasadowe). Nigdy nie mieszaj NaCN z kwasem (wydzielanie HCN!). Etap HCl do cynku wydziela H2 — iskry niedopuszczalne."
+    },
     "names": {
       "aqua_regia": "Woda Królewska (HCl + HNO3)",
       "hno3_dilute": "Kwas azotowy rozcieńczony (HNO3 25-30%)",
@@ -297,7 +323,6 @@
     "analyzingButton": "Analizuję zdjęcie...",
     "analysisRunning": "Analizuję zdjęcie...",
     "analysisDesc": "AI rozpoznaje materiał i szacuje zawartość metali (3–8 sek.)",
-    "scanning": "AI skanuje obraz…",
     "preview": "Podgląd",
     "errorTitle": "Błąd analizy",
     "analyzing": "Analizuję...",
@@ -326,7 +351,6 @@
     "noAiTitle": "Funkcja AI niedostępna na tym serwerze",
     "noAiDesc": "Analiza zdjęć wymaga klucza API OpenAI. Skontaktuj się z administratorem serwisu.",
     "profileSaved": "Profil zapisany",
-    "profileSavedDesc": "\"{{name}}\" dodany do własnych profili",
     "massLabel": "Masa (kg):",
     "qtyLabel": "Ilość (szt.):",
     "decreaseMass": "Zmniejsz masę",
@@ -444,7 +468,9 @@
     "emailVerifiedDesc": "Konto zostało aktywowane. Możesz się teraz zalogować.",
     "linkExpired": "Link weryfikacyjny wygasł",
     "linkExpiredDesc": "Ten link jest już nieważny lub wygasł. Zaloguj się poniżej i użyj opcji ponownego wysłania emaila.",
-    "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków."
+    "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków.",
+    "accountCreated": "Konto utworzone",
+    "accountCreatedEmailError": "Konto utworzone — problem z emailem"
   },
   "userPanel": {
     "title": "Mój panel",
@@ -597,6 +623,7 @@
       "statusDismissed": "odrzucona",
       "pendingLabel": "Oczekujące ({{count}}) — wstrzykiwane do promptu AI",
       "ruleTitleLabel": "Tytuł (skrótowy opis)",
+      "ruleTitlePlaceholder": "np. Stacje dokujące — zawsze e-odpad",
       "ruleTextLabel": "Tekst reguły (instrukcja dla AI)",
       "promoteDialogTitle": "Promuj do stałej reguły AI",
       "promoteSuccessDesc": "Korekta została promowana do stałej reguły AI.",

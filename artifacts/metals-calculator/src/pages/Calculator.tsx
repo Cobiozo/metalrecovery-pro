@@ -783,22 +783,22 @@ export function CalculatorPage() {
                       ))}
                       {process.id === 'aqua_regia' && (
                         <span className="text-xs px-1.5 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded border border-amber-500/30 font-medium">
-                          ⚠ Pre-trawienie HNO3
+                          {t("calculator.aquaRegiaPreEtch")}
                         </span>
                       )}
                     </div>
                     <p className={`text-xs text-muted-foreground mb-3 ${selectedProcessId === process.id ? '' : 'line-clamp-3'}`}>
-                      {process.description}
+                      {t(`calculator.descriptions.${process.id}`, { defaultValue: process.description })}
                     </p>
                     {process.id === 'aqua_regia' && selectedProcessId === process.id && (
                       <div className="mb-3 px-2 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-700 dark:text-amber-300">
-                        <strong>PRZED procesem:</strong> Przetraw wsad w rozcieńczonym HNO3 (25–30%, 40°C, 1–2h/kg) aby usunąć Cu, Zn, Ni i metale nieszlachetne. Pomija ten krok obniży czystość odzysku Au.
+                        {t("calculator.aquaRegiaWarning")}
                       </div>
                     )}
                     <div className="text-xs font-mono mt-auto text-muted-foreground">
                       <div className="flex justify-between border-t border-border pt-2">
-                        <span>Czas: {process.timePerKgMin}-{process.timePerKgMax}h/kg</span>
-                        <span>Temp: {process.temperatureOptimal}°C</span>
+                        <span>{t("calculator.processTime", { min: process.timePerKgMin, max: process.timePerKgMax })}</span>
+                        <span>{t("calculator.processTemp", { temp: process.temperatureOptimal })}</span>
                       </div>
                     </div>
                   </div>

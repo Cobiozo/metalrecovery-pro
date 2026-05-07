@@ -1288,7 +1288,7 @@ function VisionTab({
                   type="text"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="np. Stacje dokujące — zawsze e-odpad"
+                  placeholder={t("admin.vision.ruleTitlePlaceholder")}
                   className="w-full h-8 px-2.5 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
@@ -1375,14 +1375,14 @@ function VisionTab({
                           <button
                             onClick={() => { setEditRuleId(r.id); setEditTitle(r.title); setEditText(r.ruleText); }}
                             className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                            title="Edytuj"
+                            title={t("common.edit")}
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => deleteRule(r.id)}
                             className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                            title="Usuń"
+                            title={t("common.delete")}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
