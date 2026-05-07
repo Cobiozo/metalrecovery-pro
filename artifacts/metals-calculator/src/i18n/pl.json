@@ -322,6 +322,21 @@
     "decreaseQty": "Zmniejsz ilość",
     "increaseQty": "Zwiększ ilość",
     "disclaimer": "Zastrzeżenie:",
+    "metals": {
+      "au": "Złoto (Au)",
+      "ag": "Srebro (Ag)",
+      "pt": "Platyna (Pt)",
+      "pd": "Pallad (Pd)"
+    },
+    "estimatedMetalContent": "Szacowana zawartość metali",
+    "platingTitle": "Analiza złoceń",
+    "platingColor": "Kolor:",
+    "platingThickness": "Grubość:",
+    "platingQuality": "Jakość:",
+    "platingQualityNote": "Jakość złoceń {{value}}/5 uwzględniona w wycenie Au ({{sign}}{{pct}}% Au)",
+    "fromScaleG": "g z wagi",
+    "aiCountedApprox": "(AI: ~{{count}})",
+    "analysisResultAlt": "Wynik analizy",
     "confidence": {
       "high": "wysoka",
       "medium": "średnia",
@@ -562,7 +577,19 @@
       "promoteError": "Nie udało się promować korekty.",
       "deleteRuleConfirm": "Czy na pewno chcesz usunąć tę regułę?",
       "activateHint": "Kliknij aby aktywować",
-      "deactivateHint": "Kliknij aby deaktywować"
+      "deactivateHint": "Kliknij aby deaktywować",
+      "statusPending": "oczekująca",
+      "statusPromoted": "promowana",
+      "statusDismissed": "odrzucona",
+      "pendingLabel": "Oczekujące ({{count}}) — wstrzykiwane do promptu AI",
+      "ruleTitleLabel": "Tytuł (skrótowy opis)",
+      "ruleTextLabel": "Tekst reguły (instrukcja dla AI)",
+      "promoteDialogTitle": "Promuj do stałej reguły AI",
+      "promoteSuccessDesc": "Korekta została promowana do stałej reguły AI.",
+      "ruleUpdateError": "Nie udało się zaktualizować reguły.",
+      "activateTitle": "Kliknij aby aktywować",
+      "deactivateTitle": "Kliknij aby deaktywować",
+      "aiDesc": "Opis zdjęcia przez AI:"
     }
   },
   "customMaterial": {

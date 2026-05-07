@@ -822,7 +822,7 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
       <div className="relative">
       <img
         src={photoUrl}
-        alt="Wynik analizy"
+        alt={i18next.t("analysis.analysisResultAlt") as string}
         className="block w-full h-auto select-none"
         draggable={false}
       />

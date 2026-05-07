@@ -322,6 +322,21 @@
     "decreaseQty": "Decrease quantity",
     "increaseQty": "Increase quantity",
     "disclaimer": "Disclaimer:",
+    "metals": {
+      "au": "Gold (Au)",
+      "ag": "Silver (Ag)",
+      "pt": "Platinum (Pt)",
+      "pd": "Palladium (Pd)"
+    },
+    "estimatedMetalContent": "Estimated metal content",
+    "platingTitle": "Plating analysis",
+    "platingColor": "Color:",
+    "platingThickness": "Thickness:",
+    "platingQuality": "Quality:",
+    "platingQualityNote": "Plating quality {{value}}/5 reflected in Au valuation ({{sign}}{{pct}}% Au)",
+    "fromScaleG": "g from scale",
+    "aiCountedApprox": "(AI: ~{{count}})",
+    "analysisResultAlt": "Analysis result",
     "confidence": {
       "high": "high",
       "medium": "medium",
@@ -560,7 +575,19 @@
       "promoteError": "Failed to promote correction.",
       "deleteRuleConfirm": "Are you sure you want to delete this rule?",
       "activateHint": "Click to activate",
-      "deactivateHint": "Click to deactivate"
+      "deactivateHint": "Click to deactivate",
+      "statusPending": "pending",
+      "statusPromoted": "promoted",
+      "statusDismissed": "dismissed",
+      "pendingLabel": "Pending ({{count}}) — injected into AI prompt",
+      "ruleTitleLabel": "Title (brief description)",
+      "ruleTextLabel": "Rule text (AI instruction)",
+      "promoteDialogTitle": "Promote to permanent AI rule",
+      "promoteSuccessDesc": "Correction promoted to a permanent rule.",
+      "ruleUpdateError": "Failed to update rule.",
+      "activateTitle": "Click to activate",
+      "deactivateTitle": "Click to deactivate",
+      "aiDesc": "AI image description:"
     }
   },
   "customMaterial": {
