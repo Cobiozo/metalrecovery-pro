@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
@@ -76,7 +77,8 @@ function deleteMaterial(id: string): CustomMaterial[] {
 function formatDate(val: unknown): string {
   if (!val) return "—";
   try {
-    return new Date(val as string).toLocaleString("pl-PL", {
+    const locale = i18next.language === "en" ? "en-GB" : "pl-PL";
+    return new Date(val as string).toLocaleString(locale, {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit",
     });
@@ -87,7 +89,8 @@ function formatDate(val: unknown): string {
 
 function formatPln(val: number | undefined | null): string {
   if (val == null) return "—";
-  return val.toLocaleString("pl-PL", { style: "currency", currency: "PLN", maximumFractionDigits: 0 });
+  const locale = i18next.language === "en" ? "en-GB" : "pl-PL";
+  return val.toLocaleString(locale, { style: "currency", currency: "PLN", maximumFractionDigits: 0 });
 }
 
 function MetalBadge({ label, value }: { label: string; value: number }) {

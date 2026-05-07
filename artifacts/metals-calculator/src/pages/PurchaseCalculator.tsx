@@ -502,7 +502,7 @@ function SingleMode({
               {quantityGrams != null && (
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
                   = {quantityGrams >= 1000
-                    ? `${(quantityGrams / 1000).toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} kg`
+                    ? `${(quantityGrams / 1000).toLocaleString(i18next.language === "en" ? "en-GB" : "pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} kg`
                     : `${quantityGrams} g`}
                 </span>
               )}
@@ -966,7 +966,7 @@ function ResultCard({ result, isCleaned, quantityGrams, localMaterialName, local
           )}>
             <span className="text-sm font-semibold not-italic">
               {t("purchase.for")} {quantityGrams! >= 1000
-                ? `${(quantityGrams! / 1000).toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} kg`
+                ? `${(quantityGrams! / 1000).toLocaleString(i18next.language === "en" ? "en-GB" : "pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} kg`
                 : `${quantityGrams} g`}
             </span>
             <span className="text-2xl font-extrabold">

@@ -108,6 +108,7 @@
     "reagentCost": "Koszt odczynników",
     "electricityCost": "Koszt energii",
     "netProfit": "Zysk netto",
+    "unitPiece": "szt.",
     "profitablity": "Opłacalność",
     "sendToCalculator": "Wyślij do kalkulatora",
     "sendToPurchase": "Wyślij do skupu",

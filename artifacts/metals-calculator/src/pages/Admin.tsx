@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import i18next from "i18next";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { getAuthApiBase as getApiBase } from "@/lib/api";
@@ -619,7 +620,7 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
                     .map((log) => (
                       <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(log.createdAt).toLocaleString("pl-PL", {
+                          {new Date(log.createdAt).toLocaleString(i18next.language === "en" ? "en-GB" : "pl-PL", {
                             day: "2-digit", month: "2-digit", year: "2-digit",
                             hour: "2-digit", minute: "2-digit",
                           })}
@@ -691,7 +692,7 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
                     .map((log) => (
                       <tr key={log.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="py-1.5 pr-3 text-muted-foreground whitespace-nowrap">
-                          {new Date(log.createdAt).toLocaleString("pl-PL", {
+                          {new Date(log.createdAt).toLocaleString(i18next.language === "en" ? "en-GB" : "pl-PL", {
                             day: "2-digit", month: "2-digit", year: "2-digit",
                             hour: "2-digit", minute: "2-digit",
                           })}
@@ -1208,7 +1209,7 @@ function VisionTab({
                           <span className="text-[11px] text-muted-foreground">{c.userEmail}</span>
                         )}
                         <span className="text-[11px] text-muted-foreground ml-auto">
-                          {new Date(c.createdAt).toLocaleDateString("pl-PL")}
+                          {new Date(c.createdAt).toLocaleDateString(i18next.language === "en" ? "en-GB" : "pl-PL")}
                         </span>
                       </div>
                       <div className="text-xs space-y-0.5">

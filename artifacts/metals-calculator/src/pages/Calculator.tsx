@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useGetElectronicMaterials, getGetElectronicMaterialsQueryKey, useGetChemicalProcesses, getGetChemicalProcessesQueryKey, useCalculateRecovery, useCompareProcesses, CalculationResult, ProcessCompareResult } from "@workspace/api-client-react";
@@ -452,7 +453,7 @@ export function CalculatorPage() {
       return {
         materialName: material ? matName(material) : item.materialId,
         quantity: item.quantity,
-        unit: effectiveUnit === 'piece' ? 'szt.' : 'kg',
+        unit: effectiveUnit === 'piece' ? t("calculator.unitPiece") : 'kg',
       };
     }).filter(item => item.materialName);
     generateCalculationPdf({
@@ -520,7 +521,7 @@ export function CalculatorPage() {
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{session.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {new Date(session.savedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {new Date(session.savedAt).toLocaleDateString(i18next.language === "en" ? "en-GB" : "pl-PL", { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                         {' · '}{t("calculator.netProfit")}: <span className={session.result.netProfitPln >= 0 ? 'text-success' : 'text-destructive'}>{formatCurrency(session.result.netProfitPln)}</span>
                       </div>
                     </div>
@@ -614,7 +615,7 @@ export function CalculatorPage() {
                           title={t("calculator.unitToggleTip")}
                         >
                           <ArrowLeftRight className="h-3 w-3 opacity-60" />
-                          {getEffectiveUnit(item) === 'piece' ? 'szt.' : 'kg'}
+                          {getEffectiveUnit(item) === 'piece' ? t("calculator.unitPiece") : 'kg'}
                         </Button>
                       </div>
                       <div className="pb-0.5">
@@ -1045,7 +1046,7 @@ export function CalculatorPage() {
                 <span className="text-muted-foreground font-medium">{t("calculator.feed")}:</span>
                 {batchItems.filter(i => i.materialId).map((item, idx) => {
                   const mat = materials?.find(m => m.id === item.materialId);
-                  const unitLabel = (item.unitOverride ?? mat?.unit ?? 'kg') === 'piece' ? 'szt.' : 'kg';
+                  const unitLabel = (item.unitOverride ?? mat?.unit ?? 'kg') === 'piece' ? t("calculator.unitPiece") : 'kg';
                   return (
                     <span key={idx} className="font-semibold text-foreground inline-flex items-center gap-1 flex-wrap">
                       {mat ? matName(mat) : item.materialId}

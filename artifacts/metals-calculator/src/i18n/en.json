@@ -108,6 +108,7 @@
     "reagentCost": "Reagent cost",
     "electricityCost": "Electricity cost",
     "netProfit": "Net profit",
+    "unitPiece": "pcs.",
     "profitablity": "Profitability",
     "sendToCalculator": "Send to calculator",
     "sendToPurchase": "Send to purchase",

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Table } from "jspdf-autotable";
@@ -12,9 +13,11 @@ declare module "jspdf" {
 
 const EUR_PLN_RATE = 4.25;
 
+const getPdfLocale = () => i18next.language === "en" ? "en-GB" : "pl-PL";
+
 function fmtPln(value: number) {
   return (
-    value.toLocaleString("pl-PL", {
+    value.toLocaleString(getPdfLocale(), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }) + " PLN"
@@ -23,7 +26,7 @@ function fmtPln(value: number) {
 
 function fmtEur(value: number) {
   return (
-    (value / EUR_PLN_RATE).toLocaleString("pl-PL", {
+    (value / EUR_PLN_RATE).toLocaleString(getPdfLocale(), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }) + " EUR"
@@ -79,7 +82,7 @@ export function generateCalculationPdf(options: GeneratePdfOptions): void {
   const contentW = pageW - margin * 2;
   let y = margin;
 
-  const dateStr = new Date().toLocaleDateString("pl-PL", {
+  const dateStr = new Date().toLocaleDateString(getPdfLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",

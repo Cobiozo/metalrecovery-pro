@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useState } from "react";
 import {
   useGetMetalPrices,
@@ -33,7 +34,8 @@ const ALL_METALS = ["Au", "Ag", "Pt", "Pd"] as const;
 
 function formatDateLabel(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
-  return date.toLocaleDateString("pl-PL", { month: "short", day: "numeric" });
+  const locale = i18next.language === "en" ? "en-GB" : "pl-PL";
+  return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
 interface ChartTooltipProps {
@@ -357,7 +359,7 @@ export function PricesPage() {
           <span>
             {t("prices.lastUpdate")}{" "}
             {prices ? (
-              new Date(prices.updatedAt).toLocaleString("pl-PL")
+              new Date(prices.updatedAt).toLocaleString(i18next.language === "en" ? "en-GB" : "pl-PL")
             ) : (
               <Skeleton className="h-4 w-32 inline-block ml-1" />
             )}
