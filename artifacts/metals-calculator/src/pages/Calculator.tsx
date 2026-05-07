@@ -450,7 +450,7 @@ export function CalculatorPage() {
       const material = materials?.find(m => m.id === item.materialId);
       const effectiveUnit = getEffectiveUnit(item);
       return {
-        materialName: material?.name ?? item.materialId,
+        materialName: material ? matName(material) : item.materialId,
         quantity: item.quantity,
         unit: effectiveUnit === 'piece' ? 'szt.' : 'kg',
       };
@@ -1048,7 +1048,7 @@ export function CalculatorPage() {
                   const unitLabel = (item.unitOverride ?? mat?.unit ?? 'kg') === 'piece' ? 'szt.' : 'kg';
                   return (
                     <span key={idx} className="font-semibold text-foreground inline-flex items-center gap-1 flex-wrap">
-                      {mat?.name ?? item.materialId}
+                      {mat ? matName(mat) : item.materialId}
                       <span className="font-mono text-primary ml-1">× {item.quantity} {unitLabel}</span>
                       {item.isCleaned && (
                         <span className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5 ml-1">
@@ -1193,7 +1193,7 @@ export function CalculatorPage() {
                             <TableRow key={metal.metal} className="border-border">
                               <TableCell className="font-bold font-mono text-primary">
                                 {metal.metal}
-                                <span className="ml-1 font-normal text-muted-foreground text-[10px]">({METAL_NAMES[metal.metal] ?? metal.metal})</span>
+                                <span className="ml-1 font-normal text-muted-foreground text-[10px]">({t(`analysis.metals.${metal.metal.toLowerCase()}`, { defaultValue: metal.metal })})</span>
                               </TableCell>
                               <TableCell className="text-right font-mono">{formatMass(metal.massGrams, 'g')}</TableCell>
                               <TableCell className="text-right font-mono text-muted-foreground">{formatPercent(metal.yieldPercent)}</TableCell>

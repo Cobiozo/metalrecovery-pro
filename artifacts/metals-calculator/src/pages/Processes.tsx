@@ -318,7 +318,8 @@ export function ProcessesPage() {
                     const totalAmount = getAdjustedAmount(reagent, batchKg, concentrationOverrides);
                     const adjPricePerL = getAdjustedPricePerL(reagent, concentrationOverrides);
                     const totalCost = totalAmount * adjPricePerL;
-                    const hasOptions = reagent.availableConcentrations && reagent.availableConcentrations.length > 1;
+                    const availConcs = (reagent as Reagent & { availableConcentrations?: number[] }).availableConcentrations;
+                    const hasOptions = !!availConcs && availConcs.length > 1;
                     const concChanged = effConc !== reagent.concentration;
 
                     return (
@@ -342,7 +343,7 @@ export function ProcessesPage() {
                                   }}
                                   className="text-[10px] font-mono bg-muted border border-border rounded px-1 py-0 text-primary cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary/50"
                                 >
-                                  {reagent.availableConcentrations!.map(c => (
+                                  {availConcs!.map(c => (
                                     <option key={c} value={c}>{c}%</option>
                                   ))}
                                 </select>
