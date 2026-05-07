@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Trash2, Plus, ArrowRight, CheckCircle2, TrendingUp, AlertTriangle, Save, History, X, FileDown, BarChart2, Sparkles, ArrowLeftRight, ChevronsUpDown, Check } from "lucide-react";
 import { generateCalculationPdf } from "@/lib/generatePdf";
-import { formatCurrency, formatMass, formatPercent } from "@/lib/format";
+import { formatCurrency, formatCurrencyEur, formatMass, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Slider } from "@/components/ui/slider";
@@ -179,6 +179,12 @@ export function CalculatorPage() {
   const { lang } = useLanguage();
   const matName = (m: { name: string; nameEn?: string | null }) =>
     lang === "en" && m.nameEn ? m.nameEn : m.name;
+  const EUR_FALLBACK = 4.25;
+  const fmtVal = (pln: number) => {
+    if (lang !== "en") return formatCurrency(pln);
+    const rate = result?.metalPricesSnapshot?.eurRate ?? EUR_FALLBACK;
+    return formatCurrencyEur(pln / rate);
+  };
   const [activeTab, setActiveTab] = useState<string>("wsad");
   const [batchItems, setBatchItems] = useState<BatchItemState[]>([{ id: '1', materialId: '', quantity: 1 }]);
   const [selectedProcessId, setSelectedProcessId] = useState<string>("");
@@ -926,7 +932,7 @@ export function CalculatorPage() {
                           <div key={reagent.name} className="flex items-center gap-2 bg-muted/30 p-3 rounded-lg border border-border">
                             <div className="flex-1 min-w-0">
                               <div className="text-xs font-medium truncate">{reagent.name}</div>
-                              <div className="text-xs text-muted-foreground font-mono">{reagent.formula} · def: {reagent.pricePerLiter} zł/l</div>
+                              <div className="text-xs text-muted-foreground font-mono">{reagent.formula} · def: {reagent.pricePerLiter} {lang === "en" ? "€/l" : "zł/l"}</div>
                             </div>
                             <div className="relative shrink-0 w-28">
                               <Input
@@ -940,7 +946,7 @@ export function CalculatorPage() {
                                 }}
                                 className="bg-background pr-10 font-mono text-sm h-8"
                               />
-                              <span className="absolute right-2 top-1.5 text-xs text-muted-foreground">zł/l</span>
+                              <span className="absolute right-2 top-1.5 text-xs text-muted-foreground">{lang === "en" ? "€/l" : "zł/l"}</span>
                             </div>
                           </div>
                         );
@@ -1020,21 +1026,25 @@ export function CalculatorPage() {
                             not_profitable: t("calculator.notProfitable"),
                           }[finalRating] ?? finalRating}
                         </div>
-                        <div className="text-sm opacity-80 mt-0.5">{result.profitabilityNote}</div>
+                        <div className="text-sm opacity-80 mt-0.5">{t(`calculator.profitabilityNote_${finalRating}`, {
+                          profit: fmtVal(Math.abs(finalProfit)),
+                          cost: fmtVal(result.totalChemistryCostPln + result.electricityCostPln + purchaseCost),
+                          revenue: fmtVal(result.totalRevenuePln),
+                        })}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-6 shrink-0 pl-1 sm:pl-4 border-t sm:border-t-0 sm:border-l border-current/20 pt-3 sm:pt-0 sm:pl-6">
                       <div className="text-center">
                         <div className="text-xs opacity-60 uppercase mb-0.5">{t("calculator.revenue")}</div>
-                        <div className="font-mono font-bold text-base">{formatCurrency(result.totalRevenuePln)}</div>
+                        <div className="font-mono font-bold text-base">{fmtVal(result.totalRevenuePln)}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-xs opacity-60 uppercase mb-0.5">{t("calculator.costs")}</div>
-                        <div className="font-mono font-bold text-base">-{formatCurrency(result.totalChemistryCostPln + result.electricityCostPln + purchaseCost)}</div>
+                        <div className="font-mono font-bold text-base">-{fmtVal(result.totalChemistryCostPln + result.electricityCostPln + purchaseCost)}</div>
                       </div>
                       <div className="text-center">
                         <div className="text-xs opacity-60 uppercase mb-0.5 font-bold">{hasPurchaseCost ? t("calculator.profitAfterPurchase") : t("calculator.netProfit")}</div>
-                        <div className="font-mono font-bold text-xl">{formatCurrency(finalProfit)}</div>
+                        <div className="font-mono font-bold text-xl">{fmtVal(finalProfit)}</div>
                       </div>
                     </div>
                   </div>
@@ -1074,31 +1084,31 @@ export function CalculatorPage() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="bg-muted/30 p-3 rounded-lg border border-border">
                         <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.revenue")}</div>
-                        <div className="font-mono font-bold text-success text-lg">{formatCurrency(result.totalRevenuePln)}</div>
+                        <div className="font-mono font-bold text-success text-lg">{fmtVal(result.totalRevenuePln)}</div>
                       </div>
                       <div className="bg-muted/30 p-3 rounded-lg border border-border">
                         <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.reagentCost")}</div>
-                        <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(result.totalChemistryCostPln)}</div>
+                        <div className="font-mono font-bold text-destructive text-lg">-{fmtVal(result.totalChemistryCostPln)}</div>
                       </div>
                       <div className="bg-muted/30 p-3 rounded-lg border border-border">
                         <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.electricityCost")}</div>
-                        <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(result.electricityCostPln)}</div>
+                        <div className="font-mono font-bold text-destructive text-lg">-{fmtVal(result.electricityCostPln)}</div>
                       </div>
                       <div className={purchaseCost > 0 ? "bg-muted/30 p-3 rounded-lg border border-border" : "bg-primary/10 p-3 rounded-lg border border-primary/30"}>
                         <div className={`text-xs uppercase mb-1 font-bold ${purchaseCost > 0 ? "text-muted-foreground" : "text-primary"}`}>{t("calculator.netProfitChem")}</div>
-                        <div className={`font-mono font-bold text-xl ${purchaseCost > 0 ? "text-foreground" : "text-primary"}`}>{formatCurrency(result.netProfitPln)}</div>
+                        <div className={`font-mono font-bold text-xl ${purchaseCost > 0 ? "text-foreground" : "text-primary"}`}>{fmtVal(result.netProfitPln)}</div>
                       </div>
                     </div>
                     {purchaseCost > 0 && (
                       <div className="mt-3 pt-3 border-t border-border grid grid-cols-2 gap-4">
                         <div className="bg-muted/30 p-3 rounded-lg border border-border">
                           <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.ownCost")}</div>
-                          <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(purchaseCost)}</div>
+                          <div className="font-mono font-bold text-destructive text-lg">-{fmtVal(purchaseCost)}</div>
                         </div>
                         <div className="bg-primary/10 p-3 rounded-lg border border-primary/30">
                           <div className="text-xs text-primary uppercase mb-1 font-bold">{t("calculator.profitAfterPurchase")}</div>
                           <div className={`font-mono font-bold text-xl ${result.netProfitPln - purchaseCost >= 0 ? "text-primary" : "text-destructive"}`}>
-                            {formatCurrency(result.netProfitPln - purchaseCost)}
+                            {fmtVal(result.netProfitPln - purchaseCost)}
                           </div>
                         </div>
                       </div>
@@ -1198,7 +1208,7 @@ export function CalculatorPage() {
                               </TableCell>
                               <TableCell className="text-right font-mono">{formatMass(metal.massGrams, 'g')}</TableCell>
                               <TableCell className="text-right font-mono text-muted-foreground">{formatPercent(metal.yieldPercent)}</TableCell>
-                              <TableCell className="text-right font-mono font-bold text-success">{formatCurrency(metal.totalValuePln)}</TableCell>
+                              <TableCell className="text-right font-mono font-bold text-success">{fmtVal(metal.totalValuePln)}</TableCell>
                             </TableRow>
                           ))}
                           {result.recoveredMetals.length === 0 && (
@@ -1234,8 +1244,8 @@ export function CalculatorPage() {
                             <TableRow key={chem.reagentName} className="border-border">
                               <TableCell className="font-medium">{chem.reagentName}</TableCell>
                               <TableCell className="text-right font-mono">{chem.amountLiters.toFixed(2)} L</TableCell>
-                              <TableCell className="text-right font-mono text-muted-foreground">{chem.pricePerLiter.toFixed(2)} zł</TableCell>
-                              <TableCell className="text-right font-mono font-bold text-destructive">-{formatCurrency(chem.totalCostPln)}</TableCell>
+                              <TableCell className="text-right font-mono text-muted-foreground">{chem.pricePerLiter.toFixed(2)} {lang === "en" ? "€" : "zł"}</TableCell>
+                              <TableCell className="text-right font-mono font-bold text-destructive">-{fmtVal(chem.totalCostPln)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
