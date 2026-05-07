@@ -31,6 +31,7 @@ import { useCustomMaterials, getInlineContent, type CustomMaterial } from "@/lib
 import { CustomMaterialModal } from "@/components/CustomMaterialModal";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
+import i18next from "i18next";
 
 const CATEGORY_ORDER = [
   "plyty_glowne", "pcb", "procesor", "pamiec", "karta",
@@ -541,7 +542,13 @@ function SingleMode({
       )}
 
       {canCompute && !isLoading && result && (
-        <ResultCard result={result} isCleaned={materialRequiresCleaning && isCleaned} quantityGrams={quantityGrams} />
+        <ResultCard
+          result={result}
+          isCleaned={materialRequiresCleaning && isCleaned}
+          quantityGrams={quantityGrams}
+          localMaterialName={selectedApiMat ? (i18next.language === "en" && selectedApiMat.nameEn ? selectedApiMat.nameEn : selectedApiMat.name) : (selectedCustomMat?.name ?? undefined)}
+          localProcessName={t(`processes.names.${processId}`, { defaultValue: result.processName })}
+        />
       )}
     </>
   );
@@ -579,12 +586,13 @@ function BatchMode({
           data: {
             batch: validRows.map((r) => {
               const customMat = isCustomId(r.materialId) ? getCustomMat(r.materialId) : null;
-              const matName = allMaterials.find((m) => m.id === r.materialId)?.name;
+              const apiMat = allMaterials.find((m) => m.id === r.materialId);
+              const localName = apiMat ? (i18next.language === "en" && apiMat.nameEn ? apiMat.nameEn : apiMat.name) : undefined;
               return {
                 materialId: r.materialId,
                 quantityKg: parseFloat(r.quantityKg),
                 isCleaned: r.isCleaned || undefined,
-                name: customMat ? customMat.name : matName,
+                name: customMat ? customMat.name : localName,
                 ...(customMat ? { inlineMetalContent: getInlineContent(customMat) } : {}),
               };
             }),
@@ -665,7 +673,7 @@ function BatchMode({
       )}
 
       {canCompute && !batchMutation.isPending && result && (
-        <BatchResultCard result={result} />
+        <BatchResultCard result={result} processId={processId} />
       )}
     </>
   );
@@ -762,7 +770,7 @@ function BatchRowItem({
   );
 }
 
-function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
+function BatchResultCard({ result, processId }: { result: PurchasePriceBatchResult; processId: string }) {
   const { t } = useTranslation();
   const isPricePositive = result.maxPurchasePricePerKgPln > 0;
 
@@ -792,7 +800,7 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
           </div>
         </div>
         <CardDescription className="text-xs">
-          {result.processName} · {t("purchase.batch")}: {result.totalQuantityKg} kg {t("purchase.total")}
+          {t(`processes.names.${processId}`, { defaultValue: result.processName })} · {t("purchase.batch")}: {result.totalQuantityKg} kg {t("purchase.total")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -892,7 +900,7 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
   );
 }
 
-function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePriceResult; isCleaned?: boolean; quantityGrams?: number | null }) {
+function ResultCard({ result, isCleaned, quantityGrams, localMaterialName, localProcessName }: { result: PurchasePriceResult; isCleaned?: boolean; quantityGrams?: number | null; localMaterialName?: string; localProcessName?: string }) {
   const { t } = useTranslation();
   const price = result.maxPurchasePricePerKgPln;
   const isPricePositive = price > 0;
@@ -927,7 +935,7 @@ function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePric
           </div>
         </div>
         <CardDescription className="text-xs flex items-center gap-2 flex-wrap">
-          <span>{result.materialName} · {result.processName}</span>
+          <span>{localMaterialName ?? result.materialName} · {localProcessName ?? result.processName}</span>
           {isCleaned && (
             <span className="inline-flex items-center gap-0.5 font-medium text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5">
               <Sparkles className="h-3 w-3" />

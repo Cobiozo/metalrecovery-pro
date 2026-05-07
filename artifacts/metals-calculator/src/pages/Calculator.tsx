@@ -783,22 +783,22 @@ export function CalculatorPage() {
                       ))}
                       {process.id === 'aqua_regia' && (
                         <span className="text-xs px-1.5 py-0.5 bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded border border-amber-500/30 font-medium">
-                          {t("calculator.aquaRegiaPreEtch")}
+                          {t("processes.aquaRegiaPreEtch")}
                         </span>
                       )}
                     </div>
                     <p className={`text-xs text-muted-foreground mb-3 ${selectedProcessId === process.id ? '' : 'line-clamp-3'}`}>
-                      {t(`calculator.descriptions.${process.id}`, { defaultValue: process.description })}
+                      {t(`processes.descriptions.${process.id}`, { defaultValue: process.description })}
                     </p>
                     {process.id === 'aqua_regia' && selectedProcessId === process.id && (
                       <div className="mb-3 px-2 py-1.5 bg-amber-500/10 border border-amber-500/30 rounded text-xs text-amber-700 dark:text-amber-300">
-                        {t("calculator.aquaRegiaWarning")}
+                        {t("processes.aquaRegiaWarning")}
                       </div>
                     )}
                     <div className="text-xs font-mono mt-auto text-muted-foreground">
                       <div className="flex justify-between border-t border-border pt-2">
-                        <span>{t("calculator.processTime", { min: process.timePerKgMin, max: process.timePerKgMax })}</span>
-                        <span>{t("calculator.processTemp", { temp: process.temperatureOptimal })}</span>
+                        <span>{t("processes.processTime", { min: process.timePerKgMin, max: process.timePerKgMax })}</span>
+                        <span>{t("processes.processTemp", { temp: process.temperatureOptimal })}</span>
                       </div>
                     </div>
                   </div>
@@ -1060,7 +1060,7 @@ export function CalculatorPage() {
                     </span>
                   );
                 })}
-                <span className="text-muted-foreground ml-auto">{t("calculator.process")}: <span className="text-foreground font-medium">{result.processName}</span></span>
+                <span className="text-muted-foreground ml-auto">{t("calculator.process")}: <span className="text-foreground font-medium">{t(`processes.names.${selectedProcessId}`, { defaultValue: result.processName })}</span></span>
               </div>
 
               {/* ── Finanse + Parametry ───────────────────────────────────── */}
