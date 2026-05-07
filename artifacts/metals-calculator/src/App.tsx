@@ -57,6 +57,14 @@ function LangSync() {
   const { i18n } = useTranslation();
   useEffect(() => {
     document.documentElement.lang = i18n.language;
+    const locale = i18n.language === "en" ? "en_US" : "pl_PL";
+    let meta = document.querySelector<HTMLMetaElement>('meta[property="og:locale"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("property", "og:locale");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", locale);
   }, [i18n.language]);
   return null;
 }

@@ -231,6 +231,8 @@ function CorrectionDialog({
 
   const correctMaterial = selectedCategory === "__other__" ? customMaterial : selectedCategory;
 
+  const { t } = useTranslation();
+
   async function submit() {
     const trimmed = correctMaterial.trim();
     if (!trimmed) return;
@@ -251,14 +253,14 @@ function CorrectionDialog({
         try { const j = await res.json(); if (j?.error) errMsg = j.error; } catch {}
         throw new Error(errMsg);
       }
-      toast({ title: "Dziękujemy za zgłoszenie!", description: "Korekta zostanie sprawdzona przez administratora." });
+      toast({ title: t("analysis.correction.thanks"), description: t("analysis.correction.reviewPending") });
       setSelectedCategory("");
       setCustomMaterial("");
       setNote("");
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Nieznany błąd";
-      toast({ title: "Błąd wysyłania korekty", description: msg, variant: "destructive" });
+      const msg = err instanceof Error ? err.message : t("analysis.correction.unknownError");
+      toast({ title: t("analysis.correction.sendError"), description: msg, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
@@ -270,19 +272,19 @@ function CorrectionDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Flag className="w-4 h-4 text-orange-400" />
-            Zgłoś błędną klasyfikację
+            {t("analysis.correction.dialogTitle")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-1">
           <div className="space-y-1">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">AI sklasyfikowało jako:</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">{t("analysis.correction.aiClassifiedAs")}</p>
             <p className="text-sm font-medium bg-muted/50 rounded px-3 py-2 border border-border">
               {aiMaterialType}
             </p>
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
-              Właściwy materiał <span className="text-destructive">*</span>
+              {t("analysis.correction.correctMaterialLabel")} <span className="text-destructive">*</span>
             </label>
             <Button
               variant="outline"
@@ -292,7 +294,7 @@ function CorrectionDialog({
               className="w-full justify-between bg-background font-normal h-10 px-3 text-sm"
             >
               <span className={selectedCategory && selectedCategory !== "__other__" ? "text-foreground truncate" : "text-muted-foreground"}>
-                {selectedCategory && selectedCategory !== "__other__" ? selectedCategory : "— wybierz lub wyszukaj kategorię —"}
+                {selectedCategory && selectedCategory !== "__other__" ? selectedCategory : t("analysis.correction.selectPlaceholder")}
               </span>
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
@@ -300,7 +302,7 @@ function CorrectionDialog({
             <Dialog open={comboOpen} onOpenChange={setComboOpen}>
               <DialogContent className="max-w-sm p-0 gap-0 max-h-[80vh] flex flex-col">
                 <DialogHeader className="px-4 pt-4 pb-2 shrink-0">
-                  <DialogTitle className="text-sm font-semibold">Wybierz właściwy materiał</DialogTitle>
+                  <DialogTitle className="text-sm font-semibold">{t("analysis.correction.selectTitle")}</DialogTitle>
                 </DialogHeader>
                 <Command
                   className="flex flex-col min-h-0 flex-1"
@@ -310,10 +312,10 @@ function CorrectionDialog({
                   }}
                 >
                   <div className="px-3 pb-2 shrink-0">
-                    <CommandInput placeholder="Szukaj kategorii..." className="h-9" />
+                    <CommandInput placeholder={t("analysis.correction.searchPlaceholder")} className="h-9" />
                   </div>
                   <CommandList className="flex-1 overflow-y-auto overscroll-contain px-1 pb-3" style={{ WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
-                    <CommandEmpty>Brak wyników</CommandEmpty>
+                    <CommandEmpty>{t("analysis.correction.noResults")}</CommandEmpty>
                     {CORRECTION_CATEGORIES.map((group) => (
                       <CommandGroup key={group.group} heading={<span className="text-xs font-bold uppercase tracking-wider text-amber-500">{group.group}</span>}>
                         {group.items.map((item) => (
@@ -330,11 +332,11 @@ function CorrectionDialog({
                     ))}
                     <CommandGroup>
                       <CommandItem
-                        value="Inna kategoria (wpisz ręcznie)"
+                        value={t("analysis.correction.otherCategoryValue")}
                         onSelect={() => { setSelectedCategory("__other__"); setComboOpen(false); }}
                       >
                         <Check className={cn("mr-2 h-4 w-4", selectedCategory === "__other__" ? "opacity-100" : "opacity-0")} />
-                        Inna kategoria (wpisz ręcznie)…
+                        {t("analysis.correction.otherCategory")}
                       </CommandItem>
                     </CommandGroup>
                   </CommandList>
@@ -347,7 +349,7 @@ function CorrectionDialog({
                 type="text"
                 value={customMaterial}
                 onChange={(e) => setCustomMaterial(e.target.value)}
-                placeholder="Opisz właściwy materiał…"
+                placeholder={t("analysis.correction.describePrompt")}
                 autoFocus
                 className="w-full h-9 px-3 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary mt-1.5"
               />
@@ -355,23 +357,23 @@ function CorrectionDialog({
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground uppercase tracking-wider font-bold block">
-              Uwagi (opcjonalnie)
+              {t("analysis.correction.notesLabel")}
             </label>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              placeholder="Dodatkowy opis widocznych cech materiału..."
+              placeholder={t("analysis.correction.notesPlaceholder")}
               className="w-full px-3 py-2 text-sm bg-background border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary resize-none"
             />
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Twoja korekta zostanie przesłana do administratora. Po weryfikacji poprawi dokładność przyszłych analiz AI.
+            {t("analysis.correction.reviewNote")}
           </p>
         </div>
         <DialogFooter className="gap-2">
           <Button variant="ghost" size="sm" onClick={onClose} disabled={submitting}>
-            Anuluj
+            {t("common.cancel")}
           </Button>
           <Button
             size="sm"
@@ -380,7 +382,7 @@ function CorrectionDialog({
             onClick={submit}
           >
             {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Flag className="w-3.5 h-3.5" />}
-            Wyślij korektę
+            {t("analysis.correction.submit")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -412,11 +414,12 @@ function VisionResultCard({
     onQuantityChange(safe);
   };
 
+  const { t } = useTranslation();
   const metals = [
-    { key: "Au" as const, label: "Złoto (Au)", color: "text-yellow-400" },
-    { key: "Ag" as const, label: "Srebro (Ag)", color: "text-slate-300" },
-    { key: "Pt" as const, label: "Platyna (Pt)", color: "text-sky-400" },
-    { key: "Pd" as const, label: "Pallad (Pd)", color: "text-purple-400" },
+    { key: "Au" as const, label: t("analysis.metals.au"), color: "text-yellow-400" },
+    { key: "Ag" as const, label: t("analysis.metals.ag"), color: "text-slate-300" },
+    { key: "Pt" as const, label: t("analysis.metals.pt"), color: "text-sky-400" },
+    { key: "Pd" as const, label: t("analysis.metals.pd"), color: "text-purple-400" },
   ];
 
   const isNonEwaste = result.materialType.toLowerCase().startsWith("nieelektroniczne");
@@ -427,9 +430,9 @@ function VisionResultCard({
         <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
           <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-red-400">To nie jest złom elektroniczny</p>
+            <p className="text-sm font-semibold text-red-400">{t("analysis.notEwaste")}</p>
             <p className="text-xs text-red-400/80 mt-0.5 leading-relaxed">
-              Zdjęcie nie przedstawia komponentu elektronicznego. Szacunki zawartości metali nie mają zastosowania.
+              {t("analysis.notEwasteDesc")}
             </p>
           </div>
         </div>
@@ -456,7 +459,7 @@ function VisionResultCard({
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
                 <Scale className="w-3 h-3" />
-                Masa (kg):
+                {t("analysis.massKg")}
               </span>
               <div className="flex items-center gap-1">
                 <button
@@ -464,7 +467,7 @@ function VisionResultCard({
                   className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40"
                   onClick={() => updateQty(Math.max(0, qty - 0.005))}
                   disabled={qty <= 0}
-                  aria-label="Zmniejsz masę"
+                  aria-label={t("analysis.decreaseMass")}
                 >
                   −
                 </button>
@@ -483,31 +486,31 @@ function VisionResultCard({
                   type="button"
                   className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors"
                   onClick={() => updateQty(qty + 0.005)}
-                  aria-label="Zwiększ masę"
+                  aria-label={t("analysis.increaseMass")}
                 >
                   +
                 </button>
               </div>
               <span className="text-xs font-mono text-green-400 flex items-center gap-1">
                 <Scale className="w-3 h-3" />
-                {Math.round(qty * 1000)} g z wagi
+                {Math.round(qty * 1000)} {t("analysis.fromScaleG")}
               </span>
               {result.quantity > 0 && (
                 <span className="text-xs text-muted-foreground/60">
-                  (AI liczyło: ~{result.quantity} szt.)
+                  {t("analysis.aiCountedApprox", { count: result.quantity })}
                 </span>
               )}
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground shrink-0">Ilość (szt.):</span>
+              <span className="text-xs text-muted-foreground shrink-0">{t("analysis.quantityPcs")}</span>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors disabled:opacity-40"
                   onClick={() => updateQty(Math.max(0, qty - 1))}
                   disabled={qty <= 0}
-                  aria-label="Zmniejsz ilość"
+                  aria-label={t("analysis.decreaseQty")}
                 >
                   −
                 </button>
@@ -525,7 +528,7 @@ function VisionResultCard({
                   type="button"
                   className="w-7 h-7 rounded-md border border-border flex items-center justify-center text-sm font-bold hover:bg-muted transition-colors"
                   onClick={() => updateQty(qty + 1)}
-                  aria-label="Zwiększ ilość"
+                  aria-label={t("analysis.increaseQty")}
                 >
                   +
                 </button>
@@ -537,7 +540,7 @@ function VisionResultCard({
               )}
               {result.quantity > 0 && qty === result.quantity && (
                 <span className="text-xs text-muted-foreground/60 font-mono">
-                  ~{result.quantity} wg AI
+                  {t("analysis.aiEstimate", { count: result.quantity })}
                 </span>
               )}
               {weightPerPieceKg && qty > 0 && (
@@ -554,7 +557,7 @@ function VisionResultCard({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <FlaskConical className="w-4 h-4" />
-            Szacowana zawartość metali
+            {t("analysis.estimatedMetalContent")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -584,7 +587,7 @@ function VisionResultCard({
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
             <Sparkles className="w-4 h-4" />
-            Analiza złoceń
+            {t("analysis.platingTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 space-y-3">
@@ -592,12 +595,12 @@ function VisionResultCard({
             {result.platingAnalysis.detected ? (
               <>
                 <CheckCircle2 className="w-4 h-4 text-green-400 shrink-0" />
-                <span className="text-sm text-green-400 font-medium">Złocenia wykryte</span>
+                <span className="text-sm text-green-400 font-medium">{t("analysis.platingDetected")}</span>
               </>
             ) : (
               <>
                 <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="text-sm text-muted-foreground">Brak wyraźnych złoceń</span>
+                <span className="text-sm text-muted-foreground">{t("analysis.noPlating")}</span>
               </>
             )}
           </div>
@@ -605,13 +608,13 @@ function VisionResultCard({
             <div className="space-y-2 pl-6">
               {result.platingAnalysis.color && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground w-20 shrink-0">Kolor:</span>
+                  <span className="text-muted-foreground w-20 shrink-0">{t("analysis.platingColor")}</span>
                   <span className="font-medium">{translateColor(result.platingAnalysis.color)}</span>
                 </div>
               )}
               {result.platingAnalysis.thickness && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground w-20 shrink-0">Grubość:</span>
+                  <span className="text-muted-foreground w-20 shrink-0">{t("analysis.platingThickness")}</span>
                   <Badge variant="outline" className="text-xs border-yellow-500/40 text-yellow-400 bg-yellow-500/5">
                     {translateThickness(result.platingAnalysis.thickness)}
                   </Badge>
@@ -620,7 +623,7 @@ function VisionResultCard({
               {result.platingAnalysis.quality_1_to_5 !== undefined &&
                 result.platingAnalysis.quality_1_to_5 > 0 && (
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground w-20 shrink-0">Jakość:</span>
+                  <span className="text-muted-foreground w-20 shrink-0">{t("analysis.platingQuality")}</span>
                   <StarRating value={result.platingAnalysis.quality_1_to_5} />
                   <span className="text-xs text-muted-foreground ml-1">
                     {result.platingAnalysis.quality_1_to_5}/5
@@ -642,7 +645,7 @@ function VisionResultCard({
           <FlaskConical className="w-4 h-4 text-primary shrink-0" />
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">
-              Rekomendowany proces
+              {t("analysis.recommendedProcess")}
             </p>
             <p className="text-sm font-medium mt-0.5">{result.recommendedProcess}</p>
           </div>
@@ -655,15 +658,17 @@ function VisionResultCard({
             <div className="flex items-center gap-2 bg-yellow-500/5 border border-yellow-500/20 rounded-md px-3 py-2">
               <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
               <p className="text-xs text-yellow-400/90 leading-snug">
-                Jakość złoceń {result.platingAnalysis.quality_1_to_5}/5 uwzględniona w wycenie Au
-                {" "}({result.platingAnalysis.quality_1_to_5 >= 4 ? "+" : result.platingAnalysis.quality_1_to_5 <= 2 ? "" : "±"}
-                {Math.round((QUALITY_AU_MULTIPLIER[result.platingAnalysis.quality_1_to_5] - 1) * 100)}% Au)
+                {t("analysis.platingQualityNote", {
+                  value: result.platingAnalysis.quality_1_to_5,
+                  sign: result.platingAnalysis.quality_1_to_5! >= 4 ? "+" : result.platingAnalysis.quality_1_to_5! <= 2 ? "" : "±",
+                  pct: Math.round((QUALITY_AU_MULTIPLIER[result.platingAnalysis.quality_1_to_5!] - 1) * 100),
+                })}
               </p>
             </div>
           )}
           <Button variant="ghost" size="sm" className="w-full gap-2 text-muted-foreground text-xs" onClick={onSaveProfile}>
             <FlaskConical className="w-3.5 h-3.5" />
-            Zapisz jako własny profil materiału
+            {t("analysis.saveProfile")}
           </Button>
         </div>
       )}
@@ -703,7 +708,7 @@ function ScanningAnimation({ photoUrl }: { photoUrl: string }) {
         {/* Image shows at full natural proportions — no cropping */}
         <img
           src={photoUrl}
-          alt="Analizowane zdjęcie"
+          alt={i18next.t("analysis.scanning.alt") as string}
           className="block w-full h-auto select-none pointer-events-none"
           style={{ maxHeight: "70vh", objectFit: "contain", background: "#0a0a0a" }}
           draggable={false}
@@ -724,7 +729,7 @@ function ScanningAnimation({ photoUrl }: { photoUrl: string }) {
           style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }}
         >
           <span className="scan-dot" />
-          <span className="text-xs font-mono text-emerald-300">AI skanuje obraz…</span>
+          <span className="text-xs font-mono text-emerald-300">{i18next.t("analysis.scanning.status") as string}</span>
         </div>
       </div>
 
@@ -901,6 +906,7 @@ export function PhotoAnalysisPage() {
   const { toast } = useToast();
   const { authHeaders, user } = useAuth();
   const { data: apiMaterials } = useGetElectronicMaterials();
+  const { t } = useTranslation();
 
   function resolveItemMaterial(item: VisionItem): string {
     const quality = item.platingAnalysis.quality_1_to_5 ?? null;
@@ -913,7 +919,7 @@ export function PhotoAnalysisPage() {
       ag: item.metalContent.Ag.value_g_per_kg,
       pt: item.metalContent.Pt.value_g_per_kg,
       pd: item.metalContent.Pd.value_g_per_kg,
-      notes: `Analiza AI ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(item.metalContent.Au.confidence)}, Ag ${confidenceLabel(item.metalContent.Ag.confidence)}.${quality ? ` Jakość złoceń: ${quality}/5.` : ""}`,
+      notes: `${t("analysis.aiNotesPrefix")} ${new Date().toLocaleDateString()}. ${t("analysis.aiNotesConfidence")}: Au ${confidenceLabel(item.metalContent.Au.confidence)}, Ag ${confidenceLabel(item.metalContent.Ag.confidence)}.${quality ? ` ${t("analysis.aiNotesQuality")}: ${quality}/5.` : ""}`,
     });
     return mat.id;
   }
@@ -1097,9 +1103,9 @@ export function PhotoAnalysisPage() {
         return Math.max(0, i.quantity || 0);
       }));
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Nieznany błąd";
+      const msg = err instanceof Error ? err.message : t("analysis.correction.unknownError");
       setError(msg);
-      toast({ title: "Błąd analizy", description: msg, variant: "destructive" });
+      toast({ title: t("analysis.errorTitle"), description: msg, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -1124,10 +1130,10 @@ export function PhotoAnalysisPage() {
         <div>
           <h1 className="text-2xl font-bold font-sans tracking-tight flex items-center gap-2">
             <ScanLine className="h-6 w-6 text-primary" />
-            Analiza zdjęcia
+            {t("analysis.pageTitle")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Rozpoznawanie metali ze zdjęcia przy pomocy AI
+            {t("analysis.unavailableNote")}
           </p>
         </div>
         <Card className="border-border">
@@ -1136,9 +1142,9 @@ export function PhotoAnalysisPage() {
               <Sparkles className="w-8 h-8 text-muted-foreground" />
             </div>
             <div>
-              <p className="font-semibold text-base">Funkcja AI niedostępna na tym serwerze</p>
+              <p className="font-semibold text-base">{t("analysis.unavailable")}</p>
               <p className="text-muted-foreground text-sm mt-2 max-w-sm">
-                Analiza zdjęć wymaga klucza API OpenAI. Skontaktuj się z administratorem serwisu.
+                {t("analysis.unavailableDesc")}
               </p>
             </div>
           </CardContent>
@@ -1152,10 +1158,10 @@ export function PhotoAnalysisPage() {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold font-sans tracking-tight flex items-center gap-2">
           <ScanLine className="h-6 w-6 text-primary" />
-          Analiza zdjęcia
+          {t("analysis.pageTitle")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Zrób zdjęcie złomu elektronicznego, a AI oszacuje zawartość Au/Ag/Pt/Pd i oceni jakość złoceń
+          {t("analysis.pageSubtitle")}
         </p>
       </div>
 
@@ -1172,9 +1178,9 @@ export function PhotoAnalysisPage() {
               <ImageIcon className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <p className="font-semibold text-base">Przeciągnij zdjęcie tutaj</p>
-              <p className="text-muted-foreground text-sm mt-1">lub wybierz plik</p>
-              <p className="text-muted-foreground text-xs mt-1">JPG, PNG, WebP · maks. 10 MB</p>
+              <p className="font-semibold text-base">{t("analysis.dropzone")}</p>
+              <p className="text-muted-foreground text-sm mt-1">{t("analysis.orSelect")}</p>
+              <p className="text-muted-foreground text-xs mt-1">{t("analysis.formats")}</p>
             </div>
             <div className="flex gap-2 flex-wrap justify-center">
               <Button
@@ -1187,7 +1193,7 @@ export function PhotoAnalysisPage() {
                 }}
               >
                 <Camera className="w-4 h-4" />
-                Zrób zdjęcie
+                {t("analysis.takePhoto")}
               </Button>
               <Button
                 variant="outline"
@@ -1199,7 +1205,7 @@ export function PhotoAnalysisPage() {
                 }}
               >
                 <Upload className="w-4 h-4" />
-                Wybierz plik
+                {t("analysis.selectFile")}
               </Button>
             </div>
           </CardContent>
@@ -1237,12 +1243,12 @@ export function PhotoAnalysisPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Analizuję zdjęcie...
+                  {t("analysis.analyzingProgress")}
                 </>
               ) : (
                 <>
                   <ScanLine className="w-4 h-4" />
-                  Analizuj zdjęcie
+                  {t("analysis.analyzeButton")}
                 </>
               )}
             </Button>
@@ -1260,7 +1266,7 @@ export function PhotoAnalysisPage() {
             <CardContent className="py-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-destructive">Błąd analizy</p>
+                <p className="text-sm font-medium text-destructive">{t("analysis.errorTitle")}</p>
                 <p className="text-xs text-destructive/80 mt-1">{error}</p>
               </div>
             </CardContent>
@@ -1284,9 +1290,9 @@ export function PhotoAnalysisPage() {
                 </div>
               </div>
               <div>
-                <p className="font-semibold">Analizuję zdjęcie...</p>
+                <p className="font-semibold">{t("analysis.analyzingProgress")}</p>
                 <p className="text-muted-foreground text-sm mt-1">
-                  AI rozpoznaje materiał i szacuje zawartość metali (3–8 sek.)
+                  {t("analysis.analyzingNote")}
                 </p>
               </div>
             </CardContent>
@@ -1304,7 +1310,7 @@ export function PhotoAnalysisPage() {
                 className="flex items-center justify-center gap-2 text-sm font-medium text-orange-400 border border-orange-400/40 hover:border-orange-400 hover:bg-orange-400/10 transition-all rounded-lg px-5 py-2.5"
               >
                 <Flag className="w-4 h-4" />
-                Zgłoś błędną analizę
+                {t("analysis.reportError")}
               </button>
               {user && (
                 <CorrectionDialog
@@ -1327,15 +1333,15 @@ export function PhotoAnalysisPage() {
               <Scale className="w-5 h-5 text-green-400 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-green-400 flex items-center gap-2">
-                  Waga wykryta
+                  {t("analysis.scaleDetected")}
                   <Badge variant="outline" className={cn("text-xs", confidenceColor(result.scaleReading.confidence))}>
-                    pewność: {confidenceLabel(result.scaleReading.confidence)}
+                    {t("analysis.scaleConfidence")} {confidenceLabel(result.scaleReading.confidence)}
                   </Badge>
                 </p>
                 <p className="text-xs text-green-400/80 mt-0.5 leading-relaxed">
-                  Wskazanie: <span className="font-mono font-bold">{result.scaleReading.displayText ?? `${result.scaleReading.weightGrams} g`}</span>
-                  {" "}· całkowita masa: <span className="font-mono font-bold">{result.scaleReading.weightGrams} g</span>
-                  . Ilości obliczone na podstawie wskazania wagi, a nie liczby sztuk.
+                  {t("analysis.scaleReading")} <span className="font-mono font-bold">{result.scaleReading.displayText ?? `${result.scaleReading.weightGrams} g`}</span>
+                  {" "}· {t("analysis.scaleTotalMass")} <span className="font-mono font-bold">{result.scaleReading.weightGrams} g</span>
+                  . {t("analysis.scaleQtyNote")}
                 </p>
               </div>
             </div>
@@ -1372,9 +1378,8 @@ export function PhotoAnalysisPage() {
               <CardContent className="py-4 space-y-3">
                 {result.items.length > 1 && (
                   <p className="text-xs text-muted-foreground text-center">
-                    {ewasteItems.length}{" "}
-                    {ewasteItems.length === 1 ? "typ materiału" : ewasteItems.length < 5 ? "typy materiałów" : "typów materiałów"}
-                    {" "}· jakość złoceń uwzględniona dla każdego osobno
+                    {t("analysis.materialTypesCount", { count: ewasteItems.length })}
+                    {" "}· {t("analysis.platingPerItem")}
                   </p>
                 )}
                 <div className="grid grid-cols-2 gap-2">
@@ -1383,7 +1388,7 @@ export function PhotoAnalysisPage() {
                     onClick={() => navigateAll(result.items, editedQuantities, "/")}
                   >
                     <Calculator className="w-4 h-4" />
-                    Kalkulator
+                    {t("analysis.calculatorBtn")}
                   </Button>
                   <Button
                     variant="outline"
@@ -1391,7 +1396,7 @@ export function PhotoAnalysisPage() {
                     onClick={() => navigateAll(result.items, editedQuantities, "/skup")}
                   >
                     <ShoppingCart className="w-4 h-4" />
-                    Skup
+                    {t("analysis.shopBtn")}
                   </Button>
                 </div>
               </CardContent>
@@ -1405,10 +1410,7 @@ export function PhotoAnalysisPage() {
       <div className="flex items-start gap-2 bg-muted/30 border border-border rounded-md px-3 py-3">
         <Info className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" />
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          <strong>Zastrzeżenie:</strong> Wyniki analizy AI mają charakter wyłącznie szacunkowy i informacyjny.
-          Zawartość metali szlachetnych może się znacznie różnić w zależności od partii, producenta i roku produkcji.
-          Przed podjęciem decyzji zakupowych lub procesowych zaleca się wykonanie analizy laboratoryjnej (assay).
-          Wynik nie stanowi porady technicznej ani gwarancji odzysku.
+          <strong>{t("analysis.disclaimer")}</strong> {t("analysis.disclaimerText")}
         </p>
       </div>
 
@@ -1418,7 +1420,7 @@ export function PhotoAnalysisPage() {
         existing={null}
         onSave={(data) => {
           add(data);
-          toast({ title: "Profil zapisany", description: `"${data.name}" dodany do własnych profili` });
+          toast({ title: t("analysis.profileSaved"), description: `"${data.name}" ${t("analysis.profileSavedDesc")}` });
           setSaveItem(null);
         }}
         prefill={
@@ -1429,7 +1431,7 @@ export function PhotoAnalysisPage() {
                 ag: saveItem.metalContent.Ag.value_g_per_kg,
                 pt: saveItem.metalContent.Pt.value_g_per_kg,
                 pd: saveItem.metalContent.Pd.value_g_per_kg,
-                notes: `Analiza AI z dnia ${new Date().toLocaleDateString("pl-PL")}. Pewność: Au ${confidenceLabel(saveItem.metalContent.Au.confidence)}, Ag ${confidenceLabel(saveItem.metalContent.Ag.confidence)}.`,
+                notes: `${t("analysis.aiNotesPrefix")} ${new Date().toLocaleDateString()}. ${t("analysis.aiNotesConfidence")}: Au ${confidenceLabel(saveItem.metalContent.Au.confidence)}, Ag ${confidenceLabel(saveItem.metalContent.Ag.confidence)}.`,
               }
             : undefined
         }

@@ -269,6 +269,9 @@ export function Layout({ children }: { children: ReactNode }) {
             </Link>
           );
         })}
+        <div className="flex flex-col items-center justify-center px-2 py-2 border-l border-border shrink-0">
+          <LangToggle compact />
+        </div>
       </nav>
     </div>
   );

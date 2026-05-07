@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { getAuthApiBase as getApiBase } from "@/lib/api";
@@ -49,7 +50,7 @@ type VisitLogRow = {
 const ROLE_LABELS: Record<string, { label: string; icon: React.ElementType; color: string }> = {
   admin: { label: "Administrator", icon: Shield, color: "text-red-400" },
   vip: { label: "VIP", icon: Star, color: "text-yellow-400" },
-  user: { label: "Użytkownik", icon: UserIcon, color: "text-blue-400" },
+  user: { label: "User", icon: UserIcon, color: "text-blue-400" },
 };
 
 type Tab = "users" | "stats" | "settings" | "vision";
@@ -58,6 +59,7 @@ export function AdminPage() {
   const { user, authHeaders, isAdmin, loading } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("users");
 
   useEffect(() => {
@@ -78,28 +80,28 @@ export function AdminPage() {
           <Shield className="w-5 h-5 text-red-400" />
         </div>
         <div>
-          <h1 className="text-xl font-bold">Panel Administratora</h1>
-          <p className="text-xs text-muted-foreground">Zarządzanie systemem MetalRecovery Pro</p>
+          <h1 className="text-xl font-bold">{t("admin.title")}</h1>
+          <p className="text-xs text-muted-foreground">{t("admin.subtitle")}</p>
         </div>
       </div>
 
       <div className="flex border-b border-border pb-0 overflow-x-auto">
-        {(["users", "stats", "settings", "vision"] as Tab[]).map((t) => {
+        {(["users", "stats", "settings", "vision"] as Tab[]).map((tabKey) => {
           const icons = { users: Users, stats: BarChart2, settings: Settings, vision: Brain };
-          const labels = { users: "Użytkownicy", stats: "Statystyki", settings: "Ustawienia", vision: "Uczenie AI" };
-          const Icon = icons[t];
+          const labels: Record<Tab, string> = { users: t("admin.tabs.users"), stats: t("admin.tabs.stats"), settings: t("admin.tabs.settings"), vision: t("admin.tabs.vision") };
+          const Icon = icons[tabKey];
           return (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={tabKey}
+              onClick={() => setTab(tabKey)}
               className={`flex flex-1 items-center justify-center gap-1.5 px-2 py-2.5 text-xs sm:text-sm font-medium border-b-2 transition-colors -mb-px whitespace-nowrap ${
-                tab === t
+                tab === tabKey
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
-              <span className="truncate">{labels[t]}</span>
+              <span className="truncate">{labels[tabKey]}</span>
             </button>
           );
         })}
@@ -122,6 +124,7 @@ function UsersTab({
   toast: ReturnType<typeof useToast>["toast"];
   currentUserId: number;
 }) {
+  const { t } = useTranslation();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -134,39 +137,39 @@ function UsersTab({
       if (!res.ok) throw new Error();
       setUsers(await res.json());
     } catch {
-      toast({ title: "Błąd", description: "Nie udało się załadować użytkowników.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("admin.users.loadError"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [authHeaders, toast]);
+  }, [authHeaders, toast, t]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const deleteUser = async (id: number) => {
-    if (!confirm("Usunąć tego użytkownika?")) return;
+    if (!confirm(t("admin.users.deleteConfirm"))) return;
     const res = await fetch(`${getApiBase()}/admin/users/${id}`, {
       method: "DELETE",
       headers: authHeaders(),
     });
     if (res.ok) {
-      toast({ title: "Usunięto użytkownika" });
+      toast({ title: t("admin.users.deleted") });
       fetchUsers();
     } else {
       const d = await res.json();
-      toast({ title: "Błąd", description: d.error, variant: "destructive" });
+      toast({ title: t("common.error"), description: d.error, variant: "destructive" });
     }
   };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{users.length} użytkownik(ów)</p>
+        <p className="text-sm text-muted-foreground">{t("admin.users.count", { count: users.length })}</p>
         <button
           onClick={() => setShowCreate(!showCreate)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Nowy użytkownik
+          {t("admin.users.newUser")}
         </button>
       </div>
 
@@ -217,6 +220,7 @@ function UserCard({
   user: UserRow; isCurrent: boolean;
   onEdit: () => void; onDelete: () => void;
 }) {
+  const { t } = useTranslation();
   const role = ROLE_LABELS[user.role] ?? ROLE_LABELS.user;
   const Icon = role.icon;
   return (
@@ -231,18 +235,18 @@ function UserCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-medium text-sm truncate">{user.name ?? user.email}</span>
             {user.name && <span className="text-xs text-muted-foreground truncate">{user.email}</span>}
-            {isCurrent && <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">Ty</span>}
+            {isCurrent && <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t("admin.users.you")}</span>}
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`text-xs font-medium ${role.color}`}>{role.label}</span>
             <span className={`text-xs px-1.5 py-0.5 rounded ${user.isActive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
-              {user.isActive ? "Aktywny" : "Nieaktywny"}
+              {user.isActive ? t("admin.users.active") : t("admin.users.inactive")}
             </span>
             {!user.emailVerified && (
-              <span className="text-xs bg-yellow-500/10 text-yellow-400 px-1.5 py-0.5 rounded">Email niezweryfikowany</span>
+              <span className="text-xs bg-yellow-500/10 text-yellow-400 px-1.5 py-0.5 rounded">{t("admin.users.emailUnverified")}</span>
             )}
             <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Brain className="w-3 h-3" />{user.aiUsageCount} analiz AI
+              <Brain className="w-3 h-3" />{user.aiUsageCount} {t("admin.users.aiAnalysesCount")}
             </span>
           </div>
         </div>
@@ -269,6 +273,7 @@ function CreateUserForm({
   onCreated: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ email: "", password: "", name: "", role: "user", isActive: true, emailVerified: true });
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -284,10 +289,10 @@ function CreateUserForm({
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error);
-      toast({ title: "Użytkownik utworzony" });
+      toast({ title: t("admin.users.created") });
       onCreated();
     } catch (err: unknown) {
-      toast({ title: "Błąd", description: err instanceof Error ? err.message : "Błąd", variant: "destructive" });
+      toast({ title: t("common.error"), description: err instanceof Error ? err.message : t("common.error"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -295,16 +300,16 @@ function CreateUserForm({
 
   return (
     <form onSubmit={submit} className="bg-card border border-primary/30 rounded-lg p-4 space-y-3">
-      <h3 className="font-semibold text-sm">Nowy użytkownik</h3>
+      <h3 className="font-semibold text-sm">{t("admin.users.newUser")}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input required type="email" placeholder="Email *" value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
-        <input placeholder="Imię / nazwa" value={form.name}
+        <input placeholder={t("admin.users.name")} value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <div className="relative">
-          <input required type={showPass ? "text" : "password"} placeholder="Hasło *" value={form.password}
+          <input required type={showPass ? "text" : "password"} placeholder={`${t("login.password")} *`} value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             className="w-full px-3 py-2 pr-9 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
           <button type="button" onClick={() => setShowPass(!showPass)}
@@ -314,7 +319,7 @@ function CreateUserForm({
         </div>
         <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          <option value="user">Użytkownik</option>
+          <option value="user">{ROLE_LABELS.user.label}</option>
           <option value="vip">VIP</option>
           <option value="admin">Administrator</option>
         </select>
@@ -322,21 +327,21 @@ function CreateUserForm({
       <div className="flex gap-4 text-sm">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-          Konto aktywne
+          {t("admin.users.accountActive")}
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.emailVerified} onChange={(e) => setForm({ ...form, emailVerified: e.target.checked })} />
-          Email zweryfikowany
+          {t("admin.users.emailVerifiedLabel")}
         </label>
       </div>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          Anuluj
+          {t("common.cancel")}
         </button>
         <button type="submit" disabled={loading}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 transition-colors">
           {loading ? <div className="w-3.5 h-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-          Utwórz
+          {t("admin.users.create")}
         </button>
       </div>
     </form>
@@ -352,6 +357,7 @@ function EditUserForm({
   onSaved: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     name: user.name ?? "", role: user.role, isActive: user.isActive,
     emailVerified: user.emailVerified, password: "",
@@ -375,10 +381,10 @@ function EditUserForm({
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error);
-      toast({ title: "Zapisano zmiany" });
+      toast({ title: t("admin.users.saveChanges") });
       onSaved();
     } catch (err: unknown) {
-      toast({ title: "Błąd", description: err instanceof Error ? err.message : "Błąd", variant: "destructive" });
+      toast({ title: t("common.error"), description: err instanceof Error ? err.message : t("common.error"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -386,19 +392,19 @@ function EditUserForm({
 
   return (
     <form onSubmit={submit} className="bg-card border border-yellow-500/30 rounded-lg p-4 space-y-3">
-      <h3 className="font-semibold text-sm">Edycja: {user.email}</h3>
+      <h3 className="font-semibold text-sm">{t("admin.users.editing")} {user.email}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <input placeholder="Imię / nazwa" value={form.name}
+        <input placeholder={t("admin.users.name")} value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          <option value="user">Użytkownik</option>
+          <option value="user">{ROLE_LABELS.user.label}</option>
           <option value="vip">VIP</option>
           <option value="admin">Administrator</option>
         </select>
         <div className="relative col-span-2">
-          <input type={showPass ? "text" : "password"} placeholder="Nowe hasło (opcjonalne)" value={form.password}
+          <input type={showPass ? "text" : "password"} placeholder={t("admin.users.newPasswordOpt")} value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             className="w-full px-3 py-2 pr-9 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
           <button type="button" onClick={() => setShowPass(!showPass)}
@@ -410,21 +416,21 @@ function EditUserForm({
       <div className="flex gap-4 text-sm">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-          Konto aktywne
+          {t("admin.users.accountActive")}
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="checkbox" checked={form.emailVerified} onChange={(e) => setForm({ ...form, emailVerified: e.target.checked })} />
-          Email zweryfikowany
+          {t("admin.users.emailVerifiedLabel")}
         </label>
       </div>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <X className="w-4 h-4 inline mr-1" />Anuluj
+          <X className="w-4 h-4 inline mr-1" />{t("common.cancel")}
         </button>
         <button type="submit" disabled={loading}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-yellow-500 text-yellow-950 text-sm font-semibold hover:bg-yellow-400 disabled:opacity-50 transition-colors">
           {loading ? <div className="w-3.5 h-3.5 border-2 border-yellow-900/30 border-t-yellow-900 rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-          Zapisz
+          {t("common.save")}
         </button>
       </div>
     </form>
@@ -434,6 +440,7 @@ function EditUserForm({
 const LOGS_PAGE_SIZE = 15;
 
 function PageControls({ page, total, onChange }: { page: number; total: number; onChange: (p: number) => void }) {
+  const { t } = useTranslation();
   const pages = Math.ceil(total / LOGS_PAGE_SIZE);
   if (pages <= 1) return null;
   return (
@@ -443,17 +450,17 @@ function PageControls({ page, total, onChange }: { page: number; total: number; 
         disabled={page === 0}
         className="px-3 py-1 text-xs rounded-md bg-muted hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
       >
-        ← Poprzednia
+        {t("admin.stats.prevPage")}
       </button>
       <span className="text-xs text-muted-foreground">
-        Strona {page + 1} / {pages}
+        {t("admin.stats.page", { current: page + 1, total: pages })}
       </span>
       <button
         onClick={() => onChange(page + 1)}
         disabled={page >= pages - 1}
         className="px-3 py-1 text-xs rounded-md bg-muted hover:bg-muted/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors font-medium"
       >
-        Następna →
+        {t("admin.stats.nextPage")}
       </button>
     </div>
   );
@@ -461,6 +468,7 @@ function PageControls({ page, total, onChange }: { page: number; total: number; 
 
 function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [stats, setStats] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiLogs, setAiLogs] = useState<AiLogRow[]>([]);
@@ -473,26 +481,26 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
   const [clearingVisitLogs, setClearingVisitLogs] = useState(false);
 
   const handleClearAiLogs = useCallback(async () => {
-    if (!window.confirm(`Usunąć wszystkie ${aiLogs.length} logów analiz AI? Tej operacji nie można cofnąć.`)) return;
+    if (!window.confirm(t("admin.stats.clearAiConfirm", { count: aiLogs.length }))) return;
     setClearingAiLogs(true);
     try {
       const res = await fetch(`${getApiBase()}/admin/ai-logs`, { method: "DELETE", headers: authHeaders() });
       const data = await res.json();
-      if (res.ok) { setAiLogs([]); setAiLogsPage(0); toast({ title: `Wyczyszczono ${data.deleted} logów AI` }); }
-      else toast({ title: "Błąd", description: data.error, variant: "destructive" });
+      if (res.ok) { setAiLogs([]); setAiLogsPage(0); toast({ title: t("admin.stats.clearedAi", { count: data.deleted }) }); }
+      else toast({ title: t("common.error"), description: data.error, variant: "destructive" });
     } finally { setClearingAiLogs(false); }
-  }, [aiLogs.length, authHeaders, toast]);
+  }, [aiLogs.length, authHeaders, toast, t]);
 
   const handleClearVisitLogs = useCallback(async () => {
-    if (!window.confirm(`Usunąć wszystkie ${visitLogs.length} logów wizyt? Tej operacji nie można cofnąć.`)) return;
+    if (!window.confirm(t("admin.stats.clearVisitConfirm", { count: visitLogs.length }))) return;
     setClearingVisitLogs(true);
     try {
       const res = await fetch(`${getApiBase()}/admin/visit-logs`, { method: "DELETE", headers: authHeaders() });
       const data = await res.json();
-      if (res.ok) { setVisitLogs([]); setVisitLogsPage(0); toast({ title: `Wyczyszczono ${data.deleted} logów wizyt` }); }
-      else toast({ title: "Błąd", description: data.error, variant: "destructive" });
+      if (res.ok) { setVisitLogs([]); setVisitLogsPage(0); toast({ title: t("admin.stats.clearedVisits", { count: data.deleted }) }); }
+      else toast({ title: t("common.error"), description: data.error, variant: "destructive" });
     } finally { setClearingVisitLogs(false); }
-  }, [visitLogs.length, authHeaders, toast]);
+  }, [visitLogs.length, authHeaders, toast, t]);
 
   useEffect(() => {
     fetch(`${getApiBase()}/admin/stats`, { headers: authHeaders() })
@@ -510,7 +518,7 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
   }, [authHeaders]);
 
   if (loading) return <div className="flex justify-center py-8"><div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>;
-  if (!stats) return <p className="text-muted-foreground text-sm">Brak danych.</p>;
+  if (!stats) return <p className="text-muted-foreground text-sm">{t("common.error")}</p>;
 
   const last30Visits = Object.values(stats.daily).reduce((s, d) => s + (d.page_visits ?? 0), 0);
   const last30AI = Object.values(stats.daily).reduce((s, d) => s + (d.ai_analyses ?? 0), 0);
@@ -519,20 +527,20 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard icon={Users} label="Wszyscy użytkownicy" value={stats.users.total} color="text-blue-400" />
-        <StatCard icon={Shield} label="Administratorzy" value={stats.users.admin} color="text-red-400" />
-        <StatCard icon={Star} label="VIP" value={stats.users.vip} color="text-yellow-400" />
-        <StatCard icon={UserIcon} label="Użytkownicy" value={stats.users.user} color="text-green-400" />
+        <StatCard icon={Users} label={t("admin.stats.allUsers")} value={stats.users.total} color="text-blue-400" />
+        <StatCard icon={Shield} label={t("admin.stats.admins")} value={stats.users.admin} color="text-red-400" />
+        <StatCard icon={Star} label={t("admin.stats.vip")} value={stats.users.vip} color="text-yellow-400" />
+        <StatCard icon={UserIcon} label={t("admin.stats.regularUsers")} value={stats.users.user} color="text-green-400" />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <StatCard icon={Globe} label="Wizyty (30 dni)" value={last30Visits} color="text-cyan-400" />
-        <StatCard icon={Brain} label="Analizy AI (30 dni)" value={last30AI} color="text-purple-400" />
-        <StatCard icon={Brain} label="Analizy AI (łącznie)" value={stats.totalAiAnalyses} color="text-indigo-400" />
+        <StatCard icon={Globe} label={t("admin.stats.visits30d")} value={last30Visits} color="text-cyan-400" />
+        <StatCard icon={Brain} label={t("admin.stats.ai30d")} value={last30AI} color="text-purple-400" />
+        <StatCard icon={Brain} label={t("admin.stats.aiTotal")} value={stats.totalAiAnalyses} color="text-indigo-400" />
       </div>
 
       {dates.length > 0 && (
         <div className="bg-card border border-border rounded-lg p-4">
-          <h3 className="text-sm font-semibold mb-4">Ostatnie 14 dni</h3>
+          <h3 className="text-sm font-semibold mb-4">{t("admin.stats.last14days")}</h3>
           <div className="space-y-2">
             {dates.map((date) => {
               const d = stats.daily[date] ?? {};
@@ -571,9 +579,9 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
       <div className="bg-card border border-border rounded-lg p-4">
         <div className="flex items-center gap-2 mb-4">
           <List className="w-4 h-4 text-purple-400" />
-          <h3 className="text-sm font-semibold">Logi analiz AI</h3>
+          <h3 className="text-sm font-semibold">{t("admin.stats.aiLogs")}</h3>
           <span className="text-xs text-muted-foreground">
-            {aiLogs.length > 0 ? `${aiLogs.length} wpisów` : "ostatnie 100"}
+            {aiLogs.length > 0 ? t("admin.stats.entries", { count: aiLogs.length }) : t("admin.stats.last100")}
           </span>
           {aiLogs.length > 0 && (
             <button
@@ -582,8 +590,8 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
               className="ml-auto flex items-center gap-1 text-xs text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors px-2 py-1 rounded border border-red-400/30 hover:border-red-400/60"
             >
               {clearingAiLogs
-                ? <><div className="w-3 h-3 border border-red-400/50 border-t-red-400 rounded-full animate-spin" />Czyszczenie…</>
-                : <><Trash2 className="w-3 h-3" />Wyczyść logi</>
+                ? <><div className="w-3 h-3 border border-red-400/50 border-t-red-400 rounded-full animate-spin" />{t("admin.stats.clearing")}</>
+                : <><Trash2 className="w-3 h-3" />{t("admin.stats.clearLogs")}</>
               }
             </button>
           )}
@@ -591,18 +599,18 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
         {logsLoading ? (
           <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
         ) : aiLogs.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">Brak zapisanych analiz.</p>
+          <p className="text-xs text-muted-foreground text-center py-4">{t("admin.stats.noLogs")}</p>
         ) : (
           <>
             <div className="overflow-x-auto -mx-1 px-1">
               <table className="text-xs" style={{ minWidth: "520px", width: "100%" }}>
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
-                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">Data / Czas</th>
-                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">IP</th>
-                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">Konto</th>
-                    <th className="text-left pb-2 pr-3 font-medium">Wykryte materiały</th>
-                    <th className="text-right pb-2 font-medium whitespace-nowrap">Szt.</th>
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">{t("admin.stats.date")}</th>
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">{t("admin.stats.ip")}</th>
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">{t("admin.stats.account")}</th>
+                    <th className="text-left pb-2 pr-3 font-medium">{t("admin.stats.detectedMaterials")}</th>
+                    <th className="text-right pb-2 font-medium whitespace-nowrap">{t("admin.stats.count")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -621,7 +629,7 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
                           {log.userEmail ? (
                             <span className="text-purple-400">{log.userEmail}</span>
                           ) : (
-                            <span className="text-muted-foreground/50">anonim</span>
+                            <span className="text-muted-foreground/50">{t("admin.stats.anon")}</span>
                           )}
                         </td>
                         <td
@@ -646,9 +654,9 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
       <div className="bg-card border border-border rounded-lg p-4">
         <div className="flex items-center gap-2 mb-4">
           <Globe className="w-4 h-4 text-cyan-400" />
-          <h3 className="text-sm font-semibold">Logi wizyt</h3>
+          <h3 className="text-sm font-semibold">{t("admin.stats.visitLogs")}</h3>
           <span className="text-xs text-muted-foreground">
-            {visitLogs.length > 0 ? `${visitLogs.length} wpisów` : "ostatnie 200"}
+            {visitLogs.length > 0 ? t("admin.stats.entries", { count: visitLogs.length }) : t("admin.stats.last200")}
           </span>
           {visitLogs.length > 0 && (
             <button
@@ -657,8 +665,8 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
               className="ml-auto flex items-center gap-1 text-xs text-red-400 hover:text-red-300 disabled:opacity-50 transition-colors px-2 py-1 rounded border border-red-400/30 hover:border-red-400/60"
             >
               {clearingVisitLogs
-                ? <><div className="w-3 h-3 border border-red-400/50 border-t-red-400 rounded-full animate-spin" />Czyszczenie…</>
-                : <><Trash2 className="w-3 h-3" />Wyczyść logi</>
+                ? <><div className="w-3 h-3 border border-red-400/50 border-t-red-400 rounded-full animate-spin" />{t("admin.stats.clearing")}</>
+                : <><Trash2 className="w-3 h-3" />{t("admin.stats.clearLogs")}</>
               }
             </button>
           )}
@@ -666,15 +674,15 @@ function StatsTab({ authHeaders }: { authHeaders: () => Record<string, string> }
         {visitLogsLoading ? (
           <div className="flex justify-center py-4"><div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" /></div>
         ) : visitLogs.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-4">Brak zapisanych wizyt.</p>
+          <p className="text-xs text-muted-foreground text-center py-4">{t("admin.stats.noVisits")}</p>
         ) : (
           <>
             <div className="overflow-x-auto -mx-1 px-1">
               <table className="text-xs" style={{ minWidth: "300px", width: "100%" }}>
                 <thead>
                   <tr className="border-b border-border text-muted-foreground">
-                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">Data / Czas</th>
-                    <th className="text-left pb-2 font-medium whitespace-nowrap">IP</th>
+                    <th className="text-left pb-2 pr-3 font-medium whitespace-nowrap">{t("admin.stats.date")}</th>
+                    <th className="text-left pb-2 font-medium whitespace-nowrap">{t("admin.stats.ip")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -722,6 +730,7 @@ function SettingsTab({
   authHeaders: () => Record<string, string>;
   toast: ReturnType<typeof useToast>["toast"];
 }) {
+  const { t } = useTranslation();
   const [settings, setSettings] = useState<Settings>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -746,9 +755,9 @@ function SettingsTab({
         body: JSON.stringify(settings),
       });
       if (!res.ok) throw new Error();
-      toast({ title: "Ustawienia zapisane" });
+      toast({ title: t("admin.settings.saved") });
     } catch {
-      toast({ title: "Błąd", description: "Nie udało się zapisać ustawień.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("admin.settings.saveError"), variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -770,9 +779,9 @@ function SettingsTab({
       });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error);
-      toast({ title: "SMTP działa", description: d.message });
+      toast({ title: t("admin.settings.smtpOk"), description: d.message });
     } catch (err: unknown) {
-      toast({ title: "Błąd SMTP", description: err instanceof Error ? err.message : "Błąd", variant: "destructive" });
+      toast({ title: t("admin.settings.smtpError"), description: err instanceof Error ? err.message : t("common.error"), variant: "destructive" });
     } finally {
       setTesting(false);
     }
@@ -787,15 +796,13 @@ function SettingsTab({
       <div className="bg-card border border-border rounded-lg p-5 space-y-4">
         <h3 className="font-semibold flex items-center gap-2">
           <Activity className="w-4 h-4 text-primary" />
-          Rejestracja użytkowników
+          {t("admin.settings.registration")}
         </h3>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-medium">Status rejestracji</p>
+            <p className="text-sm font-medium">{t("admin.settings.registrationStatus")}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {regEnabled
-                ? "Rejestracja włączona — nowi użytkownicy mogą się rejestrować"
-                : "Rejestracja wyłączona — tylko administrator może tworzyć konta"}
+              {regEnabled ? t("admin.settings.regEnabled") : t("admin.settings.regDisabled")}
             </p>
           </div>
           <button
@@ -805,12 +812,12 @@ function SettingsTab({
             }`}
           >
             {regEnabled ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
-            {regEnabled ? "Włączona" : "Wyłączona"}
+            {regEnabled ? t("admin.settings.enabled") : t("admin.settings.disabled")}
           </button>
         </div>
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            URL strony (frontend, do przekierowań po weryfikacji)
+            {t("admin.settings.siteUrl")}
           </label>
           <input
             value={settings.site_url ?? ""}
@@ -821,7 +828,7 @@ function SettingsTab({
         </div>
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-1.5">
-            URL API (do linków weryfikacyjnych w emailach)
+            {t("admin.settings.apiUrl")}
           </label>
           <input
             value={settings.api_url ?? ""}
@@ -829,7 +836,7 @@ function SettingsTab({
             placeholder="https://recovery-calculator-bawolekw9.replit.app"
             className="w-full px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
           />
-          <p className="text-xs text-muted-foreground mt-1">Zostaw puste jeśli frontend i API są na tej samej domenie</p>
+          <p className="text-xs text-muted-foreground mt-1">{t("admin.settings.apiUrlHint")}</p>
         </div>
       </div>
 
@@ -837,13 +844,13 @@ function SettingsTab({
         <div>
           <h3 className="font-semibold flex items-center gap-2">
             <Mail className="w-4 h-4 text-primary" />
-            Konfiguracja SMTP
+            {t("admin.settings.smtp")}
           </h3>
-          <p className="text-xs text-muted-foreground mt-0.5 ml-6">wymagane do emailowej rejestracji</p>
+          <p className="text-xs text-muted-foreground mt-0.5 ml-6">{t("admin.settings.smtpNote")}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Serwer SMTP</label>
+            <label className="block text-xs text-muted-foreground mb-1">{t("admin.settings.smtpHost")}</label>
             <input
               value={settings.smtp_host ?? ""}
               onChange={(e) => set("smtp_host", e.target.value)}
@@ -861,7 +868,7 @@ function SettingsTab({
             />
           </div>
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Użytkownik SMTP</label>
+            <label className="block text-xs text-muted-foreground mb-1">{t("admin.settings.smtpUser")}</label>
             <input
               value={settings.smtp_user ?? ""}
               onChange={(e) => set("smtp_user", e.target.value)}
@@ -870,7 +877,7 @@ function SettingsTab({
             />
           </div>
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Hasło SMTP</label>
+            <label className="block text-xs text-muted-foreground mb-1">{t("admin.settings.smtpPass")}</label>
             <div className="relative">
               <input
                 type={showSmtpPass ? "text" : "password"}
@@ -886,7 +893,7 @@ function SettingsTab({
             </div>
           </div>
           <div>
-            <label className="block text-xs text-muted-foreground mb-1">Adres nadawcy (From)</label>
+            <label className="block text-xs text-muted-foreground mb-1">{t("admin.settings.smtpFrom")}</label>
             <input
               value={settings.smtp_from ?? ""}
               onChange={(e) => set("smtp_from", e.target.value)}
@@ -901,7 +908,7 @@ function SettingsTab({
                 checked={settings.smtp_secure === "true"}
                 onChange={(e) => set("smtp_secure", e.target.checked ? "true" : "false")}
               />
-              Połączenie szyfrowane (SSL/TLS, port 465)
+              {t("admin.settings.smtpSecure")}
             </label>
           </div>
         </div>
@@ -916,7 +923,7 @@ function SettingsTab({
             ) : (
               <Send className="w-3.5 h-3.5" />
             )}
-            Testuj połączenie
+            {t("admin.settings.testSmtp")}
           </button>
         </div>
       </div>
@@ -932,7 +939,7 @@ function SettingsTab({
           ) : (
             <Check className="w-4 h-4" />
           )}
-          Zapisz wszystkie ustawienia
+          {t("admin.settings.saveAll")}
         </button>
       </div>
     </div>
@@ -969,6 +976,7 @@ function VisionTab({
   authHeaders: () => Record<string, string>;
   toast: ReturnType<typeof useToast>["toast"];
 }) {
+  const { t } = useTranslation();
   const [corrections, setCorrections] = useState<VisionCorrection[]>([]);
   const [rules, setRules] = useState<VisionRule[]>([]);
   const [loadingC, setLoadingC] = useState(true);
@@ -1051,11 +1059,11 @@ function VisionTab({
         body: JSON.stringify({ title: promoteTitle, ruleText: promoteText }),
       });
       if (!res.ok) throw new Error();
-      toast({ title: "Reguła dodana!", description: "Korekta została promowana do stałej reguły AI." });
+      toast({ title: t("admin.vision.promoteSuccess"), description: t("admin.vision.promoteSuccessDesc") });
       setPromoteItem(null);
       await Promise.all([fetchCorrections(), fetchRules()]);
     } catch {
-      toast({ title: "Błąd", description: "Nie udało się promować korekty.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("admin.vision.promoteError"), variant: "destructive" });
     } finally { setPromoting(false); }
   }
 
@@ -1069,13 +1077,13 @@ function VisionTab({
   }
 
   async function deleteRule(id: number) {
-    if (!confirm("Czy na pewno chcesz usunąć tę regułę?")) return;
+    if (!confirm(t("admin.vision.deleteRuleConfirm"))) return;
     await fetch(`${getApiBase()}/admin/vision-rules/${id}`, {
       method: "DELETE",
       headers: authHeaders(),
     });
     setRules((prev) => prev.filter((r) => r.id !== id));
-    toast({ title: "Reguła usunięta" });
+    toast({ title: t("admin.vision.ruleDeleted") });
   }
 
   async function createRule() {
@@ -1088,11 +1096,11 @@ function VisionTab({
         body: JSON.stringify({ title: newTitle, ruleText: newText }),
       });
       if (!res.ok) throw new Error();
-      toast({ title: "Reguła dodana!" });
+      toast({ title: t("admin.vision.ruleAdded") });
       setNewTitle(""); setNewText(""); setShowNewRule(false);
       await fetchRules();
     } catch {
-      toast({ title: "Błąd", description: "Nie udało się dodać reguły.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("admin.vision.ruleAddError"), variant: "destructive" });
     } finally { setSaving(false); }
   }
 
@@ -1107,9 +1115,9 @@ function VisionTab({
       });
       setRules((prev) => prev.map((r) => r.id === editRuleId ? { ...r, title: editTitle, ruleText: editText } : r));
       setEditRuleId(null);
-      toast({ title: "Reguła zaktualizowana" });
+      toast({ title: t("admin.vision.ruleUpdated") });
     } catch {
-      toast({ title: "Błąd", description: "Nie udało się zapisać reguły.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("admin.vision.ruleUpdateError"), variant: "destructive" });
     } finally { setEditSaving(false); }
   }
 
@@ -1121,7 +1129,7 @@ function VisionTab({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Brain className="w-5 h-5 text-purple-400" />
-          <h2 className="text-base font-semibold">Uczenie maszynowe AI</h2>
+          <h2 className="text-base font-semibold">{t("admin.vision.title")}</h2>
         </div>
         <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
           <button
@@ -1130,7 +1138,7 @@ function VisionTab({
               section === "corrections" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Korekty użytkowników
+            {t("admin.vision.corrections")}
             {pending.length > 0 && (
               <span className="ml-1.5 bg-orange-500 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
                 {pending.length}
@@ -1143,7 +1151,7 @@ function VisionTab({
               section === "rules" ? "bg-background shadow text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Reguły promptu
+            {t("admin.vision.rules")}
             {rules.filter((r) => r.isActive).length > 0 && (
               <span className="ml-1.5 bg-green-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
                 {rules.filter((r) => r.isActive).length}
@@ -1156,9 +1164,9 @@ function VisionTab({
       {/* ── Corrections Section ── */}
       {section === "corrections" && (
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">
-            Poniżej są korekty zgłoszone przez zalogowanych użytkowników. Możesz je <strong>promować do stałych reguł</strong> lub <strong>odrzucać</strong>. Oczekujące korekty są automatycznie wstrzykiwane do promptu AI jako przykłady.
-          </p>
+          <p className="text-xs text-muted-foreground"
+            dangerouslySetInnerHTML={{ __html: t("admin.vision.correctionsDesc") }}
+          />
 
           {loadingC ? (
             <div className="py-8 flex justify-center">
@@ -1166,13 +1174,13 @@ function VisionTab({
             </div>
           ) : corrections.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground text-sm">
-              Brak korekt. Gdy użytkownicy zgłoszą błędy AI, pojawią się tutaj.
+              {t("admin.vision.noCorrections")}
             </div>
           ) : (
             <div className="space-y-2">
               {pending.length > 0 && (
                 <p className="text-xs font-semibold text-orange-400 uppercase tracking-wider">
-                  Oczekujące ({pending.length}) — wstrzykiwane do promptu AI
+                  {t("admin.vision.pendingLabel", { count: pending.length })}
                 </p>
               )}
               {[...pending, ...other].map((c) => (
@@ -1194,7 +1202,7 @@ function VisionTab({
                           c.status === "promoted" ? "bg-green-500/20 text-green-400" :
                           "bg-muted text-muted-foreground"
                         }`}>
-                          {c.status === "pending" ? "oczekująca" : c.status === "promoted" ? "promowana" : "odrzucona"}
+                          {c.status === "pending" ? t("admin.vision.statusPending") : c.status === "promoted" ? t("admin.vision.statusPromoted") : t("admin.vision.statusDismissed")}
                         </span>
                         {c.userEmail && (
                           <span className="text-[11px] text-muted-foreground">{c.userEmail}</span>
@@ -1205,16 +1213,16 @@ function VisionTab({
                       </div>
                       <div className="text-xs space-y-0.5">
                         <p className="text-muted-foreground">
-                          AI powiedział: <span className="font-medium text-foreground line-through decoration-red-400">{c.aiMaterialType}</span>
+                          {t("admin.vision.aiSaid")} <span className="font-medium text-foreground line-through decoration-red-400">{c.aiMaterialType}</span>
                         </p>
                         <p className="text-muted-foreground">
-                          Poprawna odpowiedź: <span className="font-semibold text-green-400">{c.correctMaterialType}</span>
+                          {t("admin.vision.correctAnswer")} <span className="font-semibold text-green-400">{c.correctMaterialType}</span>
                         </p>
                         {c.correctionNote && (
                           <p className="text-muted-foreground italic">„{c.correctionNote}"</p>
                         )}
                         {c.imageDescription && (
-                          <p className="text-muted-foreground/70 text-[11px]">Opis AI: {c.imageDescription.slice(0, 120)}{c.imageDescription.length > 120 ? "…" : ""}</p>
+                          <p className="text-muted-foreground/70 text-[11px]">{t("admin.vision.aiDesc")} {c.imageDescription.slice(0, 120)}{c.imageDescription.length > 120 ? "…" : ""}</p>
                         )}
                       </div>
                     </div>
@@ -1226,14 +1234,14 @@ function VisionTab({
                         className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-green-500/15 text-green-400 hover:bg-green-500/25 transition-colors"
                       >
                         <ChevronUp className="w-3 h-3" />
-                        Promuj do reguły
+                        {t("admin.vision.promote")}
                       </button>
                       <button
                         onClick={() => dismissCorrection(c.id)}
                         className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
                       >
                         <X className="w-3 h-3" />
-                        Odrzuć
+                        {t("admin.vision.dismiss")}
                       </button>
                     </div>
                   )}
@@ -1244,7 +1252,7 @@ function VisionTab({
                         className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
                       >
                         <RefreshCw className="w-3 h-3" />
-                        Przywróć
+                        {t("admin.vision.restore")}
                       </button>
                     </div>
                   )}
@@ -1260,22 +1268,22 @@ function VisionTab({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground flex-1">
-              Stałe reguły promptu AI — aktywne reguły są zawsze wstrzykiwane do każdej analizy zdjęcia.
+              {t("admin.vision.rulesDesc")}
             </p>
             <button
               onClick={() => setShowNewRule((v) => !v)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shrink-0 ml-2"
             >
               <Plus className="w-3.5 h-3.5" />
-              Nowa reguła
+              {t("admin.vision.newRule")}
             </button>
           </div>
 
           {showNewRule && (
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-3">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider">Nowa reguła promptu</p>
+              <p className="text-xs font-bold text-primary uppercase tracking-wider">{t("admin.vision.newRuleTitle")}</p>
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground font-medium block">Tytuł (skrótowy opis)</label>
+                <label className="text-xs text-muted-foreground font-medium block">{t("admin.vision.ruleTitleLabel")}</label>
                 <input
                   type="text"
                   value={newTitle}
@@ -1285,24 +1293,24 @@ function VisionTab({
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground font-medium block">Tekst reguły (instrukcja dla AI)</label>
+                <label className="text-xs text-muted-foreground font-medium block">{t("admin.vision.ruleTextLabel")}</label>
                 <textarea
                   value={newText}
                   onChange={(e) => setNewText(e.target.value)}
                   rows={3}
-                  placeholder="Jeśli widzisz... klasyfikuj jako..."
+                  placeholder={t("admin.vision.ruleTextPlaceholder")}
                   className="w-full px-2.5 py-2 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                 />
               </div>
               <div className="flex gap-2 justify-end">
-                <button onClick={() => setShowNewRule(false)} className="px-3 py-1.5 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80">Anuluj</button>
+                <button onClick={() => setShowNewRule(false)} className="px-3 py-1.5 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80">{t("common.cancel")}</button>
                 <button
                   onClick={createRule}
                   disabled={saving || !newTitle.trim() || !newText.trim()}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
                   {saving ? <div className="w-3.5 h-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                  Dodaj regułę
+                  {t("admin.vision.addRule")}
                 </button>
               </div>
             </div>
@@ -1314,7 +1322,7 @@ function VisionTab({
             </div>
           ) : rules.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground text-sm">
-              Brak reguł. Dodaj ręcznie lub promuj korekty użytkowników.
+              {t("admin.vision.noRules")}
             </div>
           ) : (
             <div className="space-y-2">
@@ -1335,14 +1343,14 @@ function VisionTab({
                         className="w-full px-2.5 py-2 text-sm bg-background border border-border rounded focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                       />
                       <div className="flex gap-2 justify-end">
-                        <button onClick={() => setEditRuleId(null)} className="px-3 py-1.5 text-xs rounded bg-muted text-muted-foreground">Anuluj</button>
+                        <button onClick={() => setEditRuleId(null)} className="px-3 py-1.5 text-xs rounded bg-muted text-muted-foreground">{t("common.cancel")}</button>
                         <button
                           onClick={saveEditRule}
                           disabled={editSaving}
                           className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                         >
                           {editSaving ? <div className="w-3.5 h-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                          Zapisz
+                          {t("common.save")}
                         </button>
                       </div>
                     </div>
@@ -1352,7 +1360,7 @@ function VisionTab({
                         <button
                           onClick={() => toggleRule(r.id, r.isActive)}
                           className="shrink-0 mt-0.5"
-                          title={r.isActive ? "Kliknij aby deaktywować" : "Kliknij aby aktywować"}
+                          title={r.isActive ? t("admin.vision.deactivateTitle") : t("admin.vision.activateTitle")}
                         >
                           {r.isActive
                             ? <ToggleRight className="w-5 h-5 text-green-400" />
@@ -1395,10 +1403,10 @@ function VisionTab({
           <div className="bg-background border border-border rounded-xl shadow-2xl max-w-lg w-full p-5 space-y-4">
             <div className="flex items-center gap-2">
               <ChevronUp className="w-4 h-4 text-green-400" />
-              <h3 className="font-semibold text-sm">Promuj do stałej reguły AI</h3>
+              <h3 className="font-semibold text-sm">{t("admin.vision.promoteDialogTitle")}</h3>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground font-medium block">Tytuł reguły</label>
+              <label className="text-xs text-muted-foreground font-medium block">{t("admin.vision.ruleTitle")}</label>
               <input
                 type="text"
                 value={promoteTitle}
@@ -1407,7 +1415,7 @@ function VisionTab({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs text-muted-foreground font-medium block">Tekst reguły (instrukcja dla AI)</label>
+              <label className="text-xs text-muted-foreground font-medium block">{t("admin.vision.ruleTextLabel")}</label>
               <textarea
                 value={promoteText}
                 onChange={(e) => setPromoteText(e.target.value)}
@@ -1416,14 +1424,14 @@ function VisionTab({
               />
             </div>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setPromoteItem(null)} disabled={promoting} className="px-4 py-2 text-sm rounded bg-muted text-muted-foreground hover:bg-muted/80">Anuluj</button>
+              <button onClick={() => setPromoteItem(null)} disabled={promoting} className="px-4 py-2 text-sm rounded bg-muted text-muted-foreground hover:bg-muted/80">{t("common.cancel")}</button>
               <button
                 onClick={submitPromote}
                 disabled={promoting || !promoteTitle.trim() || !promoteText.trim()}
                 className="flex items-center gap-2 px-4 py-2 text-sm rounded bg-green-600 text-white hover:bg-green-600/90 disabled:opacity-50"
               >
                 {promoting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
-                Dodaj jako regułę
+                {t("admin.vision.addAsRule")}
               </button>
             </div>
           </div>
