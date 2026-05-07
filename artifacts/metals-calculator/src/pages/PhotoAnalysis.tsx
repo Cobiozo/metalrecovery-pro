@@ -93,6 +93,13 @@ function confidenceColor(c: Confidence): string {
     : "border-red-500/50 text-red-400 bg-red-500/10";
 }
 
+function displayMaterialType(materialType: string): string {
+  if (i18next.language !== "en") return materialType;
+  return materialType
+    .replace(/^Nieelektroniczne\s*[—–-]\s*/i, "Non-electronic — ")
+    .replace(/^Nieelektroniczne$/i, "Non-electronic");
+}
+
 const COLOR_PL: Record<string, string> = {
   gold: "złoty", silver: "srebrny", nickel: "niklowy", mixed: "mieszany",
   "złoty": "złoty", "srebrny": "srebrny", "niklowy": "niklowy", "mieszany": "mieszany",
@@ -522,7 +529,7 @@ function VisionResultCard({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <CardTitle className="text-base">{result.materialType}</CardTitle>
+                <CardTitle className="text-base">{displayMaterialType(result.materialType)}</CardTitle>
               </div>
               <CardDescription className="text-sm mt-1 leading-relaxed">
                 {result.description}
@@ -873,7 +880,7 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
   // Flatten all individual boxes into one list: { bb, label, color }
   const allBoxes = items.flatMap((item, itemIdx) => {
     const color = ITEM_COLORS[itemIdx % ITEM_COLORS.length];
-    return (item.individualBoxes ?? []).map((bb) => ({ bb, label: item.materialType, color }));
+    return (item.individualBoxes ?? []).map((bb) => ({ bb, label: displayMaterialType(item.materialType), color }));
   });
 
   const [visCount, setVisCount] = useState(0);
@@ -1153,6 +1160,7 @@ export function PhotoAnalysisPage() {
     try {
       const formData = new FormData();
       formData.append("image", file);
+      formData.append("lang", i18next.language);
       if (apiMaterials && apiMaterials.length > 0) {
         formData.append(
           "materialCatalog",

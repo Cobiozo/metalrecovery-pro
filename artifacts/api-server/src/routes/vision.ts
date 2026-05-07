@@ -384,10 +384,26 @@ router.post(
       }
     }
 
+    const lang = typeof req.body?.lang === "string" && req.body.lang.toLowerCase().startsWith("en") ? "en" : "pl";
+
+    const languageSection = lang === "en"
+      ? `
+
+LANGUAGE OVERRIDE — ENGLISH MODE:
+Write ALL free-text fields in ENGLISH:
+  • "description": 2-4 sentences in English describing the item and its metal characteristics
+  • "caveats": 1-2 sentences in English warning about estimation accuracy
+  • "recommendedProcess": English name of the recommended recovery process
+  • "platingAnalysis.notes": English note or null
+  • "platingAnalysis.color": use English terms only: gold, silver, nickel, mixed (or null)
+  • "platingAnalysis.thickness": use English terms only: thin (<0.1μm), medium (0.1-0.5μm), thick (>0.5μm) (or null)
+CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified in the catalog — this field is used for internal database matching and must NOT be translated.`
+      : "";
+
     const learnedContext = await fetchLearnedContext();
     const prompt = ANALYSIS_PROMPT
       .replace("{{CATALOG_SECTION}}", catalogSection)
-      .replace("{{LEARNED_CONTEXT_SECTION}}", learnedContext);
+      .replace("{{LEARNED_CONTEXT_SECTION}}", learnedContext) + languageSection;
 
     const base64 = req.file.buffer.toString("base64");
     const dataUri = `data:${req.file.mimetype};base64,${base64}`;
