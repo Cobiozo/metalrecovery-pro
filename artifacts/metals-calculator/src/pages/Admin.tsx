@@ -47,10 +47,10 @@ type VisitLogRow = {
   ip: string;
 };
 
-const ROLE_LABELS: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  admin: { label: "Administrator", icon: Shield, color: "text-red-400" },
-  vip: { label: "VIP", icon: Star, color: "text-yellow-400" },
-  user: { label: "User", icon: UserIcon, color: "text-blue-400" },
+const ROLE_LABELS: Record<string, { labelKey: string; icon: React.ElementType; color: string }> = {
+  admin: { labelKey: "roles.admin", icon: Shield, color: "text-red-400" },
+  vip: { labelKey: "roles.vip", icon: Star, color: "text-yellow-400" },
+  user: { labelKey: "roles.user", icon: UserIcon, color: "text-blue-400" },
 };
 
 type Tab = "users" | "stats" | "settings" | "vision";
@@ -238,7 +238,7 @@ function UserCard({
             {isCurrent && <span className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded">{t("admin.users.you")}</span>}
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className={`text-xs font-medium ${role.color}`}>{role.label}</span>
+            <span className={`text-xs font-medium ${role.color}`}>{t(role.labelKey)}</span>
             <span className={`text-xs px-1.5 py-0.5 rounded ${user.isActive ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}>
               {user.isActive ? t("admin.users.active") : t("admin.users.inactive")}
             </span>
@@ -319,7 +319,7 @@ function CreateUserForm({
         </div>
         <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          <option value="user">{ROLE_LABELS.user.label}</option>
+          <option value="user">{t(ROLE_LABELS.user.labelKey)}</option>
           <option value="vip">VIP</option>
           <option value="admin">Administrator</option>
         </select>
@@ -399,7 +399,7 @@ function EditUserForm({
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" />
         <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}
           className="px-3 py-2 rounded-md bg-background border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/50">
-          <option value="user">{ROLE_LABELS.user.label}</option>
+          <option value="user">{t(ROLE_LABELS.user.labelKey)}</option>
           <option value="vip">VIP</option>
           <option value="admin">Administrator</option>
         </select>
@@ -1042,10 +1042,10 @@ function VisionTab({
 
   function openPromote(c: VisionCorrection) {
     setPromoteItem(c);
-    setPromoteTitle(`Nie klasyfikuj "${c.aiMaterialType}" jako błędu — poprawna nazwa to "${c.correctMaterialType}"`);
+    setPromoteTitle(t("admin.vision.promoteTitleTemplate", { aiType: c.aiMaterialType, correctType: c.correctMaterialType }));
     setPromoteText(
-      `Jeśli widzisz materiał sklasyfikowany jako "${c.aiMaterialType}", sprawdź ponownie — poprawna odpowiedź to "${c.correctMaterialType}".` +
-      (c.correctionNote ? ` Wskazówka: ${c.correctionNote}` : "")
+      t("admin.vision.promoteTextTemplate", { aiType: c.aiMaterialType, correctType: c.correctMaterialType }) +
+      (c.correctionNote ? t("admin.vision.promoteHintSuffix", { hint: c.correctionNote }) : "")
     );
   }
 
