@@ -21,6 +21,36 @@ import { ProcessCompareTable } from "@/components/ProcessCompareTable";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/hooks/useLanguage";
 
+const REAGENT_NAMES_EN: Record<string, string> = {
+  "Kwas azotowy rozcieńczony — pre-trawienie (HNO3 25%)": "Dilute nitric acid — pre-leach (HNO3 25%)",
+  "Kwas solny (HCl)": "Hydrochloric acid (HCl)",
+  "Kwas azotowy stężony (HNO3 65%)": "Concentrated nitric acid (HNO3 65%)",
+  "Mocznik (rozkład nadmiaru HNO3)": "Urea (decompose excess HNO3)",
+  "Wodorosiarczyn sodu — reduktor SMB (wytrącanie Au)": "Sodium metabisulfite — SMB reducer (Au precipitation)",
+  "Wodorosiarczyn sodu — SMB (wytrącanie Au)": "Sodium metabisulfite — SMB (Au precipitation)",
+  "Boraks (topnik do wytopu)": "Borax (smelting flux)",
+  "Boraks (topnik do wytopu Au)": "Borax (Au smelting flux)",
+  "Boraks (topnik do wytopu anody)": "Borax (anode smelting flux)",
+  "Boraks (topnik do wytopu anod)": "Borax (anode smelting flux)",
+  "Boraks (topnik)": "Borax (flux)",
+  "Kwas azotowy rozcieńczony (HNO3 25%)": "Dilute nitric acid (HNO3 25%)",
+  "Chlorek sodu (wytrącanie AgCl)": "Sodium chloride (AgCl precipitation)",
+  "Cynk metaliczny — redukcja AgCl→Ag": "Metallic zinc — AgCl→Ag reduction",
+  "Kwas solny HCl — rozpuszczenie cynku z osadu": "HCl acid — dissolve zinc from precipitate",
+  "Nadtlenek wodoru (H2O2)": "Hydrogen peroxide (H2O2)",
+  "Azotan sodu (NaNO3)": "Sodium nitrate (NaNO3)",
+  "Kwas siarkowy (H2SO4)": "Sulfuric acid (H2SO4)",
+  "Kwas azotowy (elektrolit bazowy)": "Nitric acid (base electrolyte)",
+  "Azotan złota (Au(NO3)3, uzupełniacz elektrolitu)": "Gold nitrate (Au(NO3)3, electrolyte replenisher)",
+  "Kwas solny (elektrolit bazowy HCl 20%)": "Hydrochloric acid (base electrolyte HCl 20%)",
+  "Chlorek złota (AuCl3, uzupełniacz elektrolitu)": "Gold chloride (AuCl3, electrolyte replenisher)",
+  "Chlor gazowy (Cl2)": "Chlorine gas (Cl2)",
+  "Wodorotlenek sodu NaOH 30% (neutralizacja Cl2 w off-gazie)": "Sodium hydroxide NaOH 30% (off-gas Cl2 neutralisation)",
+  "Cynk metaliczny (granulki Zn)": "Metallic zinc (Zn granules)",
+  "Ług cyjanku sodu (NaCN, opcjonalny — do ługowania)": "Sodium cyanide lye (NaCN, optional — for leaching)",
+  "Kwas solny HCl (rozpuszczenie cynku z osadu Au+Zn)": "HCl acid (dissolve zinc from Au+Zn precipitate)",
+};
+
 type BatchItemState = {
   id: string;
   materialId: string;
@@ -931,7 +961,7 @@ export function CalculatorPage() {
                         return (
                           <div key={reagent.name} className="flex items-center gap-2 bg-muted/30 p-3 rounded-lg border border-border">
                             <div className="flex-1 min-w-0">
-                              <div className="text-xs font-medium truncate">{reagent.name}</div>
+                              <div className="text-xs font-medium truncate">{lang === "en" ? (REAGENT_NAMES_EN[reagent.name] ?? reagent.name) : reagent.name}</div>
                               <div className="text-xs text-muted-foreground font-mono">{reagent.formula} · def: {reagent.pricePerLiter} {lang === "en" ? "€/l" : "zł/l"}</div>
                             </div>
                             <div className="relative shrink-0 w-28">
@@ -1242,7 +1272,7 @@ export function CalculatorPage() {
                         <TableBody>
                           {result.chemistryCosts.map((chem) => (
                             <TableRow key={chem.reagentName} className="border-border">
-                              <TableCell className="font-medium">{chem.reagentName}</TableCell>
+                              <TableCell className="font-medium">{lang === "en" && chem.reagentNameEn ? chem.reagentNameEn : chem.reagentName}</TableCell>
                               <TableCell className="text-right font-mono">{chem.amountLiters.toFixed(2)} L</TableCell>
                               <TableCell className="text-right font-mono text-muted-foreground">{chem.pricePerLiter.toFixed(2)} {lang === "en" ? "€" : "zł"}</TableCell>
                               <TableCell className="text-right font-mono font-bold text-destructive">-{fmtVal(chem.totalCostPln)}</TableCell>

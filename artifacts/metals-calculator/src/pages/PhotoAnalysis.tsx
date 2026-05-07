@@ -104,6 +104,9 @@ const COLOR_PL: Record<string, string> = {
   gold: "złoty", silver: "srebrny", nickel: "niklowy", mixed: "mieszany",
   "złoty": "złoty", "srebrny": "srebrny", "niklowy": "niklowy", "mieszany": "mieszany",
 };
+const COLOR_PL_TO_EN: Record<string, string> = {
+  "złoty": "gold", "srebrny": "silver", "niklowy": "nickel", "mieszany": "mixed",
+};
 const THICKNESS_PL: Record<string, string> = {
   "thin (<0.1μm)": "cienkie (<0,1μm)",
   "medium (0.1-0.5μm)": "średnie (0,1-0,5μm)",
@@ -112,15 +115,20 @@ const THICKNESS_PL: Record<string, string> = {
   "medium": "średnie (0,1-0,5μm)",
   "thick": "grube (>0,5μm)",
 };
+const THICKNESS_PL_TO_EN: Record<string, string> = {
+  "cienkie (<0,1μm)": "thin (<0.1μm)",
+  "średnie (0,1-0,5μm)": "medium (0.1-0.5μm)",
+  "grube (>0,5μm)": "thick (>0.5μm)",
+};
 function translateColor(v?: string | null): string | null {
   if (!v) return null;
   if (i18next.language === "pl") return COLOR_PL[v.toLowerCase()] ?? v;
-  return v;
+  return COLOR_PL_TO_EN[v.toLowerCase()] ?? v;
 }
 function translateThickness(v?: string | null): string | null {
   if (!v) return null;
   if (i18next.language === "pl") return THICKNESS_PL[v.toLowerCase()] ?? THICKNESS_PL[v] ?? v;
-  return v;
+  return THICKNESS_PL_TO_EN[v] ?? v;
 }
 
 const QUALITY_AU_MULTIPLIER: Record<number, number> = {

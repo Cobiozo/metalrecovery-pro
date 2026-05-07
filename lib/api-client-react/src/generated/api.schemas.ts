@@ -314,6 +314,7 @@ export interface RecoveredMetal {
 
 export interface ChemistryCost {
   reagentName: string;
+  reagentNameEn?: string;
   amountLiters: number;
   pricePerLiter: number;
   totalCostPln: number;

@@ -74883,6 +74883,35 @@ var electronicMaterialsMap = Object.fromEntries(
     return [m.id, entry];
   })
 );
+var REAGENT_NAMES_EN = {
+  "Kwas azotowy rozcie\u0144czony \u2014 pre-trawienie (HNO3 25%)": "Dilute nitric acid \u2014 pre-leach (HNO3 25%)",
+  "Kwas solny (HCl)": "Hydrochloric acid (HCl)",
+  "Kwas azotowy st\u0119\u017Cony (HNO3 65%)": "Concentrated nitric acid (HNO3 65%)",
+  "Mocznik (rozk\u0142ad nadmiaru HNO3)": "Urea (decompose excess HNO3)",
+  "Wodorosiarczyn sodu \u2014 reduktor SMB (wytr\u0105canie Au)": "Sodium metabisulfite \u2014 SMB reducer (Au precipitation)",
+  "Wodorosiarczyn sodu \u2014 SMB (wytr\u0105canie Au)": "Sodium metabisulfite \u2014 SMB (Au precipitation)",
+  "Boraks (topnik do wytopu)": "Borax (smelting flux)",
+  "Boraks (topnik do wytopu Au)": "Borax (Au smelting flux)",
+  "Boraks (topnik do wytopu anody)": "Borax (anode smelting flux)",
+  "Boraks (topnik do wytopu anod)": "Borax (anode smelting flux)",
+  "Boraks (topnik)": "Borax (flux)",
+  "Kwas azotowy rozcie\u0144czony (HNO3 25%)": "Dilute nitric acid (HNO3 25%)",
+  "Chlorek sodu (wytr\u0105canie AgCl)": "Sodium chloride (AgCl precipitation)",
+  "Cynk metaliczny \u2014 redukcja AgCl\u2192Ag": "Metallic zinc \u2014 AgCl\u2192Ag reduction",
+  "Kwas solny HCl \u2014 rozpuszczenie cynku z osadu": "HCl acid \u2014 dissolve zinc from precipitate",
+  "Nadtlenek wodoru (H2O2)": "Hydrogen peroxide (H2O2)",
+  "Azotan sodu (NaNO3)": "Sodium nitrate (NaNO3)",
+  "Kwas siarkowy (H2SO4)": "Sulfuric acid (H2SO4)",
+  "Kwas azotowy (elektrolit bazowy)": "Nitric acid (base electrolyte)",
+  "Azotan z\u0142ota (Au(NO3)3, uzupe\u0142niacz elektrolitu)": "Gold nitrate (Au(NO3)3, electrolyte replenisher)",
+  "Kwas solny (elektrolit bazowy HCl 20%)": "Hydrochloric acid (base electrolyte HCl 20%)",
+  "Chlorek z\u0142ota (AuCl3, uzupe\u0142niacz elektrolitu)": "Gold chloride (AuCl3, electrolyte replenisher)",
+  "Chlor gazowy (Cl2)": "Chlorine gas (Cl2)",
+  "Wodorotlenek sodu NaOH 30% (neutralizacja Cl2 w off-gazie)": "Sodium hydroxide NaOH 30% (off-gas Cl2 neutralisation)",
+  "Cynk metaliczny (granulki Zn)": "Metallic zinc (Zn granules)",
+  "\u0141ug cyjanku sodu (NaCN, opcjonalny \u2014 do \u0142ugowania)": "Sodium cyanide lye (NaCN, optional \u2014 for leaching)",
+  "Kwas solny HCl (rozpuszczenie cynku z osadu Au+Zn)": "HCl acid (dissolve zinc from Au+Zn precipitate)"
+};
 var chemicalProcessesMap = {
   aqua_regia: {
     name: "Woda Kr\xF3lewska (HCl + HNO3)",
@@ -75455,6 +75484,7 @@ router5.post("/calculator/estimate", async (req, res) => {
     const totalCost = amountLiters * effectivePrice;
     return {
       reagentName: reagent.name,
+      reagentNameEn: REAGENT_NAMES_EN[reagent.name],
       amountLiters: Math.round(amountLiters * 100) / 100,
       pricePerLiter: Math.round(effectivePrice * 100) / 100,
       totalCostPln: Math.round(totalCost * 100) / 100
