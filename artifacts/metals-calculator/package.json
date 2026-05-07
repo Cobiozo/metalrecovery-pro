@@ -76,8 +76,10 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "i18next": "^26.0.9",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
+    "react-i18next": "^17.0.6",
     "workbox-window": "^7.4.0"
   }
 }

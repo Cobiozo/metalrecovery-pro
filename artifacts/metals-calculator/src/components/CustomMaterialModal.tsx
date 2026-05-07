@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { FlaskConical, Info, Pencil, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CustomMaterial } from "@/lib/useCustomMaterials";
+import { useTranslation } from "react-i18next";
 
 type FormValues = {
   name: string;
@@ -42,8 +43,8 @@ function toForm(m: CustomMaterial): FormValues {
 function validateNumber(v: string, max = 9999): string | null {
   if (v === "" || v === "0") return null;
   const n = parseFloat(v);
-  if (isNaN(n) || n < 0) return "Musi być liczbą ≥ 0";
-  if (n > max) return `Maks. ${max} g/kg`;
+  if (isNaN(n) || n < 0) return "≥ 0";
+  if (n > max) return `max ${max}`;
   return null;
 }
 
@@ -68,6 +69,7 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
   const [errors, setErrors] = useState<Partial<FormValues>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -95,7 +97,7 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
 
   const validate = (): boolean => {
     const errs: Partial<FormValues> = {};
-    if (!form.name.trim()) errs.name = "Nazwa jest wymagana";
+    if (!form.name.trim()) errs.name = t("customMaterial.nameRequired");
     const auErr = validateNumber(form.au); if (auErr) errs.au = auErr;
     const agErr = validateNumber(form.ag); if (agErr) errs.ag = agErr;
     const ptErr = validateNumber(form.pt); if (ptErr) errs.pt = ptErr;
@@ -104,7 +106,7 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
     const total = [form.au, form.ag, form.pt, form.pd]
       .map((v) => parseFloat(v) || 0)
       .reduce((a, b) => a + b, 0);
-    if (total > 1000) errs.au = "Łączna zawartość metali przekracza 1000 g/kg";
+    if (total > 1000) errs.au = t("customMaterial.totalExceeds");
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -133,27 +135,34 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
     .map((v) => parseFloat(v) || 0)
     .reduce((a, b) => a + b, 0);
 
+  const METAL_LABELS: Record<string, { name: string; color: string }> = {
+    au: { name: `${t("metals.Au")} (Au)`, color: "text-yellow-500" },
+    ag: { name: `${t("metals.Ag")} (Ag)`, color: "text-slate-400" },
+    pt: { name: `${t("metals.Pt")} (Pt)`, color: "text-sky-400" },
+    pd: { name: `${t("metals.Pd")} (Pd)`, color: "text-purple-400" },
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {isEdit ? <Pencil className="h-4 w-4 text-primary" /> : <Plus className="h-4 w-4 text-primary" />}
-            {isEdit ? "Edytuj profil materiału" : "Nowy własny profil materiału"}
+            {isEdit ? t("customMaterial.editTitle") : t("customMaterial.addTitle")}
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Wpisz zawartość metali szlachetnych na kg materiału wg własnej analizy laboratoryjnej
+            {t("customMaterial.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
           <div className="space-y-1.5">
             <Label htmlFor="cm-name" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Nazwa materiału *
+              {t("customMaterial.name")}
             </Label>
             <Input
               id="cm-name"
-              placeholder="np. Procesory militarne (lata 70-te)"
+              placeholder={t("customMaterial.namePlaceholder")}
               value={form.name}
               onChange={set("name")}
               className={cn(errors.name && "border-destructive")}
@@ -168,7 +177,7 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
             <div className="flex items-center justify-between mb-3">
               <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <FlaskConical className="h-3.5 w-3.5" />
-                Zawartość metali (g/kg)
+                {t("customMaterial.metalContent")}
               </Label>
               {metalTotal > 0 && (
                 <Badge variant="outline" className={cn(
@@ -181,13 +190,7 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
             </div>
             <div className="grid grid-cols-2 gap-3">
               {(["au", "ag", "pt", "pd"] as const).map((metal) => {
-                const labels: Record<string, { name: string; color: string }> = {
-                  au: { name: "Złoto (Au)", color: "text-yellow-500" },
-                  ag: { name: "Srebro (Ag)", color: "text-slate-400" },
-                  pt: { name: "Platyna (Pt)", color: "text-sky-400" },
-                  pd: { name: "Pallad (Pd)", color: "text-purple-400" },
-                };
-                const { name, color } = labels[metal]!;
+                const { name, color } = METAL_LABELS[metal]!;
                 return (
                   <div key={metal} className="space-y-1">
                     <Label htmlFor={`cm-${metal}`} className={cn("text-xs font-semibold", color)}>
@@ -224,11 +227,11 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
 
           <div className="space-y-1.5">
             <Label htmlFor="cm-notes" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Notatki (opcjonalne)
+              {t("customMaterial.notes")}
             </Label>
             <Textarea
               id="cm-notes"
-              placeholder="np. źródło: raport laboratorium, data: 2025-04, próba nr 12"
+              placeholder={t("customMaterial.notesPlaceholder")}
               value={form.notes}
               onChange={set("notes")}
               rows={2}
@@ -247,14 +250,14 @@ export function CustomMaterialModal({ open, onOpenChange, onSave, onDelete, exis
               onClick={handleDelete}
             >
               <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              {confirmDelete ? "Potwierdź usunięcie" : "Usuń profil"}
+              {confirmDelete ? t("customMaterial.confirmDelete") : t("customMaterial.delete")}
             </Button>
           )}
           <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-            Anuluj
+            {t("customMaterial.cancel")}
           </Button>
           <Button size="sm" onClick={handleSave}>
-            {isEdit ? "Zapisz zmiany" : "Dodaj profil"}
+            {isEdit ? t("customMaterial.save") : t("customMaterial.add")}
           </Button>
         </DialogFooter>
       </DialogContent>

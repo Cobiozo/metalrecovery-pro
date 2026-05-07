@@ -20,6 +20,9 @@ import { useCustomMaterials } from "@/lib/useCustomMaterials";
 import { CustomMaterialModal } from "@/components/CustomMaterialModal";
 import { useToast } from "@/hooks/use-toast";
 import { useGetElectronicMaterials } from "@workspace/api-client-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
+import i18next from "i18next";
 
 type Confidence = "low" | "medium" | "high";
 
@@ -79,7 +82,7 @@ function getVisionApiBase(): string {
 }
 
 function confidenceLabel(c: Confidence): string {
-  return c === "high" ? "wysoka" : c === "medium" ? "średnia" : "niska";
+  return i18next.t(`analysis.confidence.${c}`) as string;
 }
 
 function confidenceColor(c: Confidence): string {

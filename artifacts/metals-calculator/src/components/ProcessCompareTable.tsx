@@ -3,37 +3,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatMass } from "@/lib/format";
 import { TrendingUp, AlertTriangle, ArrowRight, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 type ProfitabilityRating = "very_profitable" | "profitable" | "marginal" | "not_profitable";
 
-const RATING_CONFIG: Record<
-  ProfitabilityRating,
-  { label: string; bg: string; text: string; border: string }
-> = {
-  very_profitable: {
-    label: "Bardzo opłacalne",
-    bg: "bg-success/10",
-    text: "text-success",
-    border: "border-success/30",
-  },
-  profitable: {
-    label: "Opłacalne",
-    bg: "bg-primary/10",
-    text: "text-primary",
-    border: "border-primary/30",
-  },
-  marginal: {
-    label: "Marginalnie",
-    bg: "bg-yellow-500/10",
-    text: "text-yellow-400",
-    border: "border-yellow-500/30",
-  },
-  not_profitable: {
-    label: "Nieopłacalne",
-    bg: "bg-destructive/10",
-    text: "text-destructive",
-    border: "border-destructive/30",
-  },
+const RATING_STYLE: Record<ProfitabilityRating, { bg: string; text: string; border: string }> = {
+  very_profitable: { bg: "bg-success/10", text: "text-success", border: "border-success/30" },
+  profitable: { bg: "bg-primary/10", text: "text-primary", border: "border-primary/30" },
+  marginal: { bg: "bg-yellow-500/10", text: "text-yellow-400", border: "border-yellow-500/30" },
+  not_profitable: { bg: "bg-destructive/10", text: "text-destructive", border: "border-destructive/30" },
 };
 
 interface ProcessCompareTableProps {
@@ -49,10 +27,12 @@ export function ProcessCompareTable({
   isSelecting,
   selectedProcessId,
 }: ProcessCompareTableProps) {
+  const { t } = useTranslation();
+
   if (data.length === 0) {
     return (
       <div className="py-10 text-center text-muted-foreground text-sm">
-        Brak danych do wyświetlenia.
+        {t("compareTable.noData")}
       </div>
     );
   }
@@ -61,31 +41,28 @@ export function ProcessCompareTable({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Wszystkie procesy obliczone przy domyślnych parametrach (optymalna temperatura, standardowe
-        stężenia). Kliknij wiersz aby zobaczyć pełne wyniki dla wybranego procesu.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("compareTable.description")}</p>
 
       <div className="overflow-x-auto rounded-lg border border-border">
         <Table>
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent bg-muted/30">
-              <TableHead className="w-8 text-center">#</TableHead>
-              <TableHead>Proces</TableHead>
-              <TableHead className="text-right">Zysk netto</TableHead>
-              <TableHead className="text-right hidden sm:table-cell">Przychód</TableHead>
-              <TableHead className="text-right hidden md:table-cell">Koszt</TableHead>
+              <TableHead className="w-8 text-center">{t("compareTable.rankCol")}</TableHead>
+              <TableHead>{t("compareTable.processCol")}</TableHead>
+              <TableHead className="text-right">{t("compareTable.netProfit")}</TableHead>
+              <TableHead className="text-right hidden sm:table-cell">{t("compareTable.revenue")}</TableHead>
+              <TableHead className="text-right hidden md:table-cell">{t("compareTable.cost")}</TableHead>
               <TableHead className="text-right hidden lg:table-cell">Au</TableHead>
               <TableHead className="text-right hidden lg:table-cell">Ag</TableHead>
-              <TableHead className="text-right hidden md:table-cell">Czas</TableHead>
-              <TableHead className="text-center">Ocena</TableHead>
+              <TableHead className="text-right hidden md:table-cell">{t("compareTable.time")}</TableHead>
+              <TableHead className="text-center">{t("compareTable.rating")}</TableHead>
               <TableHead className="w-24" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((row, idx) => {
               const rating = row.profitabilityRating as ProfitabilityRating;
-              const cfg = RATING_CONFIG[rating] ?? RATING_CONFIG.not_profitable;
+              const style = RATING_STYLE[rating] ?? RATING_STYLE.not_profitable;
               const isTop = idx === 0;
               const isCurrent = row.processId === selectedProcessId;
 
@@ -112,16 +89,12 @@ export function ProcessCompareTable({
                   <TableCell>
                     <div className="font-medium leading-tight">{row.processName}</div>
                     {isTop && best && (
-                      <div className="text-xs text-success mt-0.5">Najlepszy wybór</div>
+                      <div className="text-xs text-success mt-0.5">{t("compareTable.bestChoice")}</div>
                     )}
                   </TableCell>
 
                   <TableCell className="text-right">
-                    <span
-                      className={`font-mono font-bold ${
-                        row.netProfitPln >= 0 ? "text-success" : "text-destructive"
-                      }`}
-                    >
+                    <span className={`font-mono font-bold ${row.netProfitPln >= 0 ? "text-success" : "text-destructive"}`}>
                       {formatCurrency(row.netProfitPln)}
                     </span>
                   </TableCell>
@@ -158,15 +131,13 @@ export function ProcessCompareTable({
                   </TableCell>
 
                   <TableCell className="text-center">
-                    <span
-                      className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border ${cfg.bg} ${cfg.text} ${cfg.border}`}
-                    >
+                    <span className={`inline-flex items-center gap-1 text-xs font-medium px-1.5 py-0.5 rounded border ${style.bg} ${style.text} ${style.border}`}>
                       {rating === "not_profitable" ? (
                         <AlertTriangle className="h-3 w-3 shrink-0" />
                       ) : (
                         <TrendingUp className="h-3 w-3 shrink-0" />
                       )}
-                      <span className="hidden sm:inline">{cfg.label}</span>
+                      <span className="hidden sm:inline">{t(`compareTable.ratings.${rating}`)}</span>
                     </span>
                   </TableCell>
 
@@ -185,7 +156,7 @@ export function ProcessCompareTable({
                         "..."
                       ) : (
                         <>
-                          Wybierz
+                          {t("compareTable.select")}
                           <ArrowRight className="h-3 w-3 ml-1" />
                         </>
                       )}

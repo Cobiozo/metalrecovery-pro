@@ -7,13 +7,8 @@ import { formatCurrency, formatPercent } from "@/lib/format";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Reagent } from "@workspace/api-client-react";
-
-const METAL_NAMES: Record<string, string> = {
-  Au: "złoto",
-  Ag: "srebro",
-  Pt: "platyna",
-  Pd: "pallad",
-};
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 function stripStepPrefix(step: string): string {
   return step
@@ -37,29 +32,16 @@ function getAdjustedPricePerL(reagent: Reagent, overrides: Record<string, number
   return reagent.pricePerLiter * (effConc / reagent.concentration);
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  plyty_glowne: "Płyty główne",
-  pcb: "Płytki PCB",
-  procesor: "Procesory",
-  pamiec: "Pamięci RAM",
-  karta: "Karty graficzne/dźwiękowe",
-  dysk: "Dyski i napędy",
-  urzadzenie: "Urządzenia kompletne",
-  zasilacz: "Zasilacze i ładowarki",
-  ic: "Układy scalone IC",
-  zlacza: "Złącza",
-  styki: "Styki elektryczne",
-  kondensator: "Kondensatory",
-  inne: "Inne / Mieszane",
-};
-
 const CATEGORY_ORDER = ["plyty_glowne", "pcb", "procesor", "pamiec", "karta", "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "styki", "kondensator", "inne"];
+
 
 export function ProcessesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [batchKg, setBatchKg] = useState<number>(1);
   const [concentrationOverrides, setConcentrationOverrides] = useState<Record<string, number>>({});
   const [selectedMaterialId, setSelectedMaterialId] = useState<string>('');
+  const { t } = useTranslation();
+  const { lang } = useLanguage();
 
   const { data: processes, isLoading } = useGetChemicalProcesses({
     query: { queryKey: getGetChemicalProcessesQueryKey() }
@@ -117,8 +99,8 @@ export function ProcessesPage() {
     return (
       <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-bold font-sans tracking-tight">Baza Procesów Chemicznych</h1>
-          <p className="text-muted-foreground text-sm mt-1">Specyfikacje techniczne procesów odzysku</p>
+          <h1 className="text-2xl font-bold font-sans tracking-tight">{t("processes.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("processes.subtitle")}</p>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2">
           {[1,2,3,4].map(i => <Skeleton key={i} className="h-10 w-32 shrink-0 rounded-md" />)}
@@ -131,12 +113,12 @@ export function ProcessesPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold font-sans tracking-tight">Baza Procesów Chemicznych</h1>
-        <p className="text-muted-foreground text-sm mt-1">Specyfikacje techniczne procesów odzysku</p>
+        <h1 className="text-xl sm:text-2xl font-bold font-sans tracking-tight">{t("processes.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("processes.subtitle")}</p>
         <div className="flex gap-2 items-start bg-amber-500/5 border border-amber-500/20 rounded-md p-3 mt-3">
           <Info className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground leading-relaxed">
-            <strong className="text-amber-400">Wartości szacunkowe.</strong> Ilości odczynników, czasy procesów i wydajność odzysku są podane orientacyjnie — zależą od konkretnego materiału, stężeń kwasów, temperatury oraz warunków laboratoryjnych. Dane mają charakter wyłącznie informacyjny i edukacyjny.
+            <strong className="text-amber-400">{t("processes.estimatedValues")}</strong> {t("processes.estimatedDesc")}
           </p>
         </div>
       </div>
@@ -207,7 +189,7 @@ export function ProcessesPage() {
                 <div className="flex gap-1.5 flex-wrap shrink-0">
                   {selectedProcess.targetMetals.map(m => (
                     <Badge key={m} variant="outline" className="font-mono bg-background border-primary/20 text-primary text-xs">
-                      {m} <span className="ml-1 font-normal text-muted-foreground text-[10px]">({METAL_NAMES[m]})</span>
+                      {m} <span className="ml-1 font-normal text-muted-foreground text-[10px]">({t(`metals.${m}`)})</span>
                     </Badge>
                   ))}
                 </div>
@@ -220,7 +202,7 @@ export function ProcessesPage() {
                     <Thermometer className="w-3 h-3" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Temperatura</div>
+                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider">{t("processes.temperature")}</div>
                     <div className="font-mono text-[11px] font-medium leading-tight">
                       {selectedProcess.temperatureMin}–{selectedProcess.temperatureMax}°C
                       <span className="text-muted-foreground"> (opt. {selectedProcess.temperatureOptimal}°C)</span>
@@ -232,7 +214,7 @@ export function ProcessesPage() {
                     <Clock className="w-3 h-3" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Czas</div>
+                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider">{t("processes.time")}</div>
                     <div className="font-mono text-[11px] font-medium">{selectedProcess.timePerKgMin}–{selectedProcess.timePerKgMax} h/kg</div>
                   </div>
                 </div>
@@ -241,7 +223,7 @@ export function ProcessesPage() {
                     <Zap className="w-3 h-3" />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Energia</div>
+                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider">{t("processes.energy")}</div>
                     <div className="font-mono text-[11px] font-medium">{selectedProcess.electricityKwhPerKg} kWh/kg</div>
                   </div>
                 </div>
@@ -252,7 +234,7 @@ export function ProcessesPage() {
                   <AlertTriangle className="w-3 h-3" />
                 </div>
                 <div>
-                  <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">BHP</div>
+                  <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">{t("processes.safety")}</div>
                   <div className="text-xs text-amber-400 leading-snug">{selectedProcess.safetyNotes}</div>
                 </div>
               </div>
@@ -263,7 +245,7 @@ export function ProcessesPage() {
                     <FlaskConical className="w-3 h-3" />
                   </div>
                   <div>
-                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Szacunkowa próba po odzysku</div>
+                    <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">{t("processes.outputPurity")}</div>
                     <div className="text-xs text-emerald-400 leading-snug">{(selectedProcess as any).outputPurityText}</div>
                   </div>
                 </div>
@@ -274,11 +256,11 @@ export function ProcessesPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Beaker className="w-3.5 h-3.5" /> Odczynniki
+                    <Beaker className="w-3.5 h-3.5" /> {t("processes.reagents")}
                   </h4>
                   <div className="flex items-center gap-1.5">
                     <Weight className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground">Waga materiału:</span>
+                    <span className="text-[10px] text-muted-foreground">{t("processes.materialWeight")}</span>
                     <div className="flex items-center border border-border rounded overflow-hidden">
                       <button
                         onClick={() => setBatchKg(v => Math.max(0.1, Math.round((v - 0.5) * 10) / 10))}
@@ -306,7 +288,7 @@ export function ProcessesPage() {
                 <div className="mb-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Microscope className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Materiał wsadu (opcjonalnie)</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{t("processes.optionalMaterial")}</span>
                   </div>
                   <select
                     value={selectedMaterialId}
@@ -316,14 +298,14 @@ export function ProcessesPage() {
                     }}
                     className="w-full text-xs bg-background border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                   >
-                    <option value="">— wybierz materiał aby zobaczyć szacunkowy odzysk —</option>
+                    <option value="">{t("processes.selectMaterial")}</option>
                     {CATEGORY_ORDER.map(cat => {
                       const mats = materials?.filter(m => m.category === cat) ?? [];
                       if (!mats.length) return null;
                       return (
-                        <optgroup key={cat} label={CATEGORY_LABELS[cat] ?? cat}>
+                        <optgroup key={cat} label={t(`categories.${cat}`)}>
                           {mats.map(m => (
-                            <option key={m.id} value={m.id}>{m.name}</option>
+                            <option key={m.id} value={m.id}>{lang === "en" && m.nameEn ? m.nameEn : m.name}</option>
                           ))}
                         </optgroup>
                       );
@@ -378,14 +360,14 @@ export function ProcessesPage() {
                         </div>
                         {concChanged && (
                           <div className="mt-1 text-[9px] text-primary/70 leading-tight">
-                            Przeliczono z {reagent.concentration}%: {(reagent.amountPerKg * batchKg).toFixed(2)} L → {totalAmount.toFixed(2)} L (wyższe stęż. = mniej obj.)
+                            {t("processes.recalculatedFrom")} {reagent.concentration}%: {(reagent.amountPerKg * batchKg).toFixed(2)} L → {totalAmount.toFixed(2)} L ({t("processes.higherConcLessVol")})
                           </div>
                         )}
                       </div>
                     );
                   })}
                   <div className="flex items-center justify-between px-3 py-1.5 border border-primary/20 rounded bg-primary/5">
-                    <span className="text-xs font-bold text-primary">Razem odczynniki ({batchKg} kg)</span>
+                    <span className="text-xs font-bold text-primary">{t("processes.totalReagents")} ({batchKg} kg)</span>
                     <span className="font-mono text-sm font-bold text-primary">{formatCurrency(totalReagentCost)}</span>
                   </div>
                   {Object.keys(concentrationOverrides).length > 0 && (
@@ -393,18 +375,18 @@ export function ProcessesPage() {
                       onClick={() => setConcentrationOverrides({})}
                       className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 w-full text-right"
                     >
-                      Przywróć domyślne stężenia
+                      {t("processes.resetConcentrations")}
                     </button>
                   )}
                 </div>
 
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-4 mb-2">Wydajność odzysku</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mt-4 mb-2">{t("processes.recoveryYield")}</h4>
                 <div className="grid grid-cols-2 gap-1.5">
                   {(Object.entries(selectedProcess.yieldPercent) as [string, number][]).map(([metal, yieldVal]) => yieldVal > 0 && (
                     <div key={metal} className="flex items-center justify-between px-3 py-1.5 border border-border rounded-md bg-background">
                       <div className="flex items-baseline gap-1">
                         <span className="font-bold font-mono text-sm">{metal}</span>
-                        <span className="text-[10px] text-muted-foreground">({METAL_NAMES[metal]})</span>
+                        <span className="text-[10px] text-muted-foreground">({t(`metals.${metal}`)})</span>
                       </div>
                       <span className="font-mono text-primary font-medium text-sm">{formatPercent(yieldVal)}</span>
                     </div>
@@ -415,7 +397,7 @@ export function ProcessesPage() {
                   <div key={selectedMaterialId} className="mt-4">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-1.5">
                       <Microscope className="w-3 h-3" />
-                      Szac. odzysk: {selectedMaterial.name} × {batchKg} kg
+                      {t("processes.estimatedRecovery")} {lang === "en" && selectedMaterial.nameEn ? selectedMaterial.nameEn : selectedMaterial.name} × {batchKg} kg
                     </h4>
                     <div className="grid grid-cols-2 gap-1.5">
                       {(["Au", "Ag", "Pt", "Pd"] as const).map(metal => {
@@ -436,13 +418,13 @@ export function ProcessesPage() {
                         );
                       })}
                     </div>
-                    <p className="text-[9px] text-muted-foreground mt-1.5 italic">*Szacunek dla wartości typowych — rzeczywisty odzysk może się różnić</p>
+                    <p className="text-[9px] text-muted-foreground mt-1.5 italic">{t("processes.estimatedRecoveryNote")}</p>
                   </div>
                 )}
               </div>
 
               <div>
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Kroki procesu</h4>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">{t("processes.processSteps")}</h4>
                 <ol className="space-y-1.5">
                   {selectedProcess.steps.map((step, idx) => (
                     <li key={idx} className="flex gap-2 text-sm">

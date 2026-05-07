@@ -17,6 +17,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { ProcessCompareTable } from "@/components/ProcessCompareTable";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 type BatchItemState = {
   id: string;
@@ -77,30 +79,6 @@ function saveReagentPrices(prices: Record<string, number>): void {
   localStorage.setItem(REAGENT_PRICES_KEY, JSON.stringify(prices));
 }
 
-const METAL_NAMES: Record<string, string> = {
-  Au: "złoto",
-  Ag: "srebro",
-  Pt: "platyna",
-  Pd: "pallad",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  plyty_glowne: "Płyty główne",
-  pcb: "Płytki PCB",
-  procesor: "Procesory",
-  pamiec: "Pamięci RAM",
-  karta: "Karty graficzne / dźwiękowe",
-  dysk: "Dyski i napędy",
-  urzadzenie: "Urządzenia kompletne",
-  zasilacz: "Zasilacze i ładowarki",
-  ic: "Układy scalone IC",
-  zlacza: "Złącza",
-  styki: "Styki elektryczne",
-  kondensator: "Kondensatory",
-  inne: "Inne",
-  wlasne: "Własne profile",
-};
-
 const CATEGORY_ORDER = [
   "plyty_glowne", "pcb", "procesor", "pamiec", "karta",
   "dysk", "urzadzenie", "zasilacz", "ic", "zlacza", "styki", "kondensator", "inne", "wlasne",
@@ -120,6 +98,7 @@ function MaterialCombobox({
   loading: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const { t } = useTranslation();
   const selected = options.find(m => m.id === value);
 
   const grouped: Record<string, MaterialOption[]> = {};
@@ -138,7 +117,7 @@ function MaterialCombobox({
           className="w-full justify-between bg-background font-normal h-10 px-3 text-sm"
         >
           <span className={selected ? "text-foreground" : "text-muted-foreground"}>
-            {selected ? selected.name : "Wybierz materiał..."}
+            {selected ? selected.name : t("calculator.selectMaterial")}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -152,19 +131,19 @@ function MaterialCombobox({
           if (!search) return 1;
           return itemValue.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
         }}>
-          <CommandInput placeholder="Szukaj materiału..." className="h-9" />
+          <CommandInput placeholder={t("calculator.searchMaterial")} className="h-9" />
           <CommandList className="max-h-[280px]">
             {loading ? (
-              <div className="p-3 text-sm text-muted-foreground">Ładowanie...</div>
+              <div className="p-3 text-sm text-muted-foreground">{t("common.loading")}</div>
             ) : (
               <>
-                <CommandEmpty>Brak wyników dla podanej frazy</CommandEmpty>
+                <CommandEmpty>{t("calculator.noResults")}</CommandEmpty>
                 {CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
                   <CommandGroup
                     key={cat}
                     heading={
                       <span className={`text-xs font-bold uppercase tracking-wider ${cat === "wlasne" ? "text-primary" : "text-amber-500"}`}>
-                        {CATEGORY_LABELS[cat] ?? cat}
+                        {t(`categories.${cat}`)}
                       </span>
                     }
                   >
@@ -195,6 +174,10 @@ function MaterialCombobox({
 
 export function CalculatorPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const matName = (m: { name: string; nameEn?: string | null }) =>
+    lang === "en" && m.nameEn ? m.nameEn : m.name;
   const [activeTab, setActiveTab] = useState<string>("wsad");
   const [batchItems, setBatchItems] = useState<BatchItemState[]>([{ id: '1', materialId: '', quantity: 1 }]);
   const [selectedProcessId, setSelectedProcessId] = useState<string>("");
@@ -506,13 +489,13 @@ export function CalculatorPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-sans tracking-tight">Kalkulator Odzysku Metali</h1>
-          <p className="text-muted-foreground text-sm mt-1">Precyzyjne szacowanie opłacalności procesów hydrometalurgicznych</p>
+          <h1 className="text-2xl font-bold font-sans tracking-tight">{t("calculator.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("calculator.subtitle")}</p>
         </div>
         {user && (
           <Button variant="outline" size="sm" onClick={() => setShowHistory(!showHistory)} className="shrink-0">
             <History className="h-4 w-4 mr-2" />
-            Historia ({savedSessions.length})
+            {t("calculator.history")} ({savedSessions.length})
           </Button>
         )}
       </div>
@@ -521,7 +504,7 @@ export function CalculatorPage() {
         <Card className="border-primary/30 bg-card">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">Zapisane sesje</CardTitle>
+              <CardTitle className="text-base">{t("calculator.savedSessions")}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setShowHistory(false)}>
                 <X className="h-4 w-4" />
               </Button>
@@ -529,7 +512,7 @@ export function CalculatorPage() {
           </CardHeader>
           <CardContent>
             {savedSessions.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">Brak zapisanych sesji. Wykonaj kalkulację i zapisz ją.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t("calculator.noSessions")}</p>
             ) : (
               <div className="space-y-2">
                 {savedSessions.map(session => (
@@ -538,10 +521,10 @@ export function CalculatorPage() {
                       <div className="font-medium truncate">{session.name}</div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(session.savedAt).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                        {' · '}Zysk: <span className={session.result.netProfitPln >= 0 ? 'text-success' : 'text-destructive'}>{formatCurrency(session.result.netProfitPln)}</span>
+                        {' · '}{t("calculator.netProfit")}: <span className={session.result.netProfitPln >= 0 ? 'text-success' : 'text-destructive'}>{formatCurrency(session.result.netProfitPln)}</span>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => handleLoadSession(session)}>Wczytaj</Button>
+                    <Button variant="outline" size="sm" onClick={() => handleLoadSession(session)}>{t("calculator.load")}</Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDeleteSession(session.id)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -556,24 +539,24 @@ export function CalculatorPage() {
       <Tabs value={activeTab} onValueChange={changeTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3 mb-8 h-12 bg-muted/50 p-1">
           <TabsTrigger value="wsad" className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <span className="hidden sm:inline">1. Materiał wsadu</span>
-            <span className="sm:hidden">1. Materiał</span>
+            <span className="hidden sm:inline">{t("calculator.tab1")}</span>
+            <span className="sm:hidden">{t("calculator.tab1Short")}</span>
           </TabsTrigger>
           <TabsTrigger value="proces" disabled={!canGoToProcess} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <span className="hidden sm:inline">2. Parametry Procesu</span>
-            <span className="sm:hidden">2. Proces</span>
+            <span className="hidden sm:inline">{t("calculator.tab2")}</span>
+            <span className="sm:hidden">{t("calculator.tab2Short")}</span>
           </TabsTrigger>
           <TabsTrigger value="wyniki" disabled={!result} className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-            <span className="hidden sm:inline">3. Wyniki & Opłacalność</span>
-            <span className="sm:hidden">3. Wyniki</span>
+            <span className="hidden sm:inline">{t("calculator.tab3")}</span>
+            <span className="sm:hidden">{t("calculator.tab3Short")}</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="wsad" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Definicja materiału wsadu</CardTitle>
-              <CardDescription>Wybierz materiały elektroniczne i określ ich ilość (kg lub sztuki)</CardDescription>
+              <CardTitle>{t("calculator.batchTitle")}</CardTitle>
+              <CardDescription>{t("calculator.batchSubtitle")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {batchItems.map((item) => {
@@ -582,17 +565,17 @@ export function CalculatorPage() {
                   <div key={item.id} className="flex flex-col gap-2">
                   <div className="flex flex-col sm:flex-row gap-4 items-start bg-muted/30 p-4 rounded-lg border border-border">
                     <div className="flex-1 w-full">
-                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Materiał</label>
+                      <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">{t("calculator.material")}</label>
                       <MaterialCombobox
                         value={item.materialId}
                         onValueChange={(val) => handleBatchMaterialChange(item.id, val)}
-                        options={(materials ?? []).map(m => ({ id: m.id, name: m.name, category: m.category }))}
+                        options={(materials ?? []).map(m => ({ id: m.id, name: matName(m), category: m.category }))}
                         loading={materialsLoading}
                       />
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto items-end">
                       <div className="flex-1 sm:w-auto">
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Ilość</label>
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">{t("calculator.quantity")}</label>
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
@@ -621,14 +604,14 @@ export function CalculatorPage() {
                         )}
                       </div>
                       <div>
-                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">Jednostka</label>
+                        <label className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-2 block">{t("calculator.unit")}</label>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleBatchUnitToggle(item.id)}
                           disabled={!item.materialId}
                           className="shrink-0 h-9 px-3 text-xs font-bold gap-1.5"
-                          title="Kliknij aby przełączyć między kg i szt."
+                          title={t("calculator.unitToggleTip")}
                         >
                           <ArrowLeftRight className="h-3 w-3 opacity-60" />
                           {getEffectiveUnit(item) === 'piece' ? 'szt.' : 'kg'}
@@ -656,7 +639,7 @@ export function CalculatorPage() {
                       />
                       <label htmlFor={`cleaned-${item.id}`} className="text-xs text-amber-600 dark:text-amber-400 cursor-pointer select-none font-medium flex items-center gap-1.5">
                         <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                        Oczyszczony (plastik/obudowa usunięte) — wyższa zawartość metali/kg
+                        {t("calculator.cleaned")}
                       </label>
                     </div>
                   )}
@@ -664,7 +647,7 @@ export function CalculatorPage() {
                     <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/25 rounded-md px-3 py-2">
                       <span className="text-xs text-yellow-700 dark:text-yellow-400 font-medium flex items-center gap-1.5">
                         <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                        Jakość złoceń z analizy AI: {item.auMultiplier > 1 ? "+" : ""}{Math.round((item.auMultiplier - 1) * 100)}% Au
+                        {t("calculator.aiPlatingQuality")} {item.auMultiplier > 1 ? "+" : ""}{Math.round((item.auMultiplier - 1) * 100)}% Au
                       </span>
                     </div>
                   )}
@@ -673,18 +656,18 @@ export function CalculatorPage() {
               })}
 
               <Button variant="outline" onClick={handleAddBatchItem} className="w-full border-dashed border-2 hover:bg-muted/50">
-                <Plus className="mr-2 h-4 w-4" /> Dodaj kolejny materiał
+                <Plus className="mr-2 h-4 w-4" /> {t("calculator.addMaterial")}
               </Button>
             </CardContent>
             <CardFooter className="bg-muted/30 border-t border-border flex flex-col gap-3 py-4">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
                 <div className="text-sm">
-                  <span className="text-muted-foreground">Szacowana masa całkowita:</span>
+                  <span className="text-muted-foreground">{t("calculator.totalMass")}</span>
                   <span className="font-mono font-bold ml-2 text-lg">{formatMass(totalMass, 'kg')}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <label htmlFor="purchase-cost" className="text-muted-foreground whitespace-nowrap">
-                    Wkład własny (koszt zakupu):
+                    {t("calculator.purchaseCost")}
                   </label>
                   <div className="relative w-32">
                     <Input
@@ -709,15 +692,14 @@ export function CalculatorPage() {
                   variant="outline"
                   onClick={handleCompare}
                   disabled={!canGoToProcess || compareMutation.isPending}
-                  title={canGoToProcess ? "Porównaj wszystkie 9 procesów dla tego wsadu" : "Dodaj materiały do wsadu"}
                   className="flex-1 sm:flex-none"
                 >
                   {compareMutation.isPending ? (
-                    "Porównuję..."
+                    t("calculator.comparing")
                   ) : (
                     <>
                       <BarChart2 className="h-4 w-4 mr-2" />
-                      Porównaj procesy
+                      {t("calculator.compareProcesses")}
                     </>
                   )}
                 </Button>
@@ -726,8 +708,8 @@ export function CalculatorPage() {
                   disabled={!canGoToProcess}
                   className="flex-1 sm:flex-none"
                 >
-                  <span className="sm:hidden">Dalej</span>
-                  <span className="hidden sm:inline">Dalej: Wybierz proces</span>
+                  <span className="sm:hidden">{t("calculator.next")}</span>
+                  <span className="hidden sm:inline">{t("calculator.nextProcess")}</span>
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -741,10 +723,10 @@ export function CalculatorPage() {
                   <div>
                     <CardTitle className="text-base flex items-center gap-2">
                       <BarChart2 className="h-5 w-5 text-primary" />
-                      Porównanie wszystkich procesów
+                      {t("calculator.compareAll")}
                     </CardTitle>
                     <CardDescription className="mt-1">
-                      Ranking opłacalności dla podanego wsadu ({formatMass(totalMass, 'kg')})
+                      {t("calculator.compareRanking")} ({formatMass(totalMass, 'kg')})
                     </CardDescription>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setShowCompare(false)}>
@@ -767,8 +749,8 @@ export function CalculatorPage() {
         <TabsContent value="proces" className="space-y-6">
           <Card className="border-border">
             <CardHeader>
-              <CardTitle>Proces Chemiczny</CardTitle>
-              <CardDescription>Wybierz metodę ekstrakcji dla zdefiniowanego wsadu</CardDescription>
+              <CardTitle>{t("calculator.processTitle")}</CardTitle>
+              <CardDescription>{t("calculator.processSubtitle")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -828,15 +810,15 @@ export function CalculatorPage() {
           {selectedProcess && (
             <Card className="border-border">
               <CardHeader>
-                <CardTitle>Parametry Procesu</CardTitle>
+                <CardTitle>{t("calculator.processParams")}</CardTitle>
                 <CardDescription>
-                  Dostosuj warunki reakcji — odchylenia od optymalnych wartości obniżą wydajność odzysku
+                  {t("calculator.processParamsDesc")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <Label>Temperatura reakcji</Label>
+                    <Label>{t("calculator.temperature")}</Label>
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-primary">
                         {processParams.temperatureOverride ?? selectedProcess.temperatureOptimal}°C
@@ -853,15 +835,15 @@ export function CalculatorPage() {
                     className="w-full"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Za niska → wolna reakcja</span>
-                    <span>Za wysoka → rozkład reagentów</span>
+                    <span>{t("calculator.tempTooLow")}</span>
+                    <span>{t("calculator.tempTooHigh")}</span>
                   </div>
                 </div>
 
                 {selectedProcess.reagents?.[0] && (
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <Label>Stężenie głównego reagentu ({selectedProcess.reagents[0].formula ?? selectedProcess.reagents[0].name})</Label>
+                      <Label>{t("calculator.acidConc")} ({selectedProcess.reagents[0].formula ?? selectedProcess.reagents[0].name})</Label>
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-primary">
                           {processParams.acidConcentrationOverride ?? selectedProcess.reagents[0].concentration}%
@@ -878,15 +860,15 @@ export function CalculatorPage() {
                       className="w-full"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Zbyt niskie → niekompletna reakcja</span>
-                      <span>Zbyt wysokie → nadmiar korozji</span>
+                      <span>{t("calculator.concTooLow")}</span>
+                      <span>{t("calculator.concTooHigh")}</span>
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <Label>Cena energii elektrycznej</Label>
+                    <Label>{t("calculator.electricity")}</Label>
                     <span className="font-mono font-bold text-primary">{processParams.electricityPricePerKwh.toFixed(2)} zł/kWh</span>
                   </div>
                   <Slider
@@ -915,28 +897,25 @@ export function CalculatorPage() {
                     />
                     <div className="space-y-1">
                       <Label htmlFor="separacja" className="font-semibold cursor-pointer">
-                        Separacja wstępna (wydziel złącza przed trawieniem)
+                        {t("calculator.withSeparation")}
                       </Label>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        Zaznacz jeśli fizycznie wycinasz złącza krawędziowe ISA/PCI/RAM i wymontowujesz
-                        złocone IC przed zanurzeniem w kwasie — do kąpieli trafi tylko ~8–10% masy
-                        płytek, co redukuje zużycie reagentów nawet 10×. Zysk z metali pozostaje
-                        niezmieniony (złoto jest zawarte w oddzielonych częściach).
+                        {t("calculator.withSeparationDesc")}
                       </p>
                     </div>
                   </div>
                   {processParams.withSeparacja && (
                     <div className="ml-7 px-3 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-xs text-emerald-700 dark:text-emerald-400 font-medium">
-                      ✓ Separacja aktywna — wolumeny chemii obliczane dla frakcji złącz (~8–10% masy wsadu)
+                      ✓ {t("calculator.separationActive")}
                     </div>
                   )}
                 </div>
 
                 {selectedProcess.reagents && selectedProcess.reagents.length > 0 && (
                   <div className="space-y-3 pt-2 border-t border-border">
-                    <Label className="text-sm font-semibold">Ceny odczynników (PLN/litr)</Label>
+                    <Label className="text-sm font-semibold">{t("calculator.reagentPrices")}</Label>
                     <p className="text-xs text-muted-foreground">
-                      Wartości zapisywane lokalnie i stosowane w kalkulacji kosztów chemii
+                      {t("calculator.reagentPricesDesc")}
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {selectedProcess.reagents.map((reagent) => {
@@ -975,20 +954,20 @@ export function CalculatorPage() {
                         }}
                         className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
                       >
-                        Przywróć ceny domyślne
+                        {t("calculator.resetPrices")}
                       </button>
                     )}
                   </div>
                 )}
               </CardContent>
               <CardFooter ref={processNextBtnRef} className="bg-muted/30 border-t border-border flex justify-between items-center py-4">
-                <Button variant="ghost" onClick={() => changeTab("wsad")}>Wróć do materiału</Button>
+                <Button variant="ghost" onClick={() => changeTab("wsad")}>{t("calculator.backToMaterial")}</Button>
                 <Button
                   onClick={handleCalculate}
                   disabled={!selectedProcessId || calculateMutation.isPending}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  {calculateMutation.isPending ? 'Kalkulowanie...' : 'Uruchom Kalkulację'} <TrendingUp className="ml-2 h-4 w-4" />
+                  {calculateMutation.isPending ? t("calculator.calculating") : t("calculator.runCalculation")} <TrendingUp className="ml-2 h-4 w-4" />
                 </Button>
               </CardFooter>
             </Card>
@@ -996,12 +975,12 @@ export function CalculatorPage() {
 
           {!selectedProcess && (
             <CardFooter className="bg-muted/30 border border-border rounded-lg flex justify-between items-center py-4 px-6">
-              <Button variant="ghost" onClick={() => changeTab("wsad")}>Wróć do materiału</Button>
+              <Button variant="ghost" onClick={() => changeTab("wsad")}>{t("calculator.backToMaterial")}</Button>
               <Button
                 onClick={handleCalculate}
                 disabled={!selectedProcessId || calculateMutation.isPending}
               >
-                {calculateMutation.isPending ? 'Kalkulowanie...' : 'Uruchom Kalkulację'} <TrendingUp className="ml-2 h-4 w-4" />
+                {calculateMutation.isPending ? t("calculator.calculating") : t("calculator.runCalculation")} <TrendingUp className="ml-2 h-4 w-4" />
               </Button>
             </CardFooter>
           )}
@@ -1034,10 +1013,10 @@ export function CalculatorPage() {
                       <div>
                         <div className="font-bold text-lg uppercase tracking-wider leading-tight">
                           {{
-                            very_profitable: 'Bardzo opłacalne',
-                            profitable: 'Opłacalne',
-                            marginal: 'Niezbyt opłacalne',
-                            not_profitable: 'Nieopłacalne',
+                            very_profitable: t("calculator.veryProfitable"),
+                            profitable: t("calculator.profitable"),
+                            marginal: t("calculator.marginal"),
+                            not_profitable: t("calculator.notProfitable"),
                           }[finalRating] ?? finalRating}
                         </div>
                         <div className="text-sm opacity-80 mt-0.5">{result.profitabilityNote}</div>
@@ -1045,15 +1024,15 @@ export function CalculatorPage() {
                     </div>
                     <div className="flex items-center gap-6 shrink-0 pl-1 sm:pl-4 border-t sm:border-t-0 sm:border-l border-current/20 pt-3 sm:pt-0 sm:pl-6">
                       <div className="text-center">
-                        <div className="text-xs opacity-60 uppercase mb-0.5">Przychód</div>
+                        <div className="text-xs opacity-60 uppercase mb-0.5">{t("calculator.revenue")}</div>
                         <div className="font-mono font-bold text-base">{formatCurrency(result.totalRevenuePln)}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs opacity-60 uppercase mb-0.5">Koszty</div>
+                        <div className="text-xs opacity-60 uppercase mb-0.5">{t("calculator.costs")}</div>
                         <div className="font-mono font-bold text-base">-{formatCurrency(result.totalChemistryCostPln + result.electricityCostPln + purchaseCost)}</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs opacity-60 uppercase mb-0.5 font-bold">{hasPurchaseCost ? 'Zysk po zakupie' : 'Zysk netto'}</div>
+                        <div className="text-xs opacity-60 uppercase mb-0.5 font-bold">{hasPurchaseCost ? t("calculator.profitAfterPurchase") : t("calculator.netProfit")}</div>
                         <div className="font-mono font-bold text-xl">{formatCurrency(finalProfit)}</div>
                       </div>
                     </div>
@@ -1063,7 +1042,7 @@ export function CalculatorPage() {
 
               {/* ── Podsumowanie wsadu ────────────────────────────────────── */}
               <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-                <span className="text-muted-foreground font-medium">Wsad:</span>
+                <span className="text-muted-foreground font-medium">{t("calculator.feed")}:</span>
                 {batchItems.filter(i => i.materialId).map((item, idx) => {
                   const mat = materials?.find(m => m.id === item.materialId);
                   const unitLabel = (item.unitOverride ?? mat?.unit ?? 'kg') === 'piece' ? 'szt.' : 'kg';
@@ -1074,49 +1053,49 @@ export function CalculatorPage() {
                       {item.isCleaned && (
                         <span className="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5 ml-1">
                           <Sparkles className="h-3 w-3" />
-                          oczyszczony
+                          {t("calculator.cleanedShort")}
                         </span>
                       )}
                       {idx < batchItems.filter(i => i.materialId).length - 1 && <span className="text-muted-foreground ml-1">+</span>}
                     </span>
                   );
                 })}
-                <span className="text-muted-foreground ml-auto">Proces: <span className="text-foreground font-medium">{result.processName}</span></span>
+                <span className="text-muted-foreground ml-auto">{t("calculator.process")}: <span className="text-foreground font-medium">{result.processName}</span></span>
               </div>
 
               {/* ── Finanse + Parametry ───────────────────────────────────── */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <Card className="border-border bg-card col-span-1 lg:col-span-2">
                   <CardHeader className="pb-2 border-b border-border mb-4">
-                    <CardTitle>Podsumowanie Finansowe</CardTitle>
+                    <CardTitle>{t("calculator.financialSummary")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                        <div className="text-xs text-muted-foreground uppercase mb-1">Przychód</div>
+                        <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.revenue")}</div>
                         <div className="font-mono font-bold text-success text-lg">{formatCurrency(result.totalRevenuePln)}</div>
                       </div>
                       <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                        <div className="text-xs text-muted-foreground uppercase mb-1">Koszty Chemii</div>
+                        <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.reagentCost")}</div>
                         <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(result.totalChemistryCostPln)}</div>
                       </div>
                       <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                        <div className="text-xs text-muted-foreground uppercase mb-1">Koszty Energii</div>
+                        <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.electricityCost")}</div>
                         <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(result.electricityCostPln)}</div>
                       </div>
                       <div className={purchaseCost > 0 ? "bg-muted/30 p-3 rounded-lg border border-border" : "bg-primary/10 p-3 rounded-lg border border-primary/30"}>
-                        <div className={`text-xs uppercase mb-1 font-bold ${purchaseCost > 0 ? "text-muted-foreground" : "text-primary"}`}>Zysk Netto (chemia)</div>
+                        <div className={`text-xs uppercase mb-1 font-bold ${purchaseCost > 0 ? "text-muted-foreground" : "text-primary"}`}>{t("calculator.netProfitChem")}</div>
                         <div className={`font-mono font-bold text-xl ${purchaseCost > 0 ? "text-foreground" : "text-primary"}`}>{formatCurrency(result.netProfitPln)}</div>
                       </div>
                     </div>
                     {purchaseCost > 0 && (
                       <div className="mt-3 pt-3 border-t border-border grid grid-cols-2 gap-4">
                         <div className="bg-muted/30 p-3 rounded-lg border border-border">
-                          <div className="text-xs text-muted-foreground uppercase mb-1">Wkład własny</div>
+                          <div className="text-xs text-muted-foreground uppercase mb-1">{t("calculator.ownCost")}</div>
                           <div className="font-mono font-bold text-destructive text-lg">-{formatCurrency(purchaseCost)}</div>
                         </div>
                         <div className="bg-primary/10 p-3 rounded-lg border border-primary/30">
-                          <div className="text-xs text-primary uppercase mb-1 font-bold">Zysk po zakupie</div>
+                          <div className="text-xs text-primary uppercase mb-1 font-bold">{t("calculator.profitAfterPurchase")}</div>
                           <div className={`font-mono font-bold text-xl ${result.netProfitPln - purchaseCost >= 0 ? "text-primary" : "text-destructive"}`}>
                             {formatCurrency(result.netProfitPln - purchaseCost)}
                           </div>
@@ -1128,29 +1107,29 @@ export function CalculatorPage() {
 
                 <Card className="border-border bg-card">
                   <CardHeader className="pb-2 border-b border-border mb-4">
-                    <CardTitle>Parametry Procesu</CardTitle>
+                    <CardTitle>{t("calculator.processParams")}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm text-muted-foreground">Masa wejściowa (całość)</span>
+                      <span className="text-sm text-muted-foreground">{t("calculator.inputMass")}</span>
                       <span className="font-mono font-bold">{formatMass(result.totalInputMassKg, 'kg')}</span>
                     </div>
                     {result.chemProcessedMassKg !== undefined && result.chemProcessedMassKg < result.totalInputMassKg * 0.99 && (
                       <div className="flex justify-between items-center border-b border-border pb-2">
                         <span className="text-sm text-muted-foreground text-amber-600 dark:text-amber-400">
-                          Masa do obróbki kwasowej
-                          <span className="block text-xs text-muted-foreground">plastik/obudowa nie wchodzi do kwasu</span>
+                          {t("calculator.acidMass")}
+                          <span className="block text-xs text-muted-foreground">{t("calculator.acidMassNote")}</span>
                         </span>
                         <span className="font-mono font-bold text-amber-600 dark:text-amber-400">{formatMass(result.chemProcessedMassKg, 'kg')}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center border-b border-border pb-2">
-                      <span className="text-sm text-muted-foreground">Szacowany czas</span>
-                      <span className="font-mono font-bold">{result.estimatedTimeHours} godz.</span>
+                      <span className="text-sm text-muted-foreground">{t("calculator.estimatedTime")}</span>
+                      <span className="font-mono font-bold">{result.estimatedTimeHours} {t("calculator.hours")}</span>
                     </div>
                     {processParams.temperatureOverride !== null && (
                       <div className="flex justify-between items-center border-b border-border pb-2">
-                        <span className="text-sm text-muted-foreground">Temperatura</span>
+                        <span className="text-sm text-muted-foreground">{t("calculator.temperature")}</span>
                         <span className="font-mono font-bold">{processParams.temperatureOverride}°C</span>
                       </div>
                     )}
@@ -1159,16 +1138,17 @@ export function CalculatorPage() {
                         className="w-full bg-amber-600 hover:bg-amber-700 text-white"
                         onClick={handleDownloadPdf}
                       >
-                        <FileDown className="h-4 w-4 mr-2" />Pobierz PDF
+                        <FileDown className="h-4 w-4 mr-2" />{t("calculator.downloadPdf")}
                       </Button>
                       {!showSaveDialog ? (
                         <Button variant="outline" className="w-full" onClick={() => setShowSaveDialog(true)}>
-                          <Save className="h-4 w-4 mr-2" />Zapisz sesję
+                          <Save className="h-4 w-4 mr-2" />{t("calculator.saveSession")}
                         </Button>
                       ) : (
                         <div className="space-y-2">
                           <Input
-                            placeholder="Nazwa sesji..."
+                            placeholder={t("calculator.sessionName") + "..."}
+
                             value={sessionName}
                             onChange={(e) => setSessionName(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSaveSession()}
@@ -1176,16 +1156,16 @@ export function CalculatorPage() {
                           />
                           <div className="flex gap-2">
                             <Button size="sm" className="flex-1" onClick={handleSaveSession} disabled={!sessionName.trim()}>
-                              Zapisz
+                              {t("calculator.save")}
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => { setShowSaveDialog(false); setSessionName(""); }}>
-                              Anuluj
+                              {t("calculator.cancel")}
                             </Button>
                           </div>
                         </div>
                       )}
                       <Button variant="outline" className="w-full" onClick={() => { setResult(null); setBatchItems([{ id: '1', materialId: '', quantity: 1 }]); setSelectedProcessId(''); changeTab("wsad"); }}>
-                        Nowa kalkulacja
+                        {t("calculator.newCalculation")}
                       </Button>
                     </div>
                   </CardContent>
@@ -1195,17 +1175,17 @@ export function CalculatorPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card className="border-border bg-card">
                   <CardHeader>
-                    <CardTitle>Odzyskane Metale</CardTitle>
+                    <CardTitle>{t("calculator.recoveredMetals")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-border hover:bg-transparent">
-                            <TableHead className="w-[80px]">Metal</TableHead>
-                            <TableHead className="text-right">Masa</TableHead>
-                            <TableHead className="text-right">Wydajność</TableHead>
-                            <TableHead className="text-right">Wartość</TableHead>
+                            <TableHead className="w-[80px]">{t("calculator.metal")}</TableHead>
+                            <TableHead className="text-right">{t("calculator.mass")}</TableHead>
+                            <TableHead className="text-right">{t("calculator.yield")}</TableHead>
+                            <TableHead className="text-right">{t("calculator.value")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1223,7 +1203,7 @@ export function CalculatorPage() {
                           {result.recoveredMetals.length === 0 && (
                             <TableRow>
                               <TableCell colSpan={4} className="text-center text-muted-foreground py-6">
-                                Brak odzyskanych metali z tego procesu
+                                {t("calculator.noMetalsRecovered")}
                               </TableCell>
                             </TableRow>
                           )}
@@ -1235,17 +1215,17 @@ export function CalculatorPage() {
 
                 <Card className="border-border bg-card">
                   <CardHeader>
-                    <CardTitle>Zapotrzebowanie Chemiczne</CardTitle>
+                    <CardTitle>{t("calculator.chemicalRequirements")}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-border hover:bg-transparent">
-                            <TableHead>Odczynnik</TableHead>
-                            <TableHead className="text-right">Ilość</TableHead>
-                            <TableHead className="text-right">Cena/l</TableHead>
-                            <TableHead className="text-right">Koszt</TableHead>
+                            <TableHead>{t("calculator.reagent")}</TableHead>
+                            <TableHead className="text-right">{t("calculator.quantity")}</TableHead>
+                            <TableHead className="text-right">{t("calculator.pricePerL")}</TableHead>
+                            <TableHead className="text-right">{t("calculator.cost")}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>

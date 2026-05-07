@@ -29,23 +29,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
 import { useCustomMaterials, getInlineContent, type CustomMaterial } from "@/lib/useCustomMaterials";
 import { CustomMaterialModal } from "@/components/CustomMaterialModal";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  plyty_glowne: "Płyty główne",
-  pcb: "Płytki PCB",
-  procesor: "Procesory",
-  pamiec: "Pamięci RAM",
-  karta: "Karty graficzne / dźwiękowe",
-  dysk: "Dyski i napędy",
-  urzadzenie: "Urządzenia kompletne",
-  zasilacz: "Zasilacze i ładowarki",
-  ic: "Układy scalone IC",
-  zlacza: "Złącza",
-  styki: "Styki elektryczne",
-  kondensator: "Kondensatory",
-  inne: "Inne",
-  wlasne: "Własne profile",
-};
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const CATEGORY_ORDER = [
   "plyty_glowne", "pcb", "procesor", "pamiec", "karta",
@@ -67,6 +52,10 @@ function makeRow(): BatchRow {
 
 export function PurchaseCalculatorPage() {
   const { user } = useAuth();
+  const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const matName = (m: { name: string; nameEn?: string | null }) =>
+    lang === "en" && m.nameEn ? m.nameEn : m.name;
   const [mode, setMode] = useState<Mode>("single");
   const [profileModal, setProfileModal] = useState<{ open: boolean; editing: CustomMaterial | null }>({
     open: false, editing: null,
@@ -92,10 +81,10 @@ export function PurchaseCalculatorPage() {
         <div>
           <h1 className="text-2xl font-bold font-sans tracking-tight flex items-center gap-2">
             <ShoppingCart className="h-6 w-6 text-primary" />
-            Kalkulator skupu
+            {t("purchase.title")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Oblicz maksymalną cenę zakupu złomu elektronicznego przy założonej marży zysku
+            {t("purchase.subtitle")}
           </p>
         </div>
         {user && (
@@ -106,7 +95,7 @@ export function PurchaseCalculatorPage() {
             onClick={() => setProfileModal({ open: true, editing: null })}
           >
             <Plus className="h-3.5 w-3.5" />
-            Własny profil
+            {t("purchase.addCustomMaterial")}
             {customMats.length > 0 && (
               <Badge variant="secondary" className="ml-0.5 text-xs px-1.5 py-0 h-4">{customMats.length}</Badge>
             )}
@@ -125,7 +114,7 @@ export function PurchaseCalculatorPage() {
           )}
         >
           <Package className="h-4 w-4" />
-          Jeden materiał
+          {t("purchase.modeSingle")}
         </button>
         <button
           onClick={() => setMode("batch")}
@@ -137,7 +126,7 @@ export function PurchaseCalculatorPage() {
           )}
         >
           <Layers className="h-4 w-4" />
-          Partia mieszana
+          {t("purchase.modeBatch")}
         </button>
       </div>
 
@@ -167,7 +156,7 @@ export function PurchaseCalculatorPage() {
           <CardHeader className="pb-2 pt-4 px-4">
             <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <FlaskConical className="h-3.5 w-3.5" />
-              Własne profile materiałów ({customMats.length})
+              {t("purchase.customProfiles")} ({customMats.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="px-4 pb-4 space-y-2">
@@ -216,6 +205,7 @@ type SharedProps = {
   allMaterials: Array<{
     id: string;
     name: string;
+    nameEn?: string | null;
     category: string;
     unit: string;
     requiresCleaning?: boolean;
@@ -232,7 +222,7 @@ function MaterialGroupedSelect({
   onValueChange,
   allMaterials,
   materialsLoading,
-  placeholder = "Wybierz materiał...",
+  placeholder,
 }: {
   value: string;
   onValueChange: (v: string) => void;
@@ -240,6 +230,11 @@ function MaterialGroupedSelect({
   materialsLoading: boolean;
   placeholder?: string;
 }) {
+  const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const defaultPlaceholder = placeholder ?? t("calculator.selectMaterial");
+  const matLabel = (m: SharedProps["allMaterials"][number]) =>
+    lang === "en" && m.nameEn ? m.nameEn : m.name;
   const grouped: Record<string, typeof allMaterials> = {};
   allMaterials.forEach((m) => {
     if (!grouped[m.category]) grouped[m.category] = [];
@@ -249,7 +244,7 @@ function MaterialGroupedSelect({
   return (
     <Select value={value} onValueChange={onValueChange}>
       <SelectTrigger className="bg-background">
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={defaultPlaceholder} />
       </SelectTrigger>
       <SelectContent>
         {materialsLoading ? (
@@ -261,11 +256,11 @@ function MaterialGroupedSelect({
                 "text-xs font-bold uppercase tracking-wider px-2 pt-2",
                 cat === "wlasne" ? "text-primary" : "text-amber-500",
               )}>
-                {CATEGORY_LABELS[cat] ?? cat}
+                {t(`categories.${cat}`)}
               </SelectLabel>
               {grouped[cat]!.map((m) => (
                 <SelectItem key={m.id} value={m.id}>
-                  {m.name}
+                  {matLabel(m)}
                 </SelectItem>
               ))}
             </SelectGroup>
@@ -288,15 +283,16 @@ function ProcessSliders({
   processes: Array<{ id: string; name: string }>;
   processesLoading: boolean;
 }) {
+  const { t } = useTranslation();
   return (
     <>
       <div className="space-y-2">
         <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
-          Proces hydrometalurgiczny
+          {t("purchase.selectProcess")}
         </Label>
         <Select value={processId} onValueChange={setProcessId}>
           <SelectTrigger className="bg-background">
-            <SelectValue placeholder="Wybierz proces..." />
+            <SelectValue placeholder={t("purchase.selectProcess") + "..."} />
           </SelectTrigger>
           <SelectContent>
             {processesLoading ? (
@@ -313,23 +309,23 @@ function ProcessSliders({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
-            Zakładana marża zysku
+            {t("purchase.profitMargin")}
           </Label>
           <span className="font-mono font-bold text-primary text-lg">
             {targetMargin === 0 ? (
-              <span className="text-amber-400">Próg rentowności</span>
+              <span className="text-amber-400">{t("purchase.breakEven")}</span>
             ) : `${targetMargin}%`}
           </span>
         </div>
         <Slider min={0} max={90} step={5} value={[targetMargin]} onValueChange={([v]) => setTargetMargin(v ?? 0)} />
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>Próg rentowności (0%)</span>
+          <span>{t("purchase.breakEven")} (0%)</span>
           <span>90%</span>
         </div>
         {targetMargin === 0 && (
           <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-400/10 rounded-md px-3 py-2 border border-amber-400/20">
             <Info className="h-3.5 w-3.5 shrink-0" />
-            <span>Marża 0% = próg rentowności (break-even): pełny zysk przeznaczony na zakup surowca</span>
+            <span>{t("purchase.breakEvenInfo")}</span>
           </div>
         )}
       </div>
@@ -338,7 +334,7 @@ function ProcessSliders({
         <div className="flex items-center justify-between">
           <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
             <Zap className="h-3.5 w-3.5" />
-            Cena energii elektrycznej
+            {t("purchase.electricityPrice")}
           </Label>
           <span className="font-mono font-bold text-primary">{electricityPrice.toFixed(2)} zł/kWh</span>
         </div>
@@ -359,6 +355,7 @@ function ProcessSliders({
 function SingleMode({
   allMaterials, processes, materialsLoading, processesLoading, isCustomId, getCustomMat, onEditCustom,
 }: SharedProps & { onEditCustom: (m: CustomMaterial) => void }) {
+  const { t } = useTranslation();
   const [materialId, setMaterialId] = useState("");
   const [processId, setProcessId] = useState("");
   const [targetMargin, setTargetMargin] = useState(20);
@@ -430,14 +427,14 @@ function SingleMode({
     <>
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Parametry skupu</CardTitle>
-          <CardDescription>Wybierz materiał, proces i oczekiwaną marżę</CardDescription>
+          <CardTitle className="text-base">{t("purchase.paramsTitle")}</CardTitle>
+          <CardDescription>{t("purchase.paramsSubtitle")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold">
-                Materiał
+                {t("calculator.material")}
               </Label>
               {selectedCustomMat && (
                 <button
@@ -445,7 +442,7 @@ function SingleMode({
                   onClick={() => onEditCustom(selectedCustomMat)}
                 >
                   <Pencil className="h-3 w-3" />
-                  Edytuj profil
+                  {t("purchase.editCustomMaterial")}
                 </button>
               )}
             </div>
@@ -462,7 +459,7 @@ function SingleMode({
               <Checkbox id="purchase-cleaned" checked={isCleaned} onCheckedChange={(c) => setIsCleaned(c === true)} />
               <label htmlFor="purchase-cleaned" className="text-xs text-amber-600 dark:text-amber-400 cursor-pointer select-none font-medium flex items-center gap-1.5">
                 <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                Oczyszczony (plastik/obudowa usunięte) — wyższa zawartość metali/kg
+                {t("calculator.cleaned")}
               </label>
             </div>
           )}
@@ -470,7 +467,7 @@ function SingleMode({
           <div className="space-y-2">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground font-bold flex items-center gap-1.5">
               <Scale className="h-3.5 w-3.5" />
-              Posiadana ilość (opcjonalnie)
+              {t("purchase.quantityOptional")}
             </Label>
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1 flex-1">
@@ -485,7 +482,7 @@ function SingleMode({
                     type="number"
                     min="1"
                     step="1"
-                    placeholder="np. 89"
+                    placeholder={t("purchase.quantityPlaceholder")}
                     value={quantityGrams ?? ""}
                     onChange={(e) => {
                       const v = e.target.value;
@@ -510,7 +507,7 @@ function SingleMode({
               )}
             </div>
             {quantityGrams == null && (
-              <p className="text-xs text-muted-foreground">Wpisz gramaturę, aby zobaczyć łączną kwotę skupu</p>
+              <p className="text-xs text-muted-foreground">{t("purchase.enterGrams")}</p>
             )}
           </div>
 
@@ -527,7 +524,7 @@ function SingleMode({
         <Card className="border-dashed border-border bg-muted/20">
           <CardContent className="py-10 text-center text-muted-foreground">
             <ShoppingCart className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Wybierz materiał i proces, aby zobaczyć wynik</p>
+            <p className="text-sm">{t("purchase.selectToSeeResult")}</p>
           </CardContent>
         </Card>
       )}
@@ -553,6 +550,7 @@ function SingleMode({
 function BatchMode({
   allMaterials, processes, materialsLoading, processesLoading, isCustomId, getCustomMat,
 }: SharedProps) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<BatchRow[]>([makeRow()]);
   const [processId, setProcessId] = useState("");
   const [targetMargin, setTargetMargin] = useState(20);
@@ -607,8 +605,8 @@ function BatchMode({
     <>
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Skład partii</CardTitle>
-          <CardDescription>Podaj materiały i masy wchodzące w skład partii skupu</CardDescription>
+          <CardTitle className="text-base">{t("purchase.batchTitle")}</CardTitle>
+          <CardDescription>{t("purchase.batchSubtitle")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {rows.map((row, idx) => (
@@ -628,14 +626,14 @@ function BatchMode({
           ))}
           <Button variant="outline" size="sm" className="w-full gap-1.5 mt-1" onClick={addRow}>
             <Plus className="h-3.5 w-3.5" />
-            Dodaj materiał
+            {t("purchase.addMaterial")}
           </Button>
         </CardContent>
       </Card>
 
       <Card className="border-border">
         <CardHeader>
-          <CardTitle className="text-base">Parametry skupu</CardTitle>
+          <CardTitle className="text-base">{t("purchase.paramsTitle")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <ProcessSliders
@@ -651,7 +649,7 @@ function BatchMode({
         <Card className="border-dashed border-border bg-muted/20">
           <CardContent className="py-10 text-center text-muted-foreground">
             <Layers className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">Dodaj materiały i wybierz proces, aby zobaczyć wynik</p>
+            <p className="text-sm">{t("purchase.addMaterialsToSeeResult")}</p>
           </CardContent>
         </Card>
       )}
@@ -688,6 +686,7 @@ function BatchRowItem({
   onRemove: () => void;
   canRemove: boolean;
 }) {
+  const { t } = useTranslation();
   const checkId = useId();
   const selectedMat = allMaterials.find((m) => m.id === row.materialId);
   const requiresCleaning = !isCustomId(row.materialId) && selectedMat?.requiresCleaning === true;
@@ -696,7 +695,7 @@ function BatchRowItem({
     <div className="rounded-lg border border-border bg-muted/10 p-3 space-y-2">
       <div className="flex items-center gap-1 mb-1">
         <span className="text-xs font-mono text-muted-foreground w-5">{index + 1}.</span>
-        <span className="text-xs text-muted-foreground font-medium flex-1">Materiał i masa</span>
+        <span className="text-xs text-muted-foreground font-medium flex-1">{t("purchase.materialAndMass")}</span>
         {canRemove && (
           <button
             onClick={onRemove}
@@ -755,7 +754,7 @@ function BatchRowItem({
           <Checkbox id={checkId} checked={row.isCleaned} onCheckedChange={onToggleCleaned} className="h-3.5 w-3.5" />
           <label htmlFor={checkId} className="text-xs text-amber-600 dark:text-amber-400 cursor-pointer select-none flex items-center gap-1">
             <Sparkles className="h-3 w-3 shrink-0" />
-            Oczyszczony
+            {t("purchase.cleaned")}
           </label>
         </div>
       )}
@@ -764,6 +763,7 @@ function BatchRowItem({
 }
 
 function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
+  const { t } = useTranslation();
   const isPricePositive = result.maxPurchasePricePerKgPln > 0;
 
   return (
@@ -777,22 +777,22 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-base flex items-center gap-2">
             <CircleDollarSign className="h-5 w-5 text-primary" />
-            Maksymalna cena skupu — partia mieszana
+            {t("purchase.maxPurchaseBatch")}
           </CardTitle>
           <div className="flex items-center gap-2 flex-wrap">
             {result.isBreakEven && (
-              <Badge variant="outline" className="border-amber-400 text-amber-400 text-xs">Próg rentowności</Badge>
+              <Badge variant="outline" className="border-amber-400 text-amber-400 text-xs">{t("purchase.breakEven")}</Badge>
             )}
             {!result.isProfitable && (
-              <Badge variant="destructive" className="text-xs">Proces nieopłacalny</Badge>
+              <Badge variant="destructive" className="text-xs">{t("purchase.notProfitable")}</Badge>
             )}
             {result.isProfitable && !result.isBreakEven && (
-              <Badge className="bg-success/20 text-success border-success/30 text-xs">Opłacalne</Badge>
+              <Badge className="bg-success/20 text-success border-success/30 text-xs">{t("purchase.profitable")}</Badge>
             )}
           </div>
         </div>
         <CardDescription className="text-xs">
-          {result.processName} · Partia: {result.totalQuantityKg} kg łącznie
+          {result.processName} · {t("purchase.batch")}: {result.totalQuantityKg} kg {t("purchase.total")}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -807,7 +807,7 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
                 : result.maxPurchasePricePerKgPln === 0 ? "0,00 zł"
                 : `−${formatCurrency(Math.abs(result.maxPurchasePricePerKgPln))}`}
             </div>
-            <div className="text-sm text-muted-foreground mt-1">za kg mieszaniny</div>
+            <div className="text-sm text-muted-foreground mt-1">{t("purchase.perKgMix")}</div>
           </div>
           <div className="text-center py-3 bg-primary/5 rounded-lg border border-primary/20">
             <div className="text-2xl font-mono font-bold text-primary">
@@ -815,13 +815,13 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
                 ? formatCurrency(result.maxPurchasePriceTotalPln)
                 : `−${formatCurrency(Math.abs(result.maxPurchasePriceTotalPln))}`}
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">łącznie za całą partię</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{t("purchase.totalForBatch")}</div>
           </div>
           <div className="text-center py-3 bg-muted/20 rounded-lg border border-border">
             <div className="text-2xl font-mono font-bold text-foreground">
               {result.totalQuantityKg} kg
             </div>
-            <div className="text-xs text-muted-foreground mt-0.5">masa partii łącznie</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{t("purchase.batchMassTotal")}</div>
           </div>
         </div>
 
@@ -829,24 +829,24 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
 
         <div className="space-y-2">
           <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-3">
-            Rozliczenie (średnia ważona per kg)
+            {t("purchase.breakdownWeighted")}
           </h4>
-          <BreakdownRow icon={<TrendingUp className="h-4 w-4 text-success" />} label="Przychód z odzysku metali" value={result.revenuePerKgPln} variant="positive" />
-          <BreakdownRow icon={<Beaker className="h-4 w-4 text-muted-foreground" />} label="Koszt chemii reagentów" value={result.chemistryCostPerKgPln} variant="negative" />
-          <BreakdownRow icon={<Zap className="h-4 w-4 text-muted-foreground" />} label="Koszt energii elektrycznej" value={result.electricityCostPerKgPln} variant="negative" />
+          <BreakdownRow icon={<TrendingUp className="h-4 w-4 text-success" />} label={t("purchase.revenueFromMetals")} value={result.revenuePerKgPln} variant="positive" />
+          <BreakdownRow icon={<Beaker className="h-4 w-4 text-muted-foreground" />} label={t("purchase.chemistryCost")} value={result.chemistryCostPerKgPln} variant="negative" />
+          <BreakdownRow icon={<Zap className="h-4 w-4 text-muted-foreground" />} label={t("purchase.electricityCost")} value={result.electricityCostPerKgPln} variant="negative" />
           <Separator className="my-2" />
           <BreakdownRow
             icon={result.grossProfitPerKgPln >= 0 ? <TrendingUp className="h-4 w-4 text-success" /> : <TrendingDown className="h-4 w-4 text-destructive" />}
-            label="Zysk brutto z przetworzenia"
+            label={t("purchase.grossProfit")}
             value={result.grossProfitPerKgPln}
             variant={result.grossProfitPerKgPln >= 0 ? "positive" : "negative"}
             bold
           />
           {result.targetMarginPercent > 0 && (
-            <BreakdownRow icon={<Minus className="h-4 w-4 text-muted-foreground" />} label={`Zakładana marża (${result.targetMarginPercent}%)`} value={result.grossProfitPerKgPln * (result.targetMarginPercent / 100)} variant="neutral" />
+            <BreakdownRow icon={<Minus className="h-4 w-4 text-muted-foreground" />} label={`${t("purchase.targetMargin")} (${result.targetMarginPercent}%)`} value={result.grossProfitPerKgPln * (result.targetMarginPercent / 100)} variant="neutral" />
           )}
           <Separator className="my-2" />
-          <BreakdownRow icon={<ShoppingCart className="h-4 w-4 text-primary" />} label="Maks. cena zakupu (śr. ważona/kg)" value={result.maxPurchasePricePerKgPln} variant={result.maxPurchasePricePerKgPln > 0 ? "positive" : "negative"} bold highlight />
+          <BreakdownRow icon={<ShoppingCart className="h-4 w-4 text-primary" />} label={t("purchase.maxPurchaseWeighted")} value={result.maxPurchasePricePerKgPln} variant={result.maxPurchasePricePerKgPln > 0 ? "positive" : "negative"} bold highlight />
         </div>
 
         {result.breakdown && result.breakdown.length > 1 && (
@@ -855,7 +855,7 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
             <div>
               <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-3 flex items-center gap-1.5">
                 <Layers className="h-3.5 w-3.5" />
-                Rozbicie per materiał
+                {t("purchase.breakdownPerMaterial")}
               </h4>
               <div className="space-y-2">
                 {result.breakdown.map((item, i) => (
@@ -865,12 +865,12 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
                         {item.materialName}
                         {item.isCleaned && (
                           <span className="ml-1.5 text-xs text-amber-500 inline-flex items-center gap-0.5">
-                            <Sparkles className="h-3 w-3" />oczyszczony
+                            <Sparkles className="h-3 w-3" />{t("purchase.cleaned")}
                           </span>
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground font-mono">
-                        {item.quantityKg} kg · przychód {formatCurrency(item.revenuePerKgPln)}/kg
+                        {item.quantityKg} kg · {t("purchase.revenue")} {formatCurrency(item.revenuePerKgPln)}/kg
                       </p>
                     </div>
                     <div className="text-right shrink-0">
@@ -878,7 +878,7 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
                         {formatCurrency(Math.abs(item.maxPurchasePricePerKgPln))}/kg
                       </p>
                       <p className="text-xs text-muted-foreground font-mono">
-                        = {formatCurrency(Math.abs(item.maxPurchasePriceTotalPln))} łącznie
+                        = {formatCurrency(Math.abs(item.maxPurchasePriceTotalPln))} {t("purchase.total")}
                       </p>
                     </div>
                   </div>
@@ -893,6 +893,7 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
 }
 
 function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePriceResult; isCleaned?: boolean; quantityGrams?: number | null }) {
+  const { t } = useTranslation();
   const price = result.maxPurchasePricePerKgPln;
   const isPricePositive = price > 0;
   const priceColor = isPricePositive ? "text-success" : "text-destructive";
@@ -911,17 +912,17 @@ function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePric
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="text-base flex items-center gap-2">
             <CircleDollarSign className="h-5 w-5 text-primary" />
-            Maksymalna cena skupu
+            {t("purchase.maxPurchase")}
           </CardTitle>
           <div className="flex items-center gap-2">
             {result.isBreakEven && (
-              <Badge variant="outline" className="border-amber-400 text-amber-400 text-xs">Próg rentowności</Badge>
+              <Badge variant="outline" className="border-amber-400 text-amber-400 text-xs">{t("purchase.breakEven")}</Badge>
             )}
             {!result.isProfitable && (
-              <Badge variant="destructive" className="text-xs">Proces nieopłacalny</Badge>
+              <Badge variant="destructive" className="text-xs">{t("purchase.notProfitable")}</Badge>
             )}
             {result.isProfitable && !result.isBreakEven && (
-              <Badge className="bg-success/20 text-success border-success/30 text-xs">Opłacalne</Badge>
+              <Badge className="bg-success/20 text-success border-success/30 text-xs">{t("purchase.profitable")}</Badge>
             )}
           </div>
         </div>
@@ -930,7 +931,7 @@ function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePric
           {isCleaned && (
             <span className="inline-flex items-center gap-0.5 font-medium text-amber-600 dark:text-amber-400 bg-amber-500/15 border border-amber-500/30 rounded px-1.5 py-0.5">
               <Sparkles className="h-3 w-3" />
-              oczyszczony
+              {t("purchase.cleaned")}
             </span>
           )}
         </CardDescription>
@@ -940,11 +941,10 @@ function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePric
           <div className={cn("text-5xl font-mono font-extrabold tracking-tight", priceColor)}>
             {isPricePositive ? formatCurrency(price) : price === 0 ? "0,00 zł" : `−${formatCurrency(Math.abs(price))}`}
           </div>
-          <div className="text-sm text-muted-foreground mt-1">za kg surowca</div>
+          <div className="text-sm text-muted-foreground mt-1">{t("purchase.perKgRaw")}</div>
           {!isPricePositive && (
             <p className="text-xs text-destructive mt-2 px-4">
-              Proces nie generuje zysku nawet bez kosztu zakupu surowca.
-              Zmień materiał lub wybierz inny proces.
+              {t("purchase.notProfitableDesc")}
             </p>
           )}
         </div>
@@ -957,7 +957,7 @@ function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePric
               : "bg-destructive/10 border-destructive/40 text-destructive",
           )}>
             <span className="text-sm font-semibold not-italic">
-              Za {quantityGrams! >= 1000
+              {t("purchase.for")} {quantityGrams! >= 1000
                 ? `${(quantityGrams! / 1000).toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 3 })} kg`
                 : `${quantityGrams} g`}
             </span>
@@ -971,24 +971,24 @@ function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePric
 
         <div className="space-y-2">
           <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-bold mb-3">
-            Rozliczenie per kg surowca
+            {t("purchase.breakdownPerKg")}
           </h4>
-          <BreakdownRow icon={<TrendingUp className="h-4 w-4 text-success" />} label="Przychód z odzysku metali" value={result.revenuePerKgPln} variant="positive" />
-          <BreakdownRow icon={<Beaker className="h-4 w-4 text-muted-foreground" />} label="Koszt chemii reagentów" value={result.chemistryCostPerKgPln} variant="negative" />
-          <BreakdownRow icon={<Zap className="h-4 w-4 text-muted-foreground" />} label="Koszt energii elektrycznej" value={result.electricityCostPerKgPln} variant="negative" />
+          <BreakdownRow icon={<TrendingUp className="h-4 w-4 text-success" />} label={t("purchase.revenueFromMetals")} value={result.revenuePerKgPln} variant="positive" />
+          <BreakdownRow icon={<Beaker className="h-4 w-4 text-muted-foreground" />} label={t("purchase.chemistryCost")} value={result.chemistryCostPerKgPln} variant="negative" />
+          <BreakdownRow icon={<Zap className="h-4 w-4 text-muted-foreground" />} label={t("purchase.electricityCost")} value={result.electricityCostPerKgPln} variant="negative" />
           <Separator className="my-2" />
           <BreakdownRow
             icon={result.grossProfitPerKgPln >= 0 ? <TrendingUp className="h-4 w-4 text-success" /> : <TrendingDown className="h-4 w-4 text-destructive" />}
-            label="Zysk brutto z przetworzenia"
+            label={t("purchase.grossProfit")}
             value={result.grossProfitPerKgPln}
             variant={result.grossProfitPerKgPln >= 0 ? "positive" : "negative"}
             bold
           />
           {result.targetMarginPercent > 0 && (
-            <BreakdownRow icon={<Minus className="h-4 w-4 text-muted-foreground" />} label={`Zakładana marża (${result.targetMarginPercent}%)`} value={result.grossProfitPerKgPln * (result.targetMarginPercent / 100)} variant="neutral" />
+            <BreakdownRow icon={<Minus className="h-4 w-4 text-muted-foreground" />} label={`${t("purchase.targetMargin")} (${result.targetMarginPercent}%)`} value={result.grossProfitPerKgPln * (result.targetMarginPercent / 100)} variant="neutral" />
           )}
           <Separator className="my-2" />
-          <BreakdownRow icon={<ShoppingCart className="h-4 w-4 text-primary" />} label="Maks. cena zakupu surowca" value={result.maxPurchasePricePerKgPln} variant={result.maxPurchasePricePerKgPln > 0 ? "positive" : "negative"} bold highlight />
+          <BreakdownRow icon={<ShoppingCart className="h-4 w-4 text-primary" />} label={t("purchase.maxPurchaseRaw")} value={result.maxPurchasePricePerKgPln} variant={result.maxPurchasePricePerKgPln > 0 ? "positive" : "negative"} bold highlight />
         </div>
       </CardContent>
     </Card>

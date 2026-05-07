@@ -17,15 +17,8 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
-
-const METAL_NAMES: Record<string, string> = {
-  Au: "złoto",
-  Ag: "srebro",
-  Pt: "platyna",
-  Pd: "pallad",
-};
+import { useTranslation } from "react-i18next";
 
 const METAL_COLORS: Record<string, string> = {
   Au: "#F59E0B",
@@ -34,48 +27,12 @@ const METAL_COLORS: Record<string, string> = {
   Pd: "#A78BFA",
 };
 
-const FINENESS: Record<string, { label: string; value: number }[]> = {
-  Au: [
-    { label: "999.9 (24K — czyste)", value: 999.9 },
-    { label: "999 (24K — inwestycyjne)", value: 999 },
-    { label: "750 (18K — jubilerskie)", value: 750 },
-    { label: "585 (14K — popularne)", value: 585 },
-    { label: "375 (9K)", value: 375 },
-    { label: "333 (8K)", value: 333 },
-  ],
-  Ag: [
-    { label: "999 (czyste)", value: 999 },
-    { label: "925 (sterling)", value: 925 },
-    { label: "800 (stare srebro)", value: 800 },
-    { label: "500 (50%)", value: 500 },
-  ],
-  Pt: [
-    { label: "950 (jubilerskie)", value: 950 },
-    { label: "850 (techniczne)", value: 850 },
-    { label: "750 (stop)", value: 750 },
-  ],
-  Pd: [
-    { label: "950 (katalityczne)", value: 950 },
-    { label: "500 (stop)", value: 500 },
-  ],
-};
-
 type HistoryRange = "7d" | "30d" | "90d" | "365d";
-
-const RANGE_LABELS: Record<HistoryRange, string> = {
-  "7d": "7 dni",
-  "30d": "30 dni",
-  "90d": "90 dni",
-  "365d": "1 rok",
-};
 
 const ALL_METALS = ["Au", "Ag", "Pt", "Pd"] as const;
 
-function formatDateLabel(dateStr: string, range: HistoryRange): string {
+function formatDateLabel(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
-  if (range === "365d") {
-    return date.toLocaleDateString("pl-PL", { month: "short", day: "numeric" });
-  }
   return date.toLocaleDateString("pl-PL", { month: "short", day: "numeric" });
 }
 
@@ -92,16 +49,9 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
       <div className="text-muted-foreground text-xs mb-2">{label}</div>
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
-          <span
-            className="inline-block w-2 h-2 rounded-full shrink-0"
-            style={{ backgroundColor: entry.color }}
-          />
-          <span className="font-mono font-bold" style={{ color: entry.color }}>
-            {entry.name}
-          </span>
-          <span className="font-mono text-foreground ml-auto pl-3">
-            {formatCurrency(entry.value)}/g
-          </span>
+          <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
+          <span className="font-mono font-bold" style={{ color: entry.color }}>{entry.name}</span>
+          <span className="font-mono text-foreground ml-auto pl-3">{formatCurrency(entry.value)}/g</span>
         </div>
       ))}
     </div>
@@ -109,6 +59,41 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
 }
 
 export function PricesPage() {
+  const { t } = useTranslation();
+
+  const FINENESS: Record<string, { label: string; value: number }[]> = {
+    Au: [
+      { label: t("prices.fineness_au_9999"), value: 999.9 },
+      { label: t("prices.fineness_au_999"), value: 999 },
+      { label: t("prices.fineness_au_750"), value: 750 },
+      { label: t("prices.fineness_au_585"), value: 585 },
+      { label: t("prices.fineness_au_375"), value: 375 },
+      { label: t("prices.fineness_au_333"), value: 333 },
+    ],
+    Ag: [
+      { label: t("prices.fineness_ag_999"), value: 999 },
+      { label: t("prices.fineness_ag_925"), value: 925 },
+      { label: t("prices.fineness_ag_800"), value: 800 },
+      { label: t("prices.fineness_ag_500"), value: 500 },
+    ],
+    Pt: [
+      { label: t("prices.fineness_pt_950"), value: 950 },
+      { label: t("prices.fineness_pt_850"), value: 850 },
+      { label: t("prices.fineness_pt_750"), value: 750 },
+    ],
+    Pd: [
+      { label: t("prices.fineness_pd_950"), value: 950 },
+      { label: t("prices.fineness_pd_500"), value: 500 },
+    ],
+  };
+
+  const RANGE_LABELS: Record<HistoryRange, string> = {
+    "7d": t("prices.range7d"),
+    "30d": t("prices.range30d"),
+    "90d": t("prices.range90d"),
+    "365d": t("prices.range365d"),
+  };
+
   const { data: prices, isLoading } = useGetMetalPrices({
     query: {
       queryKey: getGetMetalPricesQueryKey(),
@@ -118,16 +103,11 @@ export function PricesPage() {
   });
 
   const [selected, setSelected] = useState<Record<string, number>>({
-    Au: 999.9,
-    Ag: 999,
-    Pt: 950,
-    Pd: 950,
+    Au: 999.9, Ag: 999, Pt: 950, Pd: 950,
   });
 
   const [range, setRange] = useState<HistoryRange>("30d");
-  const [visibleMetals, setVisibleMetals] = useState<Set<string>>(
-    new Set(["Au"])
-  );
+  const [visibleMetals, setVisibleMetals] = useState<Set<string>>(new Set(["Au"]));
 
   const { data: history, isLoading: historyLoading, isError: historyError } = useGetMetalPricesHistory(
     { range },
@@ -166,7 +146,7 @@ export function PricesPage() {
 
   const chartData =
     history?.map((point) => ({
-      date: formatDateLabel(point.date, range),
+      date: formatDateLabel(point.date),
       rawDate: point.date,
       Au: point.Au,
       Ag: point.Ag,
@@ -196,12 +176,8 @@ export function PricesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold font-sans tracking-tight">
-          Aktualne Kursy Metali
-        </h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Ceny skupu z rynku globalnego (PLN/g)
-        </p>
+        <h1 className="text-2xl font-bold font-sans tracking-tight">{t("prices.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("prices.subtitle")}</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -212,22 +188,19 @@ export function PricesPage() {
           const fineness = FINENESS[metal];
 
           return (
-            <Card
-              key={metal}
-              className="bg-card border-border shadow-sm flex flex-col"
-            >
+            <Card key={metal} className="bg-card border-border shadow-sm flex flex-col">
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl font-bold font-mono text-primary flex items-baseline gap-1.5">
                   {metal}
                   <span className="text-sm font-normal text-muted-foreground">
-                    ({METAL_NAMES[metal]})
+                    ({t(`metals.${metal}`)})
                   </span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-3 flex-1">
                 <div>
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                    Kurs spot (999.9 / czyste)
+                    {t("prices.spotPrice")}
                   </div>
                   {isLoading ? (
                     <Skeleton className="h-7 w-28" />
@@ -236,34 +209,27 @@ export function PricesPage() {
                       {spot != null ? formatCurrency(spot) : "—"}
                     </div>
                   )}
-                  <div className="text-xs text-muted-foreground">za 1 gram</div>
+                  <div className="text-xs text-muted-foreground">{t("prices.perGram")}</div>
                 </div>
 
                 <div className="border-t border-border pt-3">
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1.5">
-                    Próba / czystość
+                    {t("prices.fineness")}
                   </div>
                   <select
                     value={proba}
-                    onChange={(e) =>
-                      setSelected((prev) => ({
-                        ...prev,
-                        [metal]: Number(e.target.value),
-                      }))
-                    }
+                    onChange={(e) => setSelected((prev) => ({ ...prev, [metal]: Number(e.target.value) }))}
                     className="w-full text-xs bg-muted border border-border rounded px-2 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {fineness.map((f) => (
-                      <option key={f.value} value={f.value}>
-                        {f.label}
-                      </option>
+                      <option key={f.value} value={f.value}>{f.label}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2">
                   <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                    Cena przy próbie {proba}
+                    {t("prices.priceAtFineness")} {proba}
                   </div>
                   {isLoading ? (
                     <Skeleton className="h-6 w-24" />
@@ -272,9 +238,7 @@ export function PricesPage() {
                       {priceAtProba != null ? formatCurrency(priceAtProba) : "—"}
                     </div>
                   )}
-                  <div className="text-[10px] text-muted-foreground">
-                    za 1 gram stopu
-                  </div>
+                  <div className="text-[10px] text-muted-foreground">{t("prices.perGramAlloy")}</div>
                 </div>
               </CardContent>
             </Card>
@@ -287,7 +251,7 @@ export function PricesPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <CardTitle className="flex items-center gap-2 text-base font-semibold">
               <TrendingUp className="w-4 h-4 text-primary" />
-              Historia cen (PLN/g)
+              {t("prices.historyTitle")}
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex rounded-md border border-border overflow-hidden">
@@ -319,17 +283,13 @@ export function PricesPage() {
                     ? "border-transparent text-white"
                     : "border-border bg-transparent text-muted-foreground"
                 }`}
-                style={
-                  visibleMetals.has(metal)
-                    ? { backgroundColor: METAL_COLORS[metal] }
-                    : {}
-                }
+                style={visibleMetals.has(metal) ? { backgroundColor: METAL_COLORS[metal] } : {}}
               >
                 <span
                   className="w-1.5 h-1.5 rounded-full"
                   style={{ backgroundColor: visibleMetals.has(metal) ? "white" : METAL_COLORS[metal] }}
                 />
-                {metal} ({METAL_NAMES[metal]})
+                {metal} ({t(`metals.${metal}`)})
               </button>
             ))}
           </div>
@@ -339,30 +299,23 @@ export function PricesPage() {
             <div className="h-64 flex items-center justify-center">
               <div className="flex flex-col items-center gap-3 text-muted-foreground">
                 <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                <span className="text-sm">Pobieranie danych historycznych…</span>
+                <span className="text-sm">{t("prices.loadingHistory")}</span>
               </div>
             </div>
           ) : historyError ? (
             <div className="h-64 flex flex-col items-center justify-center gap-2 text-muted-foreground text-sm">
-              <span>Nie udało się pobrać historii cen.</span>
-              <span className="text-xs">Spróbuj odświeżyć stronę lub sprawdź połączenie z siecią.</span>
+              <span>{t("prices.historyError")}</span>
+              <span className="text-xs">{t("prices.historyErrorHint")}</span>
             </div>
           ) : chartData.length === 0 ? (
             <div className="h-64 flex items-center justify-center text-muted-foreground text-sm">
-              Brak danych historycznych dla wybranego zakresu
+              {t("prices.noHistoryData")}
             </div>
           ) : (
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={chartData}
-                  margin={{ top: 4, right: 8, left: 0, bottom: 4 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                    opacity={0.5}
-                  />
+                <LineChart data={chartData} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                   <XAxis
                     dataKey="date"
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
@@ -402,7 +355,7 @@ export function PricesPage() {
         <CardContent className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="w-4 h-4 shrink-0" />
           <span>
-            Ostatnia aktualizacja:{" "}
+            {t("prices.lastUpdate")}{" "}
             {prices ? (
               new Date(prices.updatedAt).toLocaleString("pl-PL")
             ) : (

@@ -16,6 +16,7 @@ import { UserPanelPage } from "@/pages/UserPanel";
 import { AuthProvider } from "@/hooks/useAuth";
 import { getAuthApiBase } from "@/lib/api";
 import { setBaseUrl } from "@workspace/api-client-react";
+import { useTranslation } from "react-i18next";
 
 // Configure the generated API client to use the remote API when VITE_VISION_API_URL
 // is set (production on Cyberfolks).  The env var ends with /api, but the
@@ -52,6 +53,14 @@ function Router() {
   );
 }
 
+function LangSync() {
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+  return null;
+}
+
 function App() {
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -68,6 +77,7 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthProvider>
+            <LangSync />
             <Router />
           </AuthProvider>
         </WouterRouter>
