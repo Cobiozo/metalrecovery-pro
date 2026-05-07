@@ -186,25 +186,31 @@ export function Layout({ children }: { children: ReactNode }) {
             <span className="text-xs text-primary font-mono font-medium shrink-0">PRO</span>
           </div>
         </Link>
-        {!authLoading && user?.role === "admin" && (
-          <Link href="/admin" className="p-1.5 rounded-md text-red-400/70 hover:text-red-400 hover:bg-red-500/10 transition-colors">
-            <Shield className="w-4 h-4" />
-          </Link>
-        )}
-        {!authLoading && user && user.role !== "admin" && (
-          <Link href="/panel" className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-            <LayoutDashboard className="w-4 h-4" />
-          </Link>
-        )}
         {!authLoading && (
           user ? (
-            <button
-              onClick={() => logout()}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0"
-            >
-              {user.name?.split(" ")[0] ?? user.email.split("@")[0]}
-              <LogOut className="w-3.5 h-3.5 ml-1" />
-            </button>
+            <div className="flex items-center gap-1 shrink-0">
+              <Link
+                href={user.role === "admin" ? "/admin" : "/panel"}
+                className={cn(
+                  "flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors",
+                  user.role === "admin"
+                    ? "text-red-400/80 hover:text-red-400 hover:bg-red-500/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                {user.role === "admin" && <Shield className="w-3.5 h-3.5 shrink-0" />}
+                <span className="max-w-[72px] truncate">
+                  {user.name?.split(" ")[0] ?? user.email.split("@")[0]}
+                </span>
+              </Link>
+              <button
+                onClick={() => logout()}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title={t("nav.logout")}
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
           ) : (
             <Link
               href="/logowanie"
@@ -269,9 +275,6 @@ export function Layout({ children }: { children: ReactNode }) {
             </Link>
           );
         })}
-        <div className="flex flex-col items-center justify-center px-2 py-2 border-l border-border shrink-0">
-          <LangToggle compact />
-        </div>
       </nav>
     </div>
   );
