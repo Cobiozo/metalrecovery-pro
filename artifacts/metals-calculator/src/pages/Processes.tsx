@@ -137,7 +137,7 @@ export function ProcessesPage() {
                   : "bg-card border-border text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <div className="text-xs font-semibold whitespace-nowrap">{process.name}</div>
+              <div className="text-xs font-semibold whitespace-nowrap">{t(`processes.names.${process.id}`, { defaultValue: process.name })}</div>
               <div className="flex gap-1 mt-1">
                 {process.targetMetals.map(m => (
                   <Badge key={m} variant="outline" className="text-[10px] px-1 py-0 font-mono border-primary/20 text-primary">
@@ -166,7 +166,7 @@ export function ProcessesPage() {
                 )}
               >
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-semibold leading-tight line-clamp-2">{process.name}</span>
+                  <span className="text-xs font-semibold leading-tight line-clamp-2">{t(`processes.names.${process.id}`, { defaultValue: process.name })}</span>
                   {isSelected && <ChevronRight className="w-3.5 h-3.5 shrink-0 text-primary" />}
                 </div>
                 <div className="flex gap-1 mt-1 flex-wrap">
@@ -185,7 +185,7 @@ export function ProcessesPage() {
           <Card className="flex-1 min-w-0 border-border bg-card overflow-hidden">
             <div className="bg-primary/5 px-4 py-4 border-b border-border">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                <h2 className="text-base font-bold leading-tight">{selectedProcess.name}</h2>
+                <h2 className="text-base font-bold leading-tight">{t(`processes.names.${selectedProcess.id}`, { defaultValue: selectedProcess.name })}</h2>
                 <div className="flex gap-1.5 flex-wrap shrink-0">
                   {selectedProcess.targetMetals.map(m => (
                     <Badge key={m} variant="outline" className="font-mono bg-background border-primary/20 text-primary text-xs">
@@ -412,7 +412,7 @@ export function ProcessesPage() {
                               <span className="font-mono text-xs font-medium">{grams >= 0.001 ? grams.toFixed(3) : '<0.001'} g</span>
                             </div>
                             <div className="text-[9px] text-muted-foreground mt-0.5">
-                              z {inputGrams.toFixed(3)} g × {yield_}%
+                              {t("processes.fromGramsTimesYield", { grams: inputGrams.toFixed(3), yield: yield_ })}
                             </div>
                           </div>
                         );

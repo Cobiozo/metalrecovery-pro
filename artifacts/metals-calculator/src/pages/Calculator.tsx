@@ -772,7 +772,7 @@ export function CalculatorPage() {
                     }}
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold text-lg leading-tight">{process.name}</h3>
+                      <h3 className="font-bold text-lg leading-tight">{t(`processes.names.${process.id}`, { defaultValue: process.name })}</h3>
                       {selectedProcessId === process.id && <CheckCircle2 className="text-primary h-5 w-5 shrink-0 ml-2" />}
                     </div>
                     <div className="flex flex-wrap gap-1 mb-2">

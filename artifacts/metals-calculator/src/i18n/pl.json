@@ -266,7 +266,19 @@
     "estimatedRecoveryNote": "*Szacunek dla wartości typowych — rzeczywisty odzysk może się różnić",
     "processSteps": "Kroki procesu",
     "recalculatedFrom": "Przeliczono z",
-    "higherConcLessVol": "wyższe stęż. = mniej obj."
+    "higherConcLessVol": "wyższe stęż. = mniej obj.",
+    "fromGramsTimesYield": "z {{grams}} g × {{yield}}%",
+    "names": {
+      "aqua_regia": "Woda Królewska (HCl + HNO3)",
+      "hno3_dilute": "Kwas azotowy rozcieńczony (HNO3 25-30%)",
+      "hno3_concentrated": "Kwas azotowy stężony (HNO3 65%)",
+      "hcl_h2o2": "HCl + H2O2 (etching kwasowy)",
+      "nitrate_boat": "Łódź azotanowa (NaNO3 + H2SO4)",
+      "electrolysis": "Elektroliza (rafinacja elektrolityczna)",
+      "wohlwill_process": "Proces Wöhlwilla (rafinacja złota 999.9)",
+      "miller_process": "Proces Millera (rafinacja chlorem)",
+      "cementation_zinc": "Cementacja cynkowa"
+    }
   },
   "analysis": {
     "title": "Analiza Zdjęcia AI",
@@ -337,6 +349,7 @@
     "fromScaleG": "g z wagi",
     "aiCountedApprox": "(AI: ~{{count}})",
     "analysisResultAlt": "Wynik analizy",
+    "serverError": "Błąd serwera",
     "confidence": {
       "high": "wysoka",
       "medium": "średnia",
@@ -430,7 +443,8 @@
     "emailVerified": "Email potwierdzony!",
     "emailVerifiedDesc": "Konto zostało aktywowane. Możesz się teraz zalogować.",
     "linkExpired": "Link weryfikacyjny wygasł",
-    "linkExpiredDesc": "Ten link jest już nieważny lub wygasł. Zaloguj się poniżej i użyj opcji ponownego wysłania emaila."
+    "linkExpiredDesc": "Ten link jest już nieważny lub wygasł. Zaloguj się poniżej i użyj opcji ponownego wysłania emaila.",
+    "passwordMinLength": "Hasło musi mieć co najmniej 8 znaków."
   },
   "userPanel": {
     "title": "Mój panel",

@@ -299,7 +299,7 @@ function ProcessSliders({
               <div className="p-2"><Skeleton className="h-4 w-full" /></div>
             ) : (
               processes.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                <SelectItem key={p.id} value={p.id}>{t(`processes.names.${p.id}`, { defaultValue: p.name })}</SelectItem>
               ))
             )}
           </SelectContent>
@@ -712,7 +712,7 @@ function BatchRowItem({
             onValueChange={onChangeMaterial}
             allMaterials={allMaterials}
             materialsLoading={materialsLoading}
-            placeholder="Wybierz materiał..."
+            placeholder={t("calculator.selectMaterial")}
           />
         </div>
         <div className="flex items-center gap-0.5 shrink-0">
@@ -804,7 +804,7 @@ function BatchResultCard({ result }: { result: PurchasePriceBatchResult }) {
             )}>
               {isPricePositive
                 ? formatCurrency(result.maxPurchasePricePerKgPln)
-                : result.maxPurchasePricePerKgPln === 0 ? "0,00 zł"
+                : result.maxPurchasePricePerKgPln === 0 ? formatCurrency(0)
                 : `−${formatCurrency(Math.abs(result.maxPurchasePricePerKgPln))}`}
             </div>
             <div className="text-sm text-muted-foreground mt-1">{t("purchase.perKgMix")}</div>
@@ -939,7 +939,7 @@ function ResultCard({ result, isCleaned, quantityGrams }: { result: PurchasePric
       <CardContent className="space-y-5">
         <div className="text-center py-4 bg-muted/30 rounded-xl border border-border">
           <div className={cn("text-5xl font-mono font-extrabold tracking-tight", priceColor)}>
-            {isPricePositive ? formatCurrency(price) : price === 0 ? "0,00 zł" : `−${formatCurrency(Math.abs(price))}`}
+            {isPricePositive ? formatCurrency(price) : price === 0 ? formatCurrency(0) : `−${formatCurrency(Math.abs(price))}`}
           </div>
           <div className="text-sm text-muted-foreground mt-1">{t("purchase.perKgRaw")}</div>
           {!isPricePositive && (

@@ -89,7 +89,7 @@ export function LoginPage() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) {
-      toast({ title: t("common.error"), description: "Hasło musi mieć co najmniej 8 znaków.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("login.passwordMinLength"), variant: "destructive" });
       return;
     }
     setLoading(true);

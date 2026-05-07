@@ -266,7 +266,19 @@
     "estimatedRecoveryNote": "*Estimate based on typical values — actual recovery may vary",
     "recalculatedFrom": "Recalculated from",
     "higherConcLessVol": "higher conc. = less volume",
-    "processSteps": "Process steps"
+    "processSteps": "Process steps",
+    "fromGramsTimesYield": "from {{grams}} g × {{yield}}%",
+    "names": {
+      "aqua_regia": "Aqua Regia (HCl + HNO3)",
+      "hno3_dilute": "Dilute Nitric Acid (HNO3 25-30%)",
+      "hno3_concentrated": "Concentrated Nitric Acid (HNO3 65%)",
+      "hcl_h2o2": "HCl + H2O2 (Acid Etching)",
+      "nitrate_boat": "Nitrate Boat (NaNO3 + H2SO4)",
+      "electrolysis": "Electrolysis (Electrolytic Refining)",
+      "wohlwill_process": "Wohlwill Process (Gold 999.9 Refining)",
+      "miller_process": "Miller Process (Chlorination Refining)",
+      "cementation_zinc": "Zinc Cementation"
+    }
   },
   "analysis": {
     "title": "AI Photo Analysis",
@@ -337,6 +349,7 @@
     "fromScaleG": "g from scale",
     "aiCountedApprox": "(AI: ~{{count}})",
     "analysisResultAlt": "Analysis result",
+    "serverError": "Server error",
     "confidence": {
       "high": "high",
       "medium": "medium",
@@ -428,7 +441,8 @@
     "emailVerified": "Email verified!",
     "emailVerifiedDesc": "Your account has been activated. You can now log in.",
     "linkExpired": "Verification link expired",
-    "linkExpiredDesc": "This link is no longer valid or has expired. Log in below and use the resend option."
+    "linkExpiredDesc": "This link is no longer valid or has expired. Log in below and use the resend option.",
+    "passwordMinLength": "Password must be at least 8 characters."
   },
   "userPanel": {
     "title": "My Dashboard",

@@ -107,11 +107,13 @@ const THICKNESS_PL: Record<string, string> = {
 };
 function translateColor(v?: string | null): string | null {
   if (!v) return null;
-  return COLOR_PL[v.toLowerCase()] ?? v;
+  if (i18next.language === "pl") return COLOR_PL[v.toLowerCase()] ?? v;
+  return v;
 }
 function translateThickness(v?: string | null): string | null {
   if (!v) return null;
-  return THICKNESS_PL[v.toLowerCase()] ?? THICKNESS_PL[v] ?? v;
+  if (i18next.language === "pl") return THICKNESS_PL[v.toLowerCase()] ?? THICKNESS_PL[v] ?? v;
+  return v;
 }
 
 const QUALITY_AU_MULTIPLIER: Record<number, number> = {
@@ -1093,7 +1095,7 @@ export function PhotoAnalysisPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? `Błąd serwera (${response.status})`);
+        throw new Error(data.error ?? `${i18next.t("analysis.serverError")} (${response.status})`);
       }
 
       const parsed = data as VisionResultSet;
@@ -1216,7 +1218,7 @@ export function PhotoAnalysisPage() {
             <div className="flex items-center gap-3">
               <div className="relative w-20 h-20 rounded-md overflow-hidden border border-border shrink-0 bg-muted">
                 {preview && (
-                  <img src={preview} alt="Podgląd" className="w-full h-full object-cover" />
+                  <img src={preview} alt={i18next.t("analysis.preview") as string} className="w-full h-full object-cover" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
