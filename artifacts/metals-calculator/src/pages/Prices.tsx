@@ -7,7 +7,8 @@ import {
   getGetMetalPricesHistoryQueryKey,
 } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatCurrencyEur } from "@/lib/format";
+import { useLanguage } from "@/hooks/useLanguage";
 import { Clock, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -46,6 +47,8 @@ interface ChartTooltipProps {
 
 function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
+  const isEn = i18next.language === "en";
+  const fmt = isEn ? formatCurrencyEur : formatCurrency;
   return (
     <div className="bg-card border border-border rounded-md p-3 shadow-lg text-sm">
       <div className="text-muted-foreground text-xs mb-2">{label}</div>
@@ -53,15 +56,19 @@ function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
         <div key={entry.name} className="flex items-center gap-2 mb-1">
           <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: entry.color }} />
           <span className="font-mono font-bold" style={{ color: entry.color }}>{entry.name}</span>
-          <span className="font-mono text-foreground ml-auto pl-3">{formatCurrency(entry.value)}/g</span>
+          <span className="font-mono text-foreground ml-auto pl-3">{fmt(entry.value)}/g</span>
         </div>
       ))}
     </div>
   );
 }
 
+const EUR_PLN_FALLBACK = 4.25;
+
 export function PricesPage() {
   const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const isEn = lang === "en";
 
   const FINENESS: Record<string, { label: string; value: number }[]> = {
     Au: [
@@ -123,6 +130,10 @@ export function PricesPage() {
     }
   );
 
+  const eurRate = prices?.eurRate ?? EUR_PLN_FALLBACK;
+  const toDisplay = (pln: number) => isEn ? pln / eurRate : pln;
+  const fmtDisplay = (pln: number) => isEn ? formatCurrencyEur(toDisplay(pln)) : formatCurrency(pln);
+
   const spotPrice = (metal: string): number | null => {
     if (!prices) return null;
     return (prices[metal as keyof typeof prices] as number) ?? null;
@@ -150,10 +161,10 @@ export function PricesPage() {
     history?.map((point) => ({
       date: formatDateLabel(point.date),
       rawDate: point.date,
-      Au: point.Au,
-      Ag: point.Ag,
-      Pt: point.Pt,
-      Pd: point.Pd,
+      Au: isEn ? point.Au / eurRate : point.Au,
+      Ag: isEn ? point.Ag / eurRate : point.Ag,
+      Pt: isEn ? point.Pt / eurRate : point.Pt,
+      Pd: isEn ? point.Pd / eurRate : point.Pd,
     })) ?? [];
 
   const computeYDomain = (): [number, number] => {
@@ -208,7 +219,7 @@ export function PricesPage() {
                     <Skeleton className="h-7 w-28" />
                   ) : (
                     <div className="text-2xl font-bold tracking-tight font-mono">
-                      {spot != null ? formatCurrency(spot) : "—"}
+                      {spot != null ? fmtDisplay(spot) : "—"}
                     </div>
                   )}
                   <div className="text-xs text-muted-foreground">{t("prices.perGram")}</div>
@@ -237,7 +248,7 @@ export function PricesPage() {
                     <Skeleton className="h-6 w-24" />
                   ) : (
                     <div className="text-lg font-bold font-mono text-primary">
-                      {priceAtProba != null ? formatCurrency(priceAtProba) : "—"}
+                      {priceAtProba != null ? fmtDisplay(priceAtProba) : "—"}
                     </div>
                   )}
                   <div className="text-[10px] text-muted-foreground">{t("prices.perGramAlloy")}</div>
@@ -330,8 +341,8 @@ export function PricesPage() {
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(v) => `${v}`}
-                    width={48}
+                    tickFormatter={(v) => isEn ? formatCurrencyEur(v) : `${v}`}
+                    width={isEn ? 72 : 48}
                   />
                   <Tooltip content={<ChartTooltip />} />
                   {ALL_METALS.filter((m) => visibleMetals.has(m)).map((metal) => (

@@ -11,6 +11,15 @@ export const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+export const formatCurrencyEur = (value: number) => {
+  return new Intl.NumberFormat(getLocale(), {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
 export const formatMass = (value: number, unit: 'g' | 'kg' | 'pieces' = 'g') => {
   if (unit === 'pieces') {
     return `${value} ${i18next.language === "en" ? "pcs." : "szt."}`;

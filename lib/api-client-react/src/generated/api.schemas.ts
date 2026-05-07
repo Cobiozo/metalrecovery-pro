@@ -34,6 +34,8 @@ export interface MetalPrices {
   updatedAt: string;
   /** Data source name */
   source: string;
+  /** EUR/PLN exchange rate from NBP */
+  eurRate?: number;
 }
 
 export type MetalContentAu = {

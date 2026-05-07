@@ -27,6 +27,7 @@ interface MetalPrices {
   Pd: number;
   updatedAt: string;
   source: string;
+  eurRate: number;
 }
 
 interface PerMetalPrices {
@@ -150,8 +151,12 @@ async function fetchFromFrankfurterAPI(usdToPln: number): Promise<PerMetalPrices
 }
 
 async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
-  const usdToPlnRate = await fetchNBPExchangeRate("usd");
+  const [usdToPlnRate, eurToPlnRate] = await Promise.all([
+    fetchNBPExchangeRate("usd"),
+    fetchNBPExchangeRate("eur"),
+  ]);
   const usdToPln = usdToPlnRate ?? 4.0;
+  const eurToPln = eurToPlnRate ?? 4.25;
 
   const [nbpGold, openMetals, frankfurterMetals, stooqMetals] = await Promise.all([
     fetchNBPGoldPerGram(),
@@ -196,6 +201,7 @@ async function fetchMetalPricesFromNBP(): Promise<MetalPrices> {
     Pd: Math.round(pdPerGram * 100) / 100,
     updatedAt: new Date().toISOString(),
     source: sources.join(" + "),
+    eurRate: Math.round(eurToPln * 10000) / 10000,
   };
 }
 

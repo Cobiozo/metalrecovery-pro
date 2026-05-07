@@ -72063,8 +72063,12 @@ async function fetchFromFrankfurterAPI(usdToPln) {
   return result;
 }
 async function fetchMetalPricesFromNBP() {
-  const usdToPlnRate = await fetchNBPExchangeRate("usd");
+  const [usdToPlnRate, eurToPlnRate] = await Promise.all([
+    fetchNBPExchangeRate("usd"),
+    fetchNBPExchangeRate("eur")
+  ]);
   const usdToPln = usdToPlnRate ?? 4;
+  const eurToPln = eurToPlnRate ?? 4.25;
   const [nbpGold, openMetals, frankfurterMetals, stooqMetals] = await Promise.all([
     fetchNBPGoldPerGram(),
     fetchFromOpenMetals(usdToPln),
@@ -72087,7 +72091,8 @@ async function fetchMetalPricesFromNBP() {
     Pt: Math.round(ptPerGram * 100) / 100,
     Pd: Math.round(pdPerGram * 100) / 100,
     updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-    source: sources.join(" + ")
+    source: sources.join(" + "),
+    eurRate: Math.round(eurToPln * 1e4) / 1e4
   };
 }
 async function getOrFetchPrices() {
