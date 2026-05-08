@@ -1,5 +1,11 @@
 Options -MultiViews
 RewriteEngine On
+
+# Bot detection: redirect /analiza/:id to OG meta endpoint
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Slackbot|Discordbot|SkypeUriPreview|vkShare|Googlebot|bingbot) [NC]
+RewriteRule ^analiza/([^/]+)/?$ /api/vision/og/analiza/$1 [L,R=302]
+
+# SPA fallback: serve index.html for all non-file paths
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

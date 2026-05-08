@@ -523,6 +523,77 @@ router.post("/share", async (req: Request, res: Response) => {
   res.json({ shareId });
 });
 
+// GET /vision/og/analiza/:shareId — Open Graph HTML for bots (Facebook, WhatsApp, Telegram etc.)
+router.get("/og/analiza/:shareId", async (req: Request, res: Response) => {
+  const shareId = req.params.shareId;
+  const shareUrl = `https://metalrecovery.online/analiza/${shareId}`;
+  const ogImage = "https://metalrecovery.online/og-preview-v2.jpg";
+
+  let ogTitle = "Analiza AI — MetalRecovery Pro";
+  let ogDesc = "Precyzyjne szacowanie odzysku złota, srebra, platyny i palladu z e-odpadów.";
+
+  try {
+    const [share] = await db
+      .select()
+      .from(analysisSharesTable)
+      .where(eq(analysisSharesTable.id, shareId))
+      .limit(1);
+
+    if (share && (!share.expiresAt || share.expiresAt > new Date())) {
+      const result = JSON.parse(share.resultJson) as {
+        items?: Array<{ materialType?: string; au?: number; ag?: number; pt?: number; pd?: number; quantity?: number }>;
+      };
+      const items = result.items ?? [];
+      if (items.length > 0) {
+        const first = items[0];
+        const name = first.materialType ?? "Materiał";
+        const metals = [
+          first.au != null ? `Au ${first.au} g/kg` : null,
+          first.ag != null ? `Ag ${first.ag} g/kg` : null,
+          first.pt != null && first.pt > 0 ? `Pt ${first.pt} g/kg` : null,
+          first.pd != null && first.pd > 0 ? `Pd ${first.pd} g/kg` : null,
+        ].filter(Boolean).join(" · ");
+        const extra = items.length > 1 ? ` (+${items.length - 1} więcej)` : "";
+        ogTitle = `${name}${extra} — analiza AI | MetalRecovery Pro`;
+        ogDesc = metals ? `${metals}. Analiza wykonana przez MetalRecovery Pro — kalkulator odzysku metali szlachetnych z e-odpadów.` : ogDesc;
+      }
+    }
+  } catch {
+    // fall through to defaults
+  }
+
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<title>${esc(ogTitle)}</title>
+<meta name="description" content="${esc(ogDesc)}" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="${esc(shareUrl)}" />
+<meta property="og:site_name" content="MetalRecovery Pro" />
+<meta property="og:title" content="${esc(ogTitle)}" />
+<meta property="og:description" content="${esc(ogDesc)}" />
+<meta property="og:image" content="${ogImage}" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="${esc(ogTitle)}" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${esc(ogTitle)}" />
+<meta name="twitter:description" content="${esc(ogDesc)}" />
+<meta name="twitter:image" content="${ogImage}" />
+<meta http-equiv="refresh" content="0;url=${esc(shareUrl)}" />
+<script>window.location.replace(${JSON.stringify(shareUrl)});</script>
+</head>
+<body><a href="${esc(shareUrl)}">${esc(ogTitle)}</a></body>
+</html>`;
+
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.send(html);
+});
+
 // GET /vision/share/:id — load saved analysis result
 router.get("/share/:id", async (req: Request, res: Response) => {
   const [share] = await db

@@ -83336,6 +83336,63 @@ router6.post("/share", async (req, res) => {
   await db.insert(analysisSharesTable).values({ id: shareId, resultJson, expiresAt });
   res.json({ shareId });
 });
+router6.get("/og/analiza/:shareId", async (req, res) => {
+  const shareId = req.params.shareId;
+  const shareUrl = `https://metalrecovery.online/analiza/${shareId}`;
+  const ogImage = "https://metalrecovery.online/og-preview-v2.jpg";
+  let ogTitle = "Analiza AI \u2014 MetalRecovery Pro";
+  let ogDesc = "Precyzyjne szacowanie odzysku z\u0142ota, srebra, platyny i palladu z e-odpad\xF3w.";
+  try {
+    const [share] = await db.select().from(analysisSharesTable).where(eq(analysisSharesTable.id, shareId)).limit(1);
+    if (share && (!share.expiresAt || share.expiresAt > /* @__PURE__ */ new Date())) {
+      const result = JSON.parse(share.resultJson);
+      const items = result.items ?? [];
+      if (items.length > 0) {
+        const first = items[0];
+        const name2 = first.materialType ?? "Materia\u0142";
+        const metals = [
+          first.au != null ? `Au ${first.au} g/kg` : null,
+          first.ag != null ? `Ag ${first.ag} g/kg` : null,
+          first.pt != null && first.pt > 0 ? `Pt ${first.pt} g/kg` : null,
+          first.pd != null && first.pd > 0 ? `Pd ${first.pd} g/kg` : null
+        ].filter(Boolean).join(" \xB7 ");
+        const extra = items.length > 1 ? ` (+${items.length - 1} wi\u0119cej)` : "";
+        ogTitle = `${name2}${extra} \u2014 analiza AI | MetalRecovery Pro`;
+        ogDesc = metals ? `${metals}. Analiza wykonana przez MetalRecovery Pro \u2014 kalkulator odzysku metali szlachetnych z e-odpad\xF3w.` : ogDesc;
+      }
+    }
+  } catch {
+  }
+  const esc2 = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<title>${esc2(ogTitle)}</title>
+<meta name="description" content="${esc2(ogDesc)}" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="${esc2(shareUrl)}" />
+<meta property="og:site_name" content="MetalRecovery Pro" />
+<meta property="og:title" content="${esc2(ogTitle)}" />
+<meta property="og:description" content="${esc2(ogDesc)}" />
+<meta property="og:image" content="${ogImage}" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="${esc2(ogTitle)}" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="${esc2(ogTitle)}" />
+<meta name="twitter:description" content="${esc2(ogDesc)}" />
+<meta name="twitter:image" content="${ogImage}" />
+<meta http-equiv="refresh" content="0;url=${esc2(shareUrl)}" />
+<script>window.location.replace(${JSON.stringify(shareUrl)});</script>
+</head>
+<body><a href="${esc2(shareUrl)}">${esc2(ogTitle)}</a></body>
+</html>`;
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.send(html);
+});
 router6.get("/share/:id", async (req, res) => {
   const [share] = await db.select().from(analysisSharesTable).where(eq(analysisSharesTable.id, req.params.id)).limit(1);
   if (!share) {
