@@ -111,6 +111,8 @@ export function PricesPage() {
     },
   });
 
+  const SPOT_FINENESS: Record<string, number> = { Au: 999.9, Ag: 999, Pt: 950, Pd: 950 };
+
   const [selected, setSelected] = useState<Record<string, number>>({
     Au: 999.9, Ag: 999, Pt: 950, Pd: 950,
   });
@@ -142,7 +144,8 @@ export function PricesPage() {
   const calcPrice = (metal: string): number | null => {
     const spot = spotPrice(metal);
     if (spot == null) return null;
-    return spot * (selected[metal] / 1000);
+    const spotFine = SPOT_FINENESS[metal] ?? 1000;
+    return spot * (selected[metal] / spotFine);
   };
 
   const toggleMetal = (metal: string) => {
@@ -240,19 +243,21 @@ export function PricesPage() {
                   </select>
                 </div>
 
-                <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2">
-                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                    {t("prices.priceAtFineness")} {proba}
-                  </div>
-                  {isLoading ? (
-                    <Skeleton className="h-6 w-24" />
-                  ) : (
-                    <div className="text-lg font-bold font-mono text-primary">
-                      {priceAtProba != null ? fmtDisplay(priceAtProba) : "—"}
+                {proba !== SPOT_FINENESS[metal] && (
+                  <div className="bg-primary/5 border border-primary/20 rounded-md px-3 py-2">
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+                      {t("prices.priceAtFineness")} {proba}
                     </div>
-                  )}
-                  <div className="text-[10px] text-muted-foreground">{t("prices.perGramAlloy")}</div>
-                </div>
+                    {isLoading ? (
+                      <Skeleton className="h-6 w-24" />
+                    ) : (
+                      <div className="text-lg font-bold font-mono text-primary">
+                        {priceAtProba != null ? fmtDisplay(priceAtProba) : "—"}
+                      </div>
+                    )}
+                    <div className="text-[10px] text-muted-foreground">{t("prices.perGramAlloy")}</div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           );
