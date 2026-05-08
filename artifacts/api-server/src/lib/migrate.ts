@@ -126,5 +126,15 @@ export async function ensureSchema(): Promise<void> {
     )
   `);
 
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS analysis_shares (
+      id TEXT PRIMARY KEY,
+      result_json TEXT NOT NULL,
+      photo_data_url TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at TIMESTAMPTZ
+    )
+  `);
+
   console.log("[migrate] Schema OK");
 }

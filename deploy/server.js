@@ -30150,7 +30150,7 @@ var require_utils_webcrypto = __commonJS({
     var nodeCrypto = require("crypto");
     module2.exports = {
       postgresMd5PasswordHash,
-      randomBytes,
+      randomBytes: randomBytes2,
       deriveKey,
       sha256,
       hashByName,
@@ -30160,7 +30160,7 @@ var require_utils_webcrypto = __commonJS({
     var webCrypto = nodeCrypto.webcrypto || globalThis.crypto;
     var subtleCrypto = webCrypto.subtle;
     var textEncoder = new TextEncoder();
-    function randomBytes(length) {
+    function randomBytes2(length) {
       return webCrypto.getRandomValues(Buffer.alloc(length));
     }
     async function md5(string4) {
@@ -50664,12 +50664,29 @@ var init_visionPromptRules = __esm({
   }
 });
 
+// ../../lib/db/src/schema/analysisShares.ts
+var analysisSharesTable;
+var init_analysisShares = __esm({
+  "../../lib/db/src/schema/analysisShares.ts"() {
+    "use strict";
+    init_pg_core();
+    analysisSharesTable = pgTable("analysis_shares", {
+      id: text("id").primaryKey(),
+      resultJson: text("result_json").notNull(),
+      photoDataUrl: text("photo_data_url"),
+      createdAt: timestamp("created_at").notNull().defaultNow(),
+      expiresAt: timestamp("expires_at")
+    });
+  }
+});
+
 // ../../lib/db/src/schema/index.ts
 var schema_exports = {};
 __export(schema_exports, {
   SETTINGS_KEYS: () => SETTINGS_KEYS,
   STAT_METRICS: () => STAT_METRICS,
   aiAnalysisLogsTable: () => aiAnalysisLogsTable,
+  analysisSharesTable: () => analysisSharesTable,
   emailVerificationsTable: () => emailVerificationsTable,
   insertUserSchema: () => insertUserSchema,
   metalPriceHistoryTable: () => metalPriceHistoryTable,
@@ -50694,6 +50711,7 @@ var init_schema2 = __esm({
     init_visitLogs();
     init_visionCorrections();
     init_visionPromptRules();
+    init_analysisShares();
   }
 });
 
@@ -50703,6 +50721,7 @@ __export(src_exports, {
   SETTINGS_KEYS: () => SETTINGS_KEYS,
   STAT_METRICS: () => STAT_METRICS,
   aiAnalysisLogsTable: () => aiAnalysisLogsTable,
+  analysisSharesTable: () => analysisSharesTable,
   db: () => db,
   emailVerificationsTable: () => emailVerificationsTable,
   insertUserSchema: () => insertUserSchema,
@@ -66983,6 +67002,15 @@ async function ensureSchema() {
       sort_order INTEGER NOT NULL DEFAULT 0
     )
   `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS analysis_shares (
+      id TEXT PRIMARY KEY,
+      result_json TEXT NOT NULL,
+      photo_data_url TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at TIMESTAMPTZ
+    )
+  `);
   console.log("[migrate] Schema OK");
 }
 var init_migrate = __esm({
@@ -67066,7 +67094,7 @@ __export(auth_exports, {
   default: () => auth_default
 });
 function generateToken(len = 48) {
-  return import_crypto.default.randomBytes(len).toString("hex");
+  return import_crypto2.default.randomBytes(len).toString("hex");
 }
 function sessionExpiry() {
   const d = /* @__PURE__ */ new Date();
@@ -67087,13 +67115,13 @@ async function getApiUrl(req) {
   if (saved) return saved.replace(/\/+$/, "");
   return deriveApiBaseUrl(req);
 }
-var import_express7, import_bcrypt, import_crypto, router7, SESSION_DURATION_DAYS, auth_default;
+var import_express7, import_bcrypt, import_crypto2, router7, SESSION_DURATION_DAYS, auth_default;
 var init_auth2 = __esm({
   "src/routes/auth.ts"() {
     "use strict";
     import_express7 = __toESM(require_express2(), 1);
     import_bcrypt = __toESM(require("bcrypt"), 1);
-    import_crypto = __toESM(require("crypto"), 1);
+    import_crypto2 = __toESM(require("crypto"), 1);
     init_src();
     init_schema2();
     init_drizzle_orm();
@@ -75703,6 +75731,7 @@ var import_express6 = __toESM(require_express2(), 1);
 init_src();
 init_schema2();
 init_drizzle_orm();
+var import_crypto = require("crypto");
 init_stats();
 init_auth();
 var import_multer = __toESM(require_multer(), 1);
@@ -83261,13 +83290,6 @@ CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified i
       return;
     }
     for (const item of validated.data.items) {
-      for (const pt of item.individualBoxes ?? []) {
-        const cy = pt.cy;
-        const correction = (cy / 100) ** 2 * 20;
-        pt.cy = Math.max(1, Math.min(99, Math.round(cy - correction)));
-      }
-    }
-    for (const item of validated.data.items) {
       const boxCount = item.individualBoxes?.length ?? 0;
       if (boxCount > 0 && item.quantity !== boxCount) {
         item.quantity = boxCount;
@@ -83293,6 +83315,24 @@ CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified i
     res.json(validated.data);
   }
 );
+router6.post("/share", async (req, res) => {
+  const { resultJson } = req.body ?? {};
+  if (!resultJson || typeof resultJson !== "string") {
+    res.status(400).json({ error: "resultJson required" });
+    return;
+  }
+  const shareId = (0, import_crypto.randomBytes)(6).toString("base64url");
+  await db.insert(analysisSharesTable).values({ id: shareId, resultJson });
+  res.json({ shareId });
+});
+router6.get("/share/:id", async (req, res) => {
+  const [share] = await db.select().from(analysisSharesTable).where(eq(analysisSharesTable.id, req.params.id)).limit(1);
+  if (!share) {
+    res.status(404).json({ error: "Nie znaleziono analizy." });
+    return;
+  }
+  res.json({ resultJson: share.resultJson, createdAt: share.createdAt });
+});
 router6.post("/correction", requireAuth, async (req, res) => {
   const { aiMaterialType, correctMaterialType, correctionNote, imageDescription } = req.body ?? {};
   if (!aiMaterialType || !correctMaterialType) {

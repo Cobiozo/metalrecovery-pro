@@ -9,7 +9,7 @@ import { CalculatorPage } from "@/pages/Calculator";
 import { PricesPage } from "@/pages/Prices";
 import { ProcessesPage } from "@/pages/Processes";
 import { PurchaseCalculatorPage } from "@/pages/PurchaseCalculator";
-import { PhotoAnalysisPage } from "@/pages/PhotoAnalysis";
+import { PhotoAnalysisPage, SharedAnalysisPage } from "@/pages/PhotoAnalysis";
 import { LoginPage } from "@/pages/Login";
 import { AdminPage } from "@/pages/Admin";
 import { UserPanelPage } from "@/pages/UserPanel";
@@ -42,6 +42,7 @@ function Router() {
             <Route path="/kursy" component={PricesPage} />
             <Route path="/procesy" component={ProcessesPage} />
             <Route path="/skup" component={PurchaseCalculatorPage} />
+            <Route path="/analiza/:id" component={SharedAnalysisPage} />
             <Route path="/analiza" component={PhotoAnalysisPage} />
             <Route path="/panel" component={UserPanelPage} />
             <Route path="/admin" component={AdminPage} />

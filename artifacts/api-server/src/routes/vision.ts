@@ -1,7 +1,8 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable, aiAnalysisLogsTable, visionCorrectionsTable, visionPromptRulesTable } from "@workspace/db/schema";
+import { usersTable, aiAnalysisLogsTable, visionCorrectionsTable, visionPromptRulesTable, analysisSharesTable } from "@workspace/db/schema";
 import { eq, sql, desc, asc } from "drizzle-orm";
+import { randomBytes } from "crypto";
 import { incrementStat, STAT_METRICS } from "../lib/stats";
 import { resolveUser, requireAuth, type AuthRequest } from "../middlewares/auth";
 import multer from "multer";
@@ -457,16 +458,8 @@ CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified i
       return;
     }
 
-    // Correct systematic downward bias: AI overestimates cy for items in the lower
-    // portion of tall portrait images. Bias follows a quadratic pattern:
-    // delta ≈ (cy/100)^2 * 20.  Applied to cy only; cx errors are minor.
-    for (const item of validated.data.items) {
-      for (const pt of item.individualBoxes ?? []) {
-        const cy = pt.cy;
-        const correction = (cy / 100) ** 2 * 20;
-        pt.cy = Math.max(1, Math.min(99, Math.round(cy - correction)));
-      }
-    }
+    // No cy correction — AI coordinates are used as-is (previous quadratic
+    // correction caused systematic upward shift as reported by users).
 
     // Reconcile: align quantity to actual marker count so UI stays consistent
     for (const item of validated.data.items) {
@@ -506,6 +499,32 @@ CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified i
     res.json(validated.data);
   },
 );
+
+// POST /vision/share — save analysis result, return shareId (no auth required)
+router.post("/share", async (req: Request, res: Response) => {
+  const { resultJson } = req.body ?? {};
+  if (!resultJson || typeof resultJson !== "string") {
+    res.status(400).json({ error: "resultJson required" });
+    return;
+  }
+  const shareId = randomBytes(6).toString("base64url");
+  await db.insert(analysisSharesTable).values({ id: shareId, resultJson });
+  res.json({ shareId });
+});
+
+// GET /vision/share/:id — load saved analysis result
+router.get("/share/:id", async (req: Request, res: Response) => {
+  const [share] = await db
+    .select()
+    .from(analysisSharesTable)
+    .where(eq(analysisSharesTable.id, req.params.id))
+    .limit(1);
+  if (!share) {
+    res.status(404).json({ error: "Nie znaleziono analizy." });
+    return;
+  }
+  res.json({ resultJson: share.resultJson, createdAt: share.createdAt });
+});
 
 // POST /vision/correction — authenticated users submit a correction for a misclassified item
 router.post("/correction", requireAuth, async (req: AuthRequest, res: Response) => {

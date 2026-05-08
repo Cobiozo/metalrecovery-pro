@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useRoute } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -910,7 +910,7 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
 
   return (
     <div className="rounded-xl border border-border overflow-y-auto" style={{ maxHeight: "75vh" }}>
-      <div className="relative" style={{ lineHeight: 0, fontSize: 0 }}>
+      <div className="relative" style={{ lineHeight: 0 }}>
       <img
         src={photoUrl}
         alt={i18next.t("analysis.analysisResultAlt") as string}
@@ -955,7 +955,7 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
                 <span style={{
                   position: "absolute",
                   // near top → show below dot; near bottom → show above; default above
-                  top: pcy < 12 ? "1.1em" : "-1.7em",
+                  top: pcy < 12 ? "14px" : "-22px",
                   // near right edge → align right; otherwise center
                   left: pcx > 80 ? "auto" : "50%",
                   right: pcx > 80 ? "0" : "auto",
@@ -1097,6 +1097,7 @@ export function PhotoAnalysisPage() {
   const [error, setError] = useState<string | null>(null);
   const [saveItem, setSaveItem] = useState<VisionItem | null>(null);
   const [analysisCorrectionOpen, setAnalysisCorrectionOpen] = useState(false);
+  const [shareId, setShareId] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${getVisionApiBase()}/vision/status`)
@@ -1190,10 +1191,18 @@ export function PhotoAnalysisPage() {
 
       const parsed = data as VisionResultSet;
       setResult(parsed);
+      setShareId(null);
       setEditedQuantities(parsed.items.map((i: VisionItem) => {
         if (i.massGrams != null && i.massGrams > 0) return i.massGrams / 1000;
         return Math.max(0, i.quantity || 0);
       }));
+      fetch(`${getVisionApiBase()}/vision/share`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resultJson: JSON.stringify(parsed) }),
+      }).then((r) => r.json()).then((d: { shareId?: string }) => {
+        if (d.shareId) setShareId(d.shareId);
+      }).catch(() => {});
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : t("analysis.correction.unknownError");
       setError(msg);
@@ -1399,6 +1408,9 @@ export function PhotoAnalysisPage() {
               <button
                 type="button"
                 onClick={() => {
+                  const shareUrl = shareId
+                    ? `https://metalrecovery.online/analiza/${shareId}`
+                    : "https://metalrecovery.online/analiza";
                   const lines = result.items.map((item) => {
                     const au = item.metalContent.Au.value_g_per_kg.toFixed(1);
                     const ag = item.metalContent.Ag.value_g_per_kg.toFixed(1);
@@ -1406,11 +1418,11 @@ export function PhotoAnalysisPage() {
                     const pd = item.metalContent.Pd.value_g_per_kg.toFixed(2);
                     return `${displayMaterialType(item.materialType)}\nAu ${au} g/kg · Ag ${ag} g/kg · Pt ${pt} g/kg · Pd ${pd} g/kg`;
                   });
-                  const text = `🔬 MetalRecovery Analysis\n\n${lines.join("\n\n")}\n\nhttps://metalrecovery.online/analiza`;
+                  const text = `🔬 MetalRecovery Analysis\n\n${lines.join("\n\n")}\n\n${shareUrl}`;
                   if (navigator.share) {
-                    navigator.share({ title: "MetalRecovery Analysis", text }).catch(() => {});
+                    navigator.share({ title: "MetalRecovery Analysis", text, url: shareUrl }).catch(() => {});
                   } else {
-                    navigator.clipboard.writeText(text).then(() => {
+                    navigator.clipboard.writeText(shareUrl).then(() => {
                       toast({ title: t("analysis.shareCopied") });
                     });
                   }
@@ -1552,6 +1564,108 @@ export function PhotoAnalysisPage() {
             : undefined
         }
       />
+    </div>
+  );
+}
+
+export function SharedAnalysisPage() {
+  const [, params] = useRoute("/analiza/:id");
+  const shareId = params?.id ?? "";
+  const [, navigate] = useLocation();
+  const { t } = useTranslation();
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<VisionResultSet | null>(null);
+  const [editedQuantities, setEditedQuantities] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!shareId) return;
+    setLoading(true);
+    fetch(`${getVisionApiBase()}/vision/share/${encodeURIComponent(shareId)}`)
+      .then((r) => r.json())
+      .then((d: { resultJson?: string; error?: string }) => {
+        if (d.error || !d.resultJson) throw new Error(d.error ?? "Not found");
+        const parsed = JSON.parse(d.resultJson) as VisionResultSet;
+        setResult(parsed);
+        setEditedQuantities(parsed.items.map((i) => {
+          if (i.massGrams != null && i.massGrams > 0) return i.massGrams / 1000;
+          return Math.max(0, i.quantity || 0);
+        }));
+      })
+      .catch((err) => setError(err instanceof Error ? err.message : "Błąd"))
+      .finally(() => setLoading(false));
+  }, [shareId]);
+
+  const { add } = useCustomMaterials();
+
+  const handleSendToCalc = () => {
+    if (!result) return;
+    result.items.forEach((item, idx) => {
+      const qty = editedQuantities[idx] ?? Math.max(0, item.quantity || 0);
+      add({
+        name: item.materialType,
+        au: item.metalContent.Au.value_g_per_kg,
+        ag: item.metalContent.Ag.value_g_per_kg,
+        pt: item.metalContent.Pt.value_g_per_kg,
+        pd: item.metalContent.Pd.value_g_per_kg,
+        notes: `MetalRecovery AI · ${new Date().toLocaleDateString()} · qty: ${qty}`,
+      });
+    });
+    navigate("/");
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div className="flex items-center gap-3 mb-2">
+        <button
+          type="button"
+          onClick={() => navigate("/analiza")}
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← {t("analysis.title")}
+        </button>
+        <h1 className="text-xl font-bold">{t("analysis.sharedResultTitle", "Udostępniona analiza")}</h1>
+      </div>
+
+      {loading && (
+        <div className="text-center py-12 text-muted-foreground">{t("common.loading", "Ładowanie…")}</div>
+      )}
+
+      {error && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 text-destructive text-sm">
+          {error}
+        </div>
+      )}
+
+      {result && (
+        <>
+          {result.items.map((item, idx) => (
+            <VisionResultCard
+              key={idx}
+              result={item}
+              onSaveProfile={() => {}}
+              onQuantityChange={(qty) => {
+                setEditedQuantities((prev) => {
+                  const next = [...prev];
+                  next[idx] = qty;
+                  return next;
+                });
+              }}
+              initialMassKg={item.massGrams != null && item.massGrams > 0 ? item.massGrams / 1000 : null}
+            />
+          ))}
+          <div className="flex justify-center gap-3 flex-wrap pt-2">
+            <button
+              type="button"
+              onClick={handleSendToCalc}
+              className="flex items-center gap-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black transition-all rounded-lg px-5 py-2.5"
+            >
+              {t("analysis.sendToCalc")}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

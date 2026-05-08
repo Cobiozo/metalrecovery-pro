@@ -8,3 +8,4 @@ export * from "./aiAnalysisLogs";
 export * from "./visitLogs";
 export * from "./visionCorrections";
 export * from "./visionPromptRules";
+export * from "./analysisShares";
