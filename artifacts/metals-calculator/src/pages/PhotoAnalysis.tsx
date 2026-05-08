@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useLocation, useRoute } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -1570,8 +1570,9 @@ export function PhotoAnalysisPage() {
   );
 }
 
-export function SharedAnalysisPage({ id }: { id?: string }) {
-  const shareId = id ?? "";
+export function SharedAnalysisPage() {
+  const params = useParams<{ id: string }>();
+  const shareId = params?.id ?? "";
   const [, navigate] = useLocation();
   const { t } = useTranslation();
 
@@ -1582,7 +1583,11 @@ export function SharedAnalysisPage({ id }: { id?: string }) {
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
 
   useEffect(() => {
-    if (!shareId) return;
+    if (!shareId) {
+      setLoading(false);
+      setError("Brak identyfikatora analizy.");
+      return;
+    }
     setLoading(true);
     fetch(`${getVisionApiBase()}/vision/share/${encodeURIComponent(shareId)}`)
       .then(async (r) => {
