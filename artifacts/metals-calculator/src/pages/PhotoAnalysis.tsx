@@ -492,7 +492,7 @@ const BATTERY_SEP_DATA = [
     batteryTypeEn: "Li-Ion (smartphones, ~3.8 V, 3000–5000 mAh)",
   },
   {
-    matchPl: /telefon.*klawiatur.*z bateri/i,
+    matchPl: /(klawisz|klawiatur).*z bater/i,
     matchEn: /feature phone.*with batter/i,
     bodyAu: 0.35, bodyAg: 1.30, bodyPt: 0.001, bodyPd: 0.030,
     batteryFraction: 0.18,

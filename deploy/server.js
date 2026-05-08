@@ -73400,7 +73400,7 @@ var electronicMaterials = [
   },
   {
     id: "phone_klawiat_bez_bat",
-    name: "Telefony klawiaturowe (bez baterii)",
+    name: "Telefony klawiszowe (bez baterii)",
     nameEn: "Feature phones (no battery)",
     category: "urzadzenie",
     unit: "kg",
@@ -73418,7 +73418,7 @@ var electronicMaterials = [
   },
   {
     id: "phone_klawiat_z_bat",
-    name: "Telefony klawiaturowe (z bateriami)",
+    name: "Telefony klawiszowe (z bateriami)",
     nameEn: "Feature phones (with battery)",
     category: "urzadzenie",
     unit: "kg",
