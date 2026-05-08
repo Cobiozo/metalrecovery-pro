@@ -248,12 +248,12 @@ export const electronicMaterials = [
     chemFraction: 0.65,
     catalogHint: "L-shaped or C-shaped gold-plated metal connector bracket (70-100mm long), narrow slot in the middle where a SIMM module slides in, rows of tiny gold-plated spring contacts inside — pulled from old motherboard or expansion card — NOT a modern DIMM slot",
     metalContentPerKg: {
-      Au: { min: 0.8, max: 3.5, typical: 1.8 },
-      Ag: { min: 0.3, max: 1.5, typical: 0.7 },
-      Pt: { min: 0.0, max: 0.005, typical: 0.001 },
-      Pd: { min: 0.010, max: 0.08, typical: 0.035 },
+      Au: { min: 0.5, max: 2.5, typical: 1.2 },
+      Ag: { min: 0.2, max: 1.0, typical: 0.45 },
+      Pt: { min: 0.0, max: 0.003, typical: 0.001 },
+      Pd: { min: 0.008, max: 0.05, typical: 0.025 },
     },
-    notes: "Złącza slotów SIMM (30-pin i 72-pin) wyjęte z płyt głównych i kart pamięci (era ISA/486/Pentium, lata 1988-1998). Kontakty sprężynowe Au/Ni (~10-20 µin Au). chemFraction=0.65 — mosiężne piny i okucia metalowe ~65% masy; izolator plastikowy/ceramiczny ~35%. Wartości metalContent uwzględniają pełną masę (metal+plastik).",
+    notes: "Złącza slotów SIMM (30-pin i 72-pin) wyjęte z płyt głównych i kart pamięci (era ISA/486/Pentium, lata 1988-1998). Kontakty sprężynowe Au/Ni (~10-20 µin Au). chemFraction=0.65 — mosiężne piny i okucia metalowe ~65% masy; izolator plastikowy/ceramiczny ~35%. Wartości metalContent uwzględniają pełną masę (metal+plastik). UWAGA: wczesne 30-pin (1988-1993) osiągają 1,5-2,5 g/kg; późne 72-pin (1994-1998) często tylko 0,5-1,0 g/kg przez cieńsze złocenie i większy udział plastiku — mieszana partia realistycznie 0,8-1,3 g/kg.",
   },
   {
     id: "ic_socket_mixed",
