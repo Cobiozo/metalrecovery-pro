@@ -1570,9 +1570,8 @@ export function PhotoAnalysisPage() {
   );
 }
 
-export function SharedAnalysisPage() {
-  const [, params] = useRoute("/analiza/:id");
-  const shareId = params?.id ?? "";
+export function SharedAnalysisPage({ id }: { id?: string }) {
+  const shareId = id ?? "";
   const [, navigate] = useLocation();
   const { t } = useTranslation();
 
