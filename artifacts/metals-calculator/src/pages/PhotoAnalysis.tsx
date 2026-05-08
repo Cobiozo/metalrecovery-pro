@@ -4,12 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import {
   Camera, Upload, ScanLine, Loader2, AlertTriangle, Info,
   FlaskConical, Star, CheckCircle2, XCircle, Sparkles,
   ChevronRight, ImageIcon, RotateCcw, ShoppingCart, Calculator, Scale,
-  Flag, ChevronsUpDown, Check, Share2,
+  Flag, ChevronsUpDown, Check, Share2, Battery, Zap,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -481,6 +482,40 @@ function CorrectionDialog({
   );
 }
 
+const BATTERY_SEP_DATA = [
+  {
+    matchPl: /smartfon.*z bateri/i,
+    matchEn: /smartphone.*with batter/i,
+    bodyAu: 0.24, bodyAg: 0.95, bodyPt: 0.002, bodyPd: 0.022,
+    batteryFraction: 0.22,
+    batteryTypePl: "Li-Ion (smartfony, ~3.8 V, 3000–5000 mAh)",
+    batteryTypeEn: "Li-Ion (smartphones, ~3.8 V, 3000–5000 mAh)",
+  },
+  {
+    matchPl: /telefon.*klawiatur.*z bateri/i,
+    matchEn: /feature phone.*with batter/i,
+    bodyAu: 0.35, bodyAg: 1.30, bodyPt: 0.001, bodyPd: 0.030,
+    batteryFraction: 0.18,
+    batteryTypePl: "Ni-MH / Li-Ion (klawiszowe, ~700–1200 mAh)",
+    batteryTypeEn: "Ni-MH / Li-Ion (feature phones, ~700–1200 mAh)",
+  },
+  {
+    matchPl: /tablet.*z bateri/i,
+    matchEn: /tablet.*with batter/i,
+    bodyAu: 0.038, bodyAg: 0.24, bodyPt: 0.001, bodyPd: 0.011,
+    batteryFraction: 0.27,
+    batteryTypePl: "Li-Ion / Li-Po (tablety, ~3.7 V, 6000–10 000 mAh)",
+    batteryTypeEn: "Li-Ion / Li-Po (tablets, ~3.7 V, 6000–10 000 mAh)",
+  },
+] as const;
+
+function detectBatterySep(materialType: string) {
+  for (const d of BATTERY_SEP_DATA) {
+    if (d.matchPl.test(materialType) || d.matchEn.test(materialType)) return d;
+  }
+  return null;
+}
+
 function VisionResultCard({
   result,
   onSaveProfile,
@@ -514,6 +549,11 @@ function VisionResultCard({
   ];
 
   const isNonEwaste = result.materialType.toLowerCase().startsWith("nieelektroniczne");
+  const batterySep = detectBatterySep(result.materialType);
+  const [separateBattery, setSeparateBattery] = useState(false);
+  const totalMassKg = scaleMode ? qty : qty * (weightPerPieceKg ?? 0.15);
+  const bodyMassKg = batterySep ? totalMassKg * (1 - batterySep.batteryFraction) : 0;
+  const batteryMassKg = batterySep ? totalMassKg * batterySep.batteryFraction : 0;
 
   return (
     <div className="space-y-4">
@@ -644,35 +684,115 @@ function VisionResultCard({
         </CardContent>
       </Card>
 
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-            <FlaskConical className="w-4 h-4" />
-            {t("analysis.estimatedMetalContent")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="space-y-3">
-            {metals.map(({ key, label, color }) => {
-              const estimate = result.metalContent[key];
-              return (
-                <div key={key} className="flex items-center gap-3">
-                  <span className={cn("text-sm font-medium w-24 shrink-0", color)}>{label}</span>
-                  <span className="font-mono font-bold text-sm flex-1">
-                    {estimate.value_g_per_kg.toFixed(3)} g/kg
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={cn("text-xs shrink-0", confidenceColor(estimate.confidence))}
-                  >
-                    {confidenceLabel(estimate.confidence)}
-                  </Badge>
-                </div>
-              );
-            })}
+      {batterySep && (
+        <div className="flex items-start gap-3 px-1">
+          <Checkbox
+            id={`bsep-${result.materialType}`}
+            checked={separateBattery}
+            onCheckedChange={(v) => setSeparateBattery(!!v)}
+            className="mt-0.5 shrink-0"
+          />
+          <div>
+            <label htmlFor={`bsep-${result.materialType}`} className="text-sm font-medium cursor-pointer select-none">
+              {t("analysis.batterySepar.checkbox")}
+            </label>
+            <p className="text-xs text-muted-foreground leading-snug">{t("analysis.batterySepar.checkboxDesc")}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {separateBattery && batterySep ? (
+        <>
+          <Card className="border-emerald-500/30 bg-emerald-500/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <FlaskConical className="w-4 h-4" />
+                  {t("analysis.batterySepar.bodyLabel")}
+                </CardTitle>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="text-xs text-emerald-400 border-emerald-500/40">
+                    {t("analysis.batterySepar.betterYield", {
+                      pct: Math.max(0, Math.round((batterySep.bodyAu / Math.max(result.metalContent.Au.value_g_per_kg, 0.001) - 1) * 100)),
+                    })}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {t("analysis.batterySepar.bodyMassKg", { mass: bodyMassKg.toFixed(3) })}
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-3">
+                {[
+                  { key: "Au", label: t("analysis.metals.au"), color: "text-yellow-400", value: batterySep.bodyAu },
+                  { key: "Ag", label: t("analysis.metals.ag"), color: "text-slate-300", value: batterySep.bodyAg },
+                  { key: "Pt", label: t("analysis.metals.pt"), color: "text-sky-400", value: batterySep.bodyPt },
+                  { key: "Pd", label: t("analysis.metals.pd"), color: "text-purple-400", value: batterySep.bodyPd },
+                ].map(({ key, label, color, value }) => (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className={cn("text-sm font-medium w-24 shrink-0", color)}>{label}</span>
+                    <span className="font-mono font-bold text-sm flex-1">{value.toFixed(3)} g/kg</span>
+                    <Badge variant="outline" className="text-xs shrink-0 text-emerald-400 border-emerald-500/40">
+                      {t("analysis.batterySepar.bodyLabel")}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-orange-500/30 bg-orange-500/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Battery className="w-4 h-4 text-orange-400" />
+                  {t("analysis.batterySepar.batteryLabel")}
+                </CardTitle>
+                <span className="text-xs text-muted-foreground font-mono">
+                  {t("analysis.batterySepar.batteryMassKg", { mass: batteryMassKg.toFixed(3) })}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-2">
+              <p className="text-xs text-orange-300 font-medium">
+                {i18next.language === "en" ? batterySep.batteryTypeEn : batterySep.batteryTypePl}
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t("analysis.batterySepar.batteryNote")}</p>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card className="border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <FlaskConical className="w-4 h-4" />
+              {t("analysis.estimatedMetalContent")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-3">
+              {metals.map(({ key, label, color }) => {
+                const estimate = result.metalContent[key];
+                return (
+                  <div key={key} className="flex items-center gap-3">
+                    <span className={cn("text-sm font-medium w-24 shrink-0", color)}>{label}</span>
+                    <span className="font-mono font-bold text-sm flex-1">
+                      {estimate.value_g_per_kg.toFixed(3)} g/kg
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className={cn("text-xs shrink-0", confidenceColor(estimate.confidence))}
+                    >
+                      {confidenceLabel(estimate.confidence)}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-border">
         <CardHeader className="pb-3">

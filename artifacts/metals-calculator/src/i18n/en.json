@@ -517,6 +517,16 @@
       "medium": "medium",
       "low": "low"
     },
+    "batterySepar": {
+      "checkbox": "Battery separation",
+      "checkboxDesc": "Calculate separately: bodies without batteries + Li-Ion battery stream",
+      "bodyLabel": "Body (no battery)",
+      "batteryLabel": "Li-Ion batteries",
+      "batteryNote": "Send to certified battery recycler — Co, Li, Ni, Mn recovery. Li-Ion batteries contain no significant precious metals.",
+      "bodyMassKg": "body mass ~{{mass}} kg",
+      "batteryMassKg": "battery mass ~{{mass}} kg",
+      "betterYield": "+{{pct}}% Au/kg after battery removal"
+    },
     "sharedResultTitle": "Shared analysis",
     "sharedExpires": "Link valid until",
     "shareBtn": "Share result",

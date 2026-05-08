@@ -517,6 +517,16 @@
       "medium": "średnia",
       "low": "niska"
     },
+    "batterySepar": {
+      "checkbox": "Separacja baterii",
+      "checkboxDesc": "Oblicz osobno: korpusy bez baterii + strumień baterii Li-Ion",
+      "bodyLabel": "Korpus (bez baterii)",
+      "batteryLabel": "Baterie Li-Ion",
+      "batteryNote": "Przekaż do certyfikowanego recyklera baterii — odzysk Co, Li, Ni, Mn. Baterie Li-Ion nie zawierają metali szlachetnych w znaczących ilościach.",
+      "bodyMassKg": "masa korpusów ~{{mass}} kg",
+      "batteryMassKg": "masa baterii ~{{mass}} kg",
+      "betterYield": "+{{pct}}% Au/kg po usunięciu baterii"
+    },
     "sharedResultTitle": "Udostępniona analiza",
     "sharedExpires": "Link ważny do",
     "shareBtn": "Udostępnij wynik",
