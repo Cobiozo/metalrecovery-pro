@@ -1418,9 +1418,9 @@ export function PhotoAnalysisPage() {
                     const pd = item.metalContent.Pd.value_g_per_kg.toFixed(2);
                     return `${displayMaterialType(item.materialType)}\nAu ${au} g/kg · Ag ${ag} g/kg · Pt ${pt} g/kg · Pd ${pd} g/kg`;
                   });
-                  const text = `🔬 MetalRecovery Analysis\n\n${lines.join("\n\n")}\n\n${shareUrl}`;
+                  const text = `${shareUrl}\n\n🔬 MetalRecovery Analysis\n\n${lines.join("\n\n")}`;
                   if (navigator.share) {
-                    navigator.share({ title: "MetalRecovery Analysis", text, url: shareUrl }).catch(() => {});
+                    navigator.share({ title: "MetalRecovery Analysis", text }).catch(() => {});
                   } else {
                     navigator.clipboard.writeText(shareUrl).then(() => {
                       toast({ title: t("analysis.shareCopied") });
@@ -1661,7 +1661,7 @@ export function SharedAnalysisPage() {
               onClick={handleSendToCalc}
               className="flex items-center gap-2 text-sm font-medium bg-amber-500 hover:bg-amber-400 text-black transition-all rounded-lg px-5 py-2.5"
             >
-              {t("analysis.sendToCalc")}
+              {t("analysis.sendToCalculator")}
             </button>
           </div>
         </>
