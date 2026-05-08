@@ -218,6 +218,22 @@ CRITICAL VISUAL SHAPE GUIDE — read before identifying:
   ELECTROMECHANICAL RELAYS (for silver recovery): rectangular plastic or metal case 10–100g per piece — PCB-mounted or standalone — Omron/Finder/Schrack/Siemens TE brand — silver contact tips inside — when sold as BULK WEIGHT for Ag recovery, classify as "Przekaźniki elektromechaniczne (do odzysku srebra)" with Ag 1.5–12 g/kg of whole relay weight.
   LAPTOP DOCKING STATION (E-WASTE — "stacja dokująca"): flat rectangular block (150-250mm × 80-200mm × 20-50mm tall), entirely covered in ports on the back/sides — typically 4-8× USB-A, 1-2× USB-C, 1-2× DisplayPort or HDMI, 1× RJ45 Ethernet, audio jack, power input — brands: Dell (WD/D-series), HP (Thunderbolt/UltraSlim), Lenovo (ThinkPad dock) — black or dark grey plastic housing — when a pile of identical flat devices with many ports is visible in a cardboard box, these are docking stations — ALWAYS E-WASTE.
 
+⚠️ MOBILE DEVICE CLASSIFICATION — MANDATORY SPLIT RULES:
+When you see a pile of phones or mobile devices, you MUST split them into SEPARATE items by type AND by battery presence. Do NOT lump all phones into one entry.
+
+DEVICE TYPE IDENTIFICATION:
+  • FEATURE PHONES / KEYPAD PHONES ("telefony klawiszowe"): small device with a PHYSICAL KEYPAD (numeric keys 0-9 + call/end buttons visible on the front face) — compact form factor, typically 80-110mm tall — Nokia 3310/1110/6300/6310, Samsung E-series, Sony Ericsson T-series — use materialType "Telefony klawiszowe (Feature phones, z baterią)" or "Telefony klawiszowe (Feature phones, bez baterii)" depending on battery presence.
+  • TOUCHSCREEN SMARTPHONES ("smartfony dotykowe"): flat slab device with a LARGE TOUCHSCREEN covering most of the front face — NO physical keypad on the front — typically 130-170mm tall — post-2010 iPhones, Samsung Galaxy, Huawei, Xiaomi — use materialType "Smartfony (z baterią)" or "Smartfony (bez baterii)".
+  • TABLETS ("tablety"): large flat device with screen ≥7 inches — significantly larger than smartphones (typically 180-260mm long) — iPad, Samsung Galaxy Tab, Lenovo Tab, Huawei MediaPad — use materialType "Tablety (z baterią)" or "Tablety (bez baterii)".
+
+BATTERY PRESENCE DETECTION — check each device carefully:
+  • Battery PRESENT: back cover intact, device looks complete, back side has no open cavity — classify as "z baterią" (with battery)
+  • Battery MISSING / REMOVED: visible open back cavity, exposed PCB/flex cables through the back, back cover removed, or battery compartment clearly empty — classify as "bez baterii" (without battery)
+  • If you can see SOME devices have batteries and SOME do not within the same type → create TWO separate items: one "z baterią" and one "bez baterii" with appropriate counts.
+
+EXAMPLE — Mixed phone pile MUST produce multiple items:
+  If the photo shows 8 touchscreen smartphones with batteries + 4 touchscreen smartphones without batteries + 3 keypad phones → output 3 separate items, NOT 1.
+
 STEP 2 — For EACH type, select "materialType" from the catalog above (exact name). If none fits, use a descriptive Polish name.
 IMPORTANT: Apply the shape guide from above — do NOT call small square cards "RAM". Do NOT call a square board with a central opening a "laptop motherboard".
 IMPORTANT: Do NOT use "UFO" as a materialType name — ever. For mixed/unidentified electronics use the catalog entry "Mix PCB — Elektronika Mieszana".
