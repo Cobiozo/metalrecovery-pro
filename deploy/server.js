@@ -83239,7 +83239,17 @@ Write ALL free-text fields in ENGLISH:
   \u2022 "platingAnalysis.notes": English note or null
   \u2022 "platingAnalysis.color": use English terms only: gold, silver, nickel, mixed (or null)
   \u2022 "platingAnalysis.thickness": use English terms only: thin (<0.1\u03BCm), medium (0.1-0.5\u03BCm), thick (>0.5\u03BCm) (or null)
-CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified in the catalog \u2014 this field is used for internal database matching and must NOT be translated.` : "";
+CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified in the catalog \u2014 this field is used for internal database matching and must NOT be translated.` : `
+
+J\u0118ZYK \u2014 TRYB POLSKI:
+Pisz WSZYSTKIE pola tekstowe PO POLSKU:
+  \u2022 "description": 2-4 zdania po polsku opisuj\u0105ce materia\u0142 i jego charakterystyk\u0119 metaliczn\u0105
+  \u2022 "caveats": 1-2 zdania po polsku dotycz\u0105ce dok\u0142adno\u015Bci szacowania
+  \u2022 "recommendedProcess": polska nazwa rekomendowanego procesu odzysku
+  \u2022 "platingAnalysis.notes": polska notatka lub null
+  \u2022 "platingAnalysis.color": u\u017Cyj polskich termin\xF3w: z\u0142oty, srebrny, niklowy, mieszany (lub null)
+  \u2022 "platingAnalysis.thickness": u\u017Cyj polskich termin\xF3w: cienkie (<0,1\u03BCm), \u015Brednie (0,1-0,5\u03BCm), grube (>0,5\u03BCm) (lub null)
+KRYTYCZNE: Pole "materialType" MUSI pozosta\u0107 w oryginalnej polskiej formie z katalogu \u2014 u\u017Cywane do wewn\u0119trznego dopasowania w bazie danych.`;
     const learnedContext = await fetchLearnedContext();
     const prompt = ANALYSIS_PROMPT.replace("{{CATALOG_SECTION}}", catalogSection).replace("{{LEARNED_CONTEXT_SECTION}}", learnedContext) + languageSection;
     const base643 = req.file.buffer.toString("base64");

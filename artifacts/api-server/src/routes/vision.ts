@@ -399,7 +399,17 @@ Write ALL free-text fields in ENGLISH:
   • "platingAnalysis.color": use English terms only: gold, silver, nickel, mixed (or null)
   • "platingAnalysis.thickness": use English terms only: thin (<0.1μm), medium (0.1-0.5μm), thick (>0.5μm) (or null)
 CRITICAL: Keep "materialType" in its ORIGINAL POLISH form exactly as specified in the catalog — this field is used for internal database matching and must NOT be translated.`
-      : "";
+      : `
+
+JĘZYK — TRYB POLSKI:
+Pisz WSZYSTKIE pola tekstowe PO POLSKU:
+  • "description": 2-4 zdania po polsku opisujące materiał i jego charakterystykę metaliczną
+  • "caveats": 1-2 zdania po polsku dotyczące dokładności szacowania
+  • "recommendedProcess": polska nazwa rekomendowanego procesu odzysku
+  • "platingAnalysis.notes": polska notatka lub null
+  • "platingAnalysis.color": użyj polskich terminów: złoty, srebrny, niklowy, mieszany (lub null)
+  • "platingAnalysis.thickness": użyj polskich terminów: cienkie (<0,1μm), średnie (0,1-0,5μm), grube (>0,5μm) (lub null)
+KRYTYCZNE: Pole "materialType" MUSI pozostać w oryginalnej polskiej formie z katalogu — używane do wewnętrznego dopasowania w bazie danych.`;
 
     const learnedContext = await fetchLearnedContext();
     const prompt = ANALYSIS_PROMPT
