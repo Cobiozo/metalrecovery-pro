@@ -518,6 +518,7 @@
       "low": "low"
     },
     "sharedResultTitle": "Shared analysis",
+    "sharedExpires": "Link valid until",
     "shareBtn": "Share result",
     "shareCopied": "Copied to clipboard",
     "reportError": "Report incorrect classification",

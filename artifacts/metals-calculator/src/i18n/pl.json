@@ -518,6 +518,7 @@
       "low": "niska"
     },
     "sharedResultTitle": "Udostępniona analiza",
+    "sharedExpires": "Link ważny do",
     "shareBtn": "Udostępnij wynik",
     "shareCopied": "Skopiowano do schowka",
     "reportError": "Zgłoś błędną klasyfikację",

@@ -1580,16 +1580,18 @@ export function SharedAnalysisPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VisionResultSet | null>(null);
   const [editedQuantities, setEditedQuantities] = useState<number[]>([]);
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!shareId) return;
     setLoading(true);
     fetch(`${getVisionApiBase()}/vision/share/${encodeURIComponent(shareId)}`)
-      .then((r) => r.json())
-      .then((d: { resultJson?: string; error?: string }) => {
-        if (d.error || !d.resultJson) throw new Error(d.error ?? "Not found");
+      .then(async (r) => {
+        const d = await r.json() as { resultJson?: string; error?: string; expiresAt?: string };
+        if (!r.ok || d.error || !d.resultJson) throw new Error(d.error ?? "Not found");
         const parsed = JSON.parse(d.resultJson) as VisionResultSet;
         setResult(parsed);
+        if (d.expiresAt) setExpiresAt(new Date(d.expiresAt));
         setEditedQuantities(parsed.items.map((i) => {
           if (i.massGrams != null && i.massGrams > 0) return i.massGrams / 1000;
           return Math.max(0, i.quantity || 0);
@@ -1638,6 +1640,12 @@ export function SharedAnalysisPage() {
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-5 py-4 text-destructive text-sm">
           {error}
         </div>
+      )}
+
+      {result && expiresAt && (
+        <p className="text-xs text-muted-foreground text-center">
+          {t("analysis.sharedExpires", "Link ważny do")}: {expiresAt.toLocaleDateString()}
+        </p>
       )}
 
       {result && (

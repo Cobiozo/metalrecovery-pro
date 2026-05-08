@@ -83322,16 +83322,21 @@ router6.post("/share", async (req, res) => {
     return;
   }
   const shareId = (0, import_crypto.randomBytes)(6).toString("base64url");
-  await db.insert(analysisSharesTable).values({ id: shareId, resultJson });
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1e3);
+  await db.insert(analysisSharesTable).values({ id: shareId, resultJson, expiresAt });
   res.json({ shareId });
 });
 router6.get("/share/:id", async (req, res) => {
   const [share] = await db.select().from(analysisSharesTable).where(eq(analysisSharesTable.id, req.params.id)).limit(1);
   if (!share) {
-    res.status(404).json({ error: "Nie znaleziono analizy." });
+    res.status(404).json({ error: "Link nie istnieje lub analiza zosta\u0142a usuni\u0119ta." });
     return;
   }
-  res.json({ resultJson: share.resultJson, createdAt: share.createdAt });
+  if (share.expiresAt && share.expiresAt < /* @__PURE__ */ new Date()) {
+    res.status(410).json({ error: "Link wygas\u0142 (wa\u017Cny 30 dni od daty analizy)." });
+    return;
+  }
+  res.json({ resultJson: share.resultJson, createdAt: share.createdAt, expiresAt: share.expiresAt });
 });
 router6.post("/correction", requireAuth, async (req, res) => {
   const { aiMaterialType, correctMaterialType, correctionNote, imageDescription } = req.body ?? {};

@@ -508,7 +508,8 @@ router.post("/share", async (req: Request, res: Response) => {
     return;
   }
   const shareId = randomBytes(6).toString("base64url");
-  await db.insert(analysisSharesTable).values({ id: shareId, resultJson });
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  await db.insert(analysisSharesTable).values({ id: shareId, resultJson, expiresAt });
   res.json({ shareId });
 });
 
@@ -520,10 +521,14 @@ router.get("/share/:id", async (req: Request, res: Response) => {
     .where(eq(analysisSharesTable.id, req.params.id))
     .limit(1);
   if (!share) {
-    res.status(404).json({ error: "Nie znaleziono analizy." });
+    res.status(404).json({ error: "Link nie istnieje lub analiza została usunięta." });
     return;
   }
-  res.json({ resultJson: share.resultJson, createdAt: share.createdAt });
+  if (share.expiresAt && share.expiresAt < new Date()) {
+    res.status(410).json({ error: "Link wygasł (ważny 30 dni od daty analizy)." });
+    return;
+  }
+  res.json({ resultJson: share.resultJson, createdAt: share.createdAt, expiresAt: share.expiresAt });
 });
 
 // POST /vision/correction — authenticated users submit a correction for a misclassified item
