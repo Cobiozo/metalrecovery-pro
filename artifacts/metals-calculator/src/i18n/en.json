@@ -517,6 +517,8 @@
       "medium": "medium",
       "low": "low"
     },
+    "shareBtn": "Share result",
+    "shareCopied": "Copied to clipboard",
     "reportError": "Report incorrect classification",
     "sendToCalculator": "Send to calculator",
     "sendToPurchase": "Send to purchase",

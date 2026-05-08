@@ -9,7 +9,7 @@ import {
   Camera, Upload, ScanLine, Loader2, AlertTriangle, Info,
   FlaskConical, Star, CheckCircle2, XCircle, Sparkles,
   ChevronRight, ImageIcon, RotateCcw, ShoppingCart, Calculator, Scale,
-  Flag, ChevronsUpDown, Check,
+  Flag, ChevronsUpDown, Check, Share2,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -910,7 +910,7 @@ function PhotoWithDetections({ photoUrl, items }: { photoUrl: string; items: Vis
 
   return (
     <div className="rounded-xl border border-border overflow-y-auto" style={{ maxHeight: "75vh" }}>
-      <div className="relative">
+      <div className="relative" style={{ lineHeight: 0, fontSize: 0 }}>
       <img
         src={photoUrl}
         alt={i18next.t("analysis.analysisResultAlt") as string}
@@ -1395,7 +1395,31 @@ export function PhotoAnalysisPage() {
       {result && !loading && preview && (
         <div>
           <PhotoWithDetections photoUrl={preview} items={result.items} />
-          <div className="max-w-2xl mx-auto mt-4 px-1 flex justify-center">
+          <div className="max-w-2xl mx-auto mt-4 px-1 flex justify-center gap-3 flex-wrap">
+              <button
+                type="button"
+                onClick={() => {
+                  const lines = result.items.map((item) => {
+                    const au = item.metalContent.Au.value_g_per_kg.toFixed(1);
+                    const ag = item.metalContent.Ag.value_g_per_kg.toFixed(1);
+                    const pt = item.metalContent.Pt.value_g_per_kg.toFixed(2);
+                    const pd = item.metalContent.Pd.value_g_per_kg.toFixed(2);
+                    return `${displayMaterialType(item.materialType)}\nAu ${au} g/kg · Ag ${ag} g/kg · Pt ${pt} g/kg · Pd ${pd} g/kg`;
+                  });
+                  const text = `🔬 MetalRecovery Analysis\n\n${lines.join("\n\n")}\n\nhttps://metalrecovery.online/analiza`;
+                  if (navigator.share) {
+                    navigator.share({ title: "MetalRecovery Analysis", text }).catch(() => {});
+                  } else {
+                    navigator.clipboard.writeText(text).then(() => {
+                      toast({ title: t("analysis.shareCopied") });
+                    });
+                  }
+                }}
+                className="flex items-center justify-center gap-2 text-sm font-medium text-sky-400 border border-sky-400/40 hover:border-sky-400 hover:bg-sky-400/10 transition-all rounded-lg px-5 py-2.5"
+              >
+                <Share2 className="w-4 h-4" />
+                {t("analysis.shareBtn")}
+              </button>
               <button
                 type="button"
                 onClick={() => user ? setAnalysisCorrectionOpen(true) : navigate("/login")}
