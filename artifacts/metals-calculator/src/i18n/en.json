@@ -517,6 +517,7 @@
       "medium": "medium",
       "low": "low"
     },
+    "sharedResultTitle": "Shared analysis",
     "shareBtn": "Share result",
     "shareCopied": "Copied to clipboard",
     "reportError": "Report incorrect classification",
