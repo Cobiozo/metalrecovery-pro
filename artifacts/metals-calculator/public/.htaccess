@@ -1,6 +1,10 @@
 Options -MultiViews
 RewriteEngine On
 
+# When LiteSpeed blocks bots (403), serve index.html body instead of generic error page
+# This ensures Facebook/social bots see MetalRecovery Pro OG tags (same as metalrecovery.online/)
+ErrorDocument 403 /index.html
+
 # 0. Bypass LiteSpeed anti-DDoS throttling for known social media crawlers
 #    noabort tells LiteSpeed not to block the request even if the IP is rate-limited
 RewriteCond %{HTTP_USER_AGENT} facebookexternalhit [NC,OR]
