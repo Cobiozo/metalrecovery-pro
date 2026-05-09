@@ -8,6 +8,7 @@ import { resolveUser, requireAuth, type AuthRequest } from "../middlewares/auth"
 import multer from "multer";
 import OpenAI from "openai";
 import { z } from "zod";
+import { buildOgHtml, uploadOgStaticFile } from "../og-static-upload";
 
 function getOpenAIClient(): OpenAI {
   const apiKey =
@@ -537,6 +538,36 @@ router.post("/share", async (req: Request, res: Response) => {
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   await db.insert(analysisSharesTable).values({ id: shareId, resultJson, expiresAt });
   res.json({ shareId });
+
+  // Fire-and-forget: upload static OG HTML to Cyberfolks so LiteSpeed serves it
+  // with 403 body to Facebook's IPs — Facebook reads OG tags from the 403 body.
+  try {
+    let ogTitle = "Analiza AI — MetalRecovery Pro";
+    let ogDesc = "Precyzyjne szacowanie odzysku złota, srebra, platyny i palladu z e-odpadów.";
+    const result = JSON.parse(resultJson) as {
+      items?: Array<{ materialType?: string; au?: number; ag?: number; pt?: number; pd?: number }>;
+    };
+    const items = result.items ?? [];
+    if (items.length > 0) {
+      const first = items[0];
+      const name = first.materialType ?? "Materiał";
+      const metals = [
+        first.au != null ? `Au ${first.au} g/kg` : null,
+        first.ag != null ? `Ag ${first.ag} g/kg` : null,
+        first.pt != null && first.pt > 0 ? `Pt ${first.pt} g/kg` : null,
+        first.pd != null && first.pd > 0 ? `Pd ${first.pd} g/kg` : null,
+      ].filter(Boolean).join(" · ");
+      const extra = items.length > 1 ? ` (+${items.length - 1} więcej)` : "";
+      ogTitle = `${name}${extra} — analiza AI | MetalRecovery Pro`;
+      if (metals) ogDesc = `${metals}. Analiza wykonana przez MetalRecovery Pro — kalkulator odzysku metali szlachetnych z e-odpadów.`;
+    }
+    const html = buildOgHtml({ shareId, ogTitle, ogDesc });
+    uploadOgStaticFile(shareId, html).catch((e) =>
+      console.error("[og-upload] Failed to upload static OG file:", e)
+    );
+  } catch (e) {
+    console.error("[og-upload] Failed to build OG HTML for static upload:", e);
+  }
 });
 
 // GET /vision/og/analiza/:shareId — Open Graph HTML for bots (Facebook, WhatsApp, Telegram etc.)

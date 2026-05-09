@@ -1,26 +1,32 @@
 Options -MultiViews
 RewriteEngine On
 
-# Social media / OG preview: route /analiza/:id through PHP proxy (skip if ?view=1)
-# PHP script serves OG HTML for bots, redirects humans to SPA with ?view=1
+# 1. Force SPA when ?view=1 — even if a static OG directory exists at analiza/shareId/
+#    Prevents redirect loop: static index.html has JS redirect → ?view=1 → here → SPA ✓
+RewriteCond %{QUERY_STRING} view=1
+RewriteRule ^analiza/ /index.html [L]
+
+# 2. OG PHP proxy — routes /analiza/:id (no view=1) through PHP script
+#    For bots whose IPs are blocked: LiteSpeed serves static analiza/:id/index.html with 403 body
+#    For humans: PHP fetches OG HTML from API, serves with JS redirect → ?view=1 → rule 1 above
 RewriteCond %{QUERY_STRING} !view=1
 RewriteRule ^analiza/([^/]+)/?$ /_og.php?id=$1 [L,QSA]
 
-# SPA fallback: serve index.html for all non-file paths
+# 3. SPA fallback: serve index.html for all non-file, non-dir paths
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [QSA,L]
 
 <IfModule mod_headers.c>
-  # Service worker & index.html — never cache (must check for updates)
+  # Service worker & index.html — never cache
   <FilesMatch "^(sw\.js|index\.html)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
   </FilesMatch>
 
-  # Hashed assets (JS/CSS with fingerprint in name) — cache 1 year
+  # Hashed assets — cache 1 year
   <FilesMatch "\.[0-9a-f]{8}\.(js|css|woff2?)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>

@@ -32579,7 +32579,7 @@ var require_client = __commonJS({
       },
       "Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead."
     );
-    var Client2 = class extends EventEmitter {
+    var Client3 = class extends EventEmitter {
       constructor(config2) {
         super();
         this.connectionParameters = new ConnectionParameters(config2);
@@ -33154,8 +33154,8 @@ var require_client = __commonJS({
         return this._queryQueue;
       }
     };
-    Client2.Query = Query2;
-    module2.exports = Client2;
+    Client3.Query = Query2;
+    module2.exports = Client3;
   }
 });
 
@@ -33215,7 +33215,7 @@ var require_pg_pool = __commonJS({
       };
     }
     var Pool4 = class extends EventEmitter {
-      constructor(options, Client2) {
+      constructor(options, Client3) {
         super();
         this.options = Object.assign({}, options);
         if (options != null && "password" in options) {
@@ -33238,7 +33238,7 @@ var require_pg_pool = __commonJS({
         this.options.maxLifetimeSeconds = this.options.maxLifetimeSeconds || 0;
         this.log = this.options.log || function() {
         };
-        this.Client = this.options.Client || Client2 || require_lib4().Client;
+        this.Client = this.options.Client || Client3 || require_lib4().Client;
         this.Promise = this.options.Promise || global.Promise;
         if (typeof this.options.idleTimeoutMillis === "undefined") {
           this.options.idleTimeoutMillis = 1e4;
@@ -33746,7 +33746,7 @@ var require_client2 = __commonJS({
       },
       "Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead."
     );
-    var Client2 = module2.exports = function(config2) {
+    var Client3 = module2.exports = function(config2) {
       EventEmitter.call(this);
       config2 = config2 || {};
       this._Promise = config2.Promise || global.Promise;
@@ -33773,9 +33773,9 @@ var require_client2 = __commonJS({
       this.port = cp.port;
       this.namedQueries = {};
     };
-    Client2.Query = NativeQuery;
-    util2.inherits(Client2, EventEmitter);
-    Client2.prototype._errorAllQueries = function(err) {
+    Client3.Query = NativeQuery;
+    util2.inherits(Client3, EventEmitter);
+    Client3.prototype._errorAllQueries = function(err) {
       const enqueueError = (query) => {
         process.nextTick(() => {
           query.native = this.native;
@@ -33789,7 +33789,7 @@ var require_client2 = __commonJS({
       this._queryQueue.forEach(enqueueError);
       this._queryQueue.length = 0;
     };
-    Client2.prototype._connect = function(cb) {
+    Client3.prototype._connect = function(cb) {
       const self2 = this;
       if (this._connecting) {
         process.nextTick(() => cb(new Error("Client has already been connected. You cannot reuse a client.")));
@@ -33822,7 +33822,7 @@ var require_client2 = __commonJS({
         });
       });
     };
-    Client2.prototype.connect = function(callback) {
+    Client3.prototype.connect = function(callback) {
       if (callback) {
         this._connect(callback);
         return;
@@ -33837,7 +33837,7 @@ var require_client2 = __commonJS({
         });
       });
     };
-    Client2.prototype.query = function(config2, values, callback) {
+    Client3.prototype.query = function(config2, values, callback) {
       let query;
       let result;
       let readTimeout;
@@ -33909,7 +33909,7 @@ var require_client2 = __commonJS({
       this._pulseQueryQueue();
       return result;
     };
-    Client2.prototype.end = function(cb) {
+    Client3.prototype.end = function(cb) {
       const self2 = this;
       this._ending = true;
       if (!this._connected) {
@@ -33931,10 +33931,10 @@ var require_client2 = __commonJS({
       });
       return result;
     };
-    Client2.prototype._hasActiveQuery = function() {
+    Client3.prototype._hasActiveQuery = function() {
       return this._activeQuery && this._activeQuery.state !== "error" && this._activeQuery.state !== "end";
     };
-    Client2.prototype._pulseQueryQueue = function(initialConnection) {
+    Client3.prototype._pulseQueryQueue = function(initialConnection) {
       if (!this._connected) {
         return;
       }
@@ -33955,7 +33955,7 @@ var require_client2 = __commonJS({
         self2._pulseQueryQueue();
       });
     };
-    Client2.prototype.cancel = function(query) {
+    Client3.prototype.cancel = function(query) {
       if (this._activeQuery === query) {
         this.native.cancel(function() {
         });
@@ -33963,17 +33963,17 @@ var require_client2 = __commonJS({
         this._queryQueue.splice(this._queryQueue.indexOf(query), 1);
       }
     };
-    Client2.prototype.ref = function() {
+    Client3.prototype.ref = function() {
     };
-    Client2.prototype.unref = function() {
+    Client3.prototype.unref = function() {
     };
-    Client2.prototype.setTypeParser = function(oid, format, parseFn) {
+    Client3.prototype.setTypeParser = function(oid, format, parseFn) {
       return this._types.setTypeParser(oid, format, parseFn);
     };
-    Client2.prototype.getTypeParser = function(oid, format) {
+    Client3.prototype.getTypeParser = function(oid, format) {
       return this._types.getTypeParser(oid, format);
     };
-    Client2.prototype.isConnected = function() {
+    Client3.prototype.isConnected = function() {
       return this._connected;
     };
   }
@@ -33991,7 +33991,7 @@ var require_native = __commonJS({
 var require_lib4 = __commonJS({
   "../../node_modules/.pnpm/pg@8.20.0/node_modules/pg/lib/index.js"(exports2, module2) {
     "use strict";
-    var Client2 = require_client();
+    var Client3 = require_client();
     var defaults3 = require_defaults();
     var Connection2 = require_connection();
     var Result2 = require_result();
@@ -34000,10 +34000,10 @@ var require_lib4 = __commonJS({
     var TypeOverrides2 = require_type_overrides();
     var { DatabaseError: DatabaseError2 } = require_dist2();
     var { escapeIdentifier: escapeIdentifier2, escapeLiteral: escapeLiteral2 } = require_utils4();
-    var poolFactory = (Client3) => {
+    var poolFactory = (Client4) => {
       return class BoundPool extends Pool4 {
         constructor(options) {
-          super(options, Client3);
+          super(options, Client4);
         }
       };
     };
@@ -34022,7 +34022,7 @@ var require_lib4 = __commonJS({
       this.Result = Result2;
       this.utils = utils;
     };
-    var clientConstructor = Client2;
+    var clientConstructor = Client3;
     var forceNative = false;
     try {
       forceNative = !!process.env.NODE_PG_FORCE_NATIVE;
@@ -82905,6 +82905,93 @@ OpenAI.Containers = Containers;
 OpenAI.Skills = Skills;
 OpenAI.Videos = Videos;
 
+// src/og-static-upload.ts
+var import_ssh2 = require("ssh2");
+var SSH_HOST = process.env.CYBERFOLKS_SSH_HOST ?? "";
+var SSH_USER = process.env.CYBERFOLKS_SSH_USER ?? "";
+var SSH_PASS = process.env.CYBERFOLKS_SSH_PASS ?? "";
+var SSH_PORT = 222;
+var REMOTE_BASE = "/home/xlqsymddxy/domains/metalrecovery.online/public_html/analiza";
+function buildOgHtml(opts) {
+  const { shareId, ogTitle, ogDesc } = opts;
+  const ogImage = opts.ogImage ?? "https://metalrecovery.online/og-preview-v2.jpg";
+  const shareUrl = `https://metalrecovery.online/analiza/${shareId}`;
+  const spaUrl = `${shareUrl}?view=1`;
+  const esc2 = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8"/>
+<title>${esc2(ogTitle)}</title>
+<meta name="description" content="${esc2(ogDesc)}"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="${esc2(shareUrl)}"/>
+<meta property="og:site_name" content="MetalRecovery Pro"/>
+<meta property="og:title" content="${esc2(ogTitle)}"/>
+<meta property="og:description" content="${esc2(ogDesc)}"/>
+<meta property="og:image" content="${esc2(ogImage)}"/>
+<meta property="og:image:type" content="image/jpeg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:alt" content="${esc2(ogTitle)}"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="${esc2(ogTitle)}"/>
+<meta name="twitter:description" content="${esc2(ogDesc)}"/>
+<meta name="twitter:image" content="${esc2(ogImage)}"/>
+<script>window.location.replace(${JSON.stringify(spaUrl)});</script>
+</head>
+<body><a href="${esc2(spaUrl)}">${esc2(ogTitle)}</a></body>
+</html>`;
+}
+async function uploadOgStaticFile(shareId, html) {
+  if (!SSH_HOST || !SSH_USER || !SSH_PASS) {
+    console.warn("[og-upload] SSH credentials not configured, skipping static OG upload");
+    return;
+  }
+  return new Promise((resolve, reject) => {
+    const conn = new import_ssh2.Client();
+    conn.on("ready", () => {
+      conn.exec(
+        `mkdir -p "${REMOTE_BASE}/${shareId}"`,
+        (err, mkdirStream) => {
+          if (err) {
+            conn.end();
+            return reject(err);
+          }
+          mkdirStream.on("close", () => {
+            conn.sftp((sftpErr, sftp) => {
+              if (sftpErr) {
+                conn.end();
+                return reject(sftpErr);
+              }
+              const remotePath = `${REMOTE_BASE}/${shareId}/index.html`;
+              const writeStream = sftp.createWriteStream(remotePath);
+              writeStream.on("close", () => {
+                conn.end();
+                resolve();
+              });
+              writeStream.on("error", (e) => {
+                conn.end();
+                reject(e);
+              });
+              writeStream.write(html);
+              writeStream.end();
+            });
+          });
+        }
+      );
+    });
+    conn.on("error", reject);
+    conn.connect({
+      host: SSH_HOST,
+      port: SSH_PORT,
+      username: SSH_USER,
+      password: SSH_PASS,
+      readyTimeout: 1e4
+    });
+  });
+}
+
 // src/routes/vision.ts
 function getOpenAIClient() {
   const apiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
@@ -83369,6 +83456,31 @@ router6.post("/share", async (req, res) => {
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1e3);
   await db.insert(analysisSharesTable).values({ id: shareId, resultJson, expiresAt });
   res.json({ shareId });
+  try {
+    let ogTitle = "Analiza AI \u2014 MetalRecovery Pro";
+    let ogDesc = "Precyzyjne szacowanie odzysku z\u0142ota, srebra, platyny i palladu z e-odpad\xF3w.";
+    const result = JSON.parse(resultJson);
+    const items = result.items ?? [];
+    if (items.length > 0) {
+      const first = items[0];
+      const name2 = first.materialType ?? "Materia\u0142";
+      const metals = [
+        first.au != null ? `Au ${first.au} g/kg` : null,
+        first.ag != null ? `Ag ${first.ag} g/kg` : null,
+        first.pt != null && first.pt > 0 ? `Pt ${first.pt} g/kg` : null,
+        first.pd != null && first.pd > 0 ? `Pd ${first.pd} g/kg` : null
+      ].filter(Boolean).join(" \xB7 ");
+      const extra = items.length > 1 ? ` (+${items.length - 1} wi\u0119cej)` : "";
+      ogTitle = `${name2}${extra} \u2014 analiza AI | MetalRecovery Pro`;
+      if (metals) ogDesc = `${metals}. Analiza wykonana przez MetalRecovery Pro \u2014 kalkulator odzysku metali szlachetnych z e-odpad\xF3w.`;
+    }
+    const html = buildOgHtml({ shareId, ogTitle, ogDesc });
+    uploadOgStaticFile(shareId, html).catch(
+      (e) => console.error("[og-upload] Failed to upload static OG file:", e)
+    );
+  } catch (e) {
+    console.error("[og-upload] Failed to build OG HTML for static upload:", e);
+  }
 });
 router6.get("/og/analiza/:shareId", async (req, res) => {
   const shareId = req.params.shareId;
