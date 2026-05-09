@@ -56,9 +56,13 @@ export function buildOgHtml(opts: {
 
 /**
  * Upload static OG HTML file to Cyberfolks via SSH/SFTP.
- * Creates ~/public_html/analiza/{shareId}/index.html
- * LiteSpeed serves this file (with 403 body) to blocked bot IPs —
- * Facebook reads OG tags from the 403 response body and shows the preview.
+ * Creates ~/public_html/analiza/{shareId}  (extensionless file, exact URL path)
+ *
+ * WHY extensionless file instead of directory:
+ * LiteSpeed's bot-blocking returns 403 with static file body ONLY for exact
+ * file path matches. A directory at analiza/shareId/ triggers a 301 redirect
+ * which blocked IPs never receive properly. An extensionless file at the exact
+ * path analiza/shareId is served directly with 403 body → Facebook reads OG tags.
  */
 export async function uploadOgStaticFile(shareId: string, html: string): Promise<void> {
   if (!SSH_HOST || !SSH_USER || !SSH_PASS) {
@@ -70,33 +74,24 @@ export async function uploadOgStaticFile(shareId: string, html: string): Promise
     const conn = new Client();
 
     conn.on("ready", () => {
-      conn.exec(
-        `mkdir -p "${REMOTE_BASE}/${shareId}"`,
-        (err, mkdirStream) => {
-          if (err) { conn.end(); return reject(err); }
+      conn.sftp((sftpErr, sftp) => {
+        if (sftpErr) { conn.end(); return reject(sftpErr); }
 
-          mkdirStream.on("close", () => {
-            conn.sftp((sftpErr, sftp) => {
-              if (sftpErr) { conn.end(); return reject(sftpErr); }
+        const remotePath = `${REMOTE_BASE}/${shareId}`;
+        const writeStream = sftp.createWriteStream(remotePath);
 
-              const remotePath = `${REMOTE_BASE}/${shareId}/index.html`;
-              const writeStream = sftp.createWriteStream(remotePath);
+        writeStream.on("close", () => {
+          conn.end();
+          resolve();
+        });
+        writeStream.on("error", (e: Error) => {
+          conn.end();
+          reject(e);
+        });
 
-              writeStream.on("close", () => {
-                conn.end();
-                resolve();
-              });
-              writeStream.on("error", (e: Error) => {
-                conn.end();
-                reject(e);
-              });
-
-              writeStream.write(html);
-              writeStream.end();
-            });
-          });
-        }
-      );
+        writeStream.write(html);
+        writeStream.end();
+      });
     });
 
     conn.on("error", reject);

@@ -82951,35 +82951,24 @@ async function uploadOgStaticFile(shareId, html) {
   return new Promise((resolve, reject) => {
     const conn = new import_ssh2.Client();
     conn.on("ready", () => {
-      conn.exec(
-        `mkdir -p "${REMOTE_BASE}/${shareId}"`,
-        (err, mkdirStream) => {
-          if (err) {
-            conn.end();
-            return reject(err);
-          }
-          mkdirStream.on("close", () => {
-            conn.sftp((sftpErr, sftp) => {
-              if (sftpErr) {
-                conn.end();
-                return reject(sftpErr);
-              }
-              const remotePath = `${REMOTE_BASE}/${shareId}/index.html`;
-              const writeStream = sftp.createWriteStream(remotePath);
-              writeStream.on("close", () => {
-                conn.end();
-                resolve();
-              });
-              writeStream.on("error", (e) => {
-                conn.end();
-                reject(e);
-              });
-              writeStream.write(html);
-              writeStream.end();
-            });
-          });
+      conn.sftp((sftpErr, sftp) => {
+        if (sftpErr) {
+          conn.end();
+          return reject(sftpErr);
         }
-      );
+        const remotePath = `${REMOTE_BASE}/${shareId}`;
+        const writeStream = sftp.createWriteStream(remotePath);
+        writeStream.on("close", () => {
+          conn.end();
+          resolve();
+        });
+        writeStream.on("error", (e) => {
+          conn.end();
+          reject(e);
+        });
+        writeStream.write(html);
+        writeStream.end();
+      });
     });
     conn.on("error", reject);
     conn.connect({

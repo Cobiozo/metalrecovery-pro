@@ -1,15 +1,19 @@
 Options -MultiViews
 RewriteEngine On
 
-# 1. Force SPA when ?view=1 — even if a static OG directory exists at analiza/shareId/
-#    Prevents redirect loop: static index.html has JS redirect → ?view=1 → here → SPA ✓
+# 1. Force SPA when ?view=1 — handles humans after JS redirect from static OG file
 RewriteCond %{QUERY_STRING} view=1
 RewriteRule ^analiza/ /index.html [L]
 
-# 2. OG PHP proxy — routes /analiza/:id (no view=1) through PHP script
-#    For bots whose IPs are blocked: LiteSpeed serves static analiza/:id/index.html with 403 body
-#    For humans: PHP fetches OG HTML from API, serves with JS redirect → ?view=1 → rule 1 above
+# 2. OG PHP proxy — ONLY when no static file/dir exists AND no view=1
+#    When analiza/shareId exists as a static file, skip PHP entirely.
+#    LiteSpeed then serves the file directly (with 403 body for blocked bot IPs)
+#    — same mechanism that makes metalrecovery.online/ serve index.html with 403.
+#    For humans: browser gets extensionless HTML file, content-sniffs as HTML,
+#    JS redirect fires → ?view=1 → rule 1 above → SPA loads.
 RewriteCond %{QUERY_STRING} !view=1
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^analiza/([^/]+)/?$ /_og.php?id=$1 [L,QSA]
 
 # 3. SPA fallback: serve index.html for all non-file, non-dir paths
@@ -19,14 +23,12 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^ index.html [QSA,L]
 
 <IfModule mod_headers.c>
-  # Service worker & index.html — never cache
   <FilesMatch "^(sw\.js|index\.html)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires "0"
   </FilesMatch>
 
-  # Hashed assets — cache 1 year
   <FilesMatch "\.[0-9a-f]{8}\.(js|css|woff2?)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
