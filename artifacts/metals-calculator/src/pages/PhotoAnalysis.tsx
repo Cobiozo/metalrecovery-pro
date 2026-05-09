@@ -1538,7 +1538,7 @@ export function PhotoAnalysisPage() {
                 type="button"
                 onClick={() => {
                   const shareUrl = shareId
-                    ? `https://metalrecovery.online/analiza/${shareId}`
+                    ? `${getVisionApiBase()}/vision/og/analiza/${shareId}`
                     : "https://metalrecovery.online/analiza";
                   const lines = result.items.map((item) => {
                     const au = item.metalContent.Au.value_g_per_kg.toFixed(1);

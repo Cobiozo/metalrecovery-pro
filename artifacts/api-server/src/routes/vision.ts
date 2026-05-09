@@ -630,7 +630,6 @@ router.get("/og/analiza/:shareId", async (req: Request, res: Response) => {
 <meta name="twitter:title" content="${esc(ogTitle)}" />
 <meta name="twitter:description" content="${esc(ogDesc)}" />
 <meta name="twitter:image" content="${ogImage}" />
-<meta http-equiv="refresh" content="0;url=${esc(shareUrl + "?view=1")}" />
 <script>window.location.replace(${JSON.stringify(shareUrl + "?view=1")});</script>
 </head>
 <body><a href="${esc(shareUrl)}">${esc(ogTitle)}</a></body>
