@@ -1,6 +1,15 @@
 Options -MultiViews
 RewriteEngine On
 
+# 0. Bypass LiteSpeed anti-DDoS throttling for known social media crawlers
+#    noabort tells LiteSpeed not to block the request even if the IP is rate-limited
+RewriteCond %{HTTP_USER_AGENT} facebookexternalhit [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} Facebot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} Twitterbot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} LinkedInBot [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} WhatsApp [NC]
+RewriteRule ^ - [E=noabort:1,L]
+
 # 1. Force SPA when ?view=1 — handles humans after JS redirect from static OG file
 RewriteCond %{QUERY_STRING} view=1
 RewriteRule ^analiza/ /index.html [L]
