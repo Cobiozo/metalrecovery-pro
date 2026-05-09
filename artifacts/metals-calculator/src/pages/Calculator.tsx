@@ -1234,11 +1234,11 @@ export function CalculatorPage() {
                             <TableRow key={metal.metal} className="border-border">
                               <TableCell className="font-bold font-mono text-primary">
                                 {metal.metal}
-                                <span className="ml-1 font-normal text-muted-foreground text-[10px]">({t(`analysis.metals.${metal.metal.toLowerCase()}`, { defaultValue: metal.metal })})</span>
+                                <span className="ml-1 font-normal text-muted-foreground text-[10px]">({t(`metals.${metal.metal}`, { defaultValue: metal.metal })})</span>
                               </TableCell>
                               <TableCell className="text-right font-mono">{formatMass(metal.massGrams, 'g')}</TableCell>
                               <TableCell className="text-right font-mono text-muted-foreground">{formatPercent(metal.yieldPercent)}</TableCell>
-                              <TableCell className="text-right font-mono font-bold text-success">{fmtVal(metal.totalValuePln)}</TableCell>
+                              <TableCell className="text-right font-mono font-bold text-success">{fmtVal(metal.massGrams < 0.005 ? 0 : metal.totalValuePln)}</TableCell>
                             </TableRow>
                           ))}
                           {result.recoveredMetals.length === 0 && (
