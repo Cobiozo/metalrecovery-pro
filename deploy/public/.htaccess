@@ -2,9 +2,8 @@ Options -MultiViews
 RewriteEngine On
 
 # Social media / OG preview: redirect /analiza/:id to OG HTML endpoint
-# Applied unconditionally — bots get OG tags, humans get JS-redirected back with ?view=1
-# Skip if ?view=1 is present (human returning from OG page via JS redirect)
-RewriteCond %{QUERY_STRING} !(?:^|&)view=1(?:&|$)
+# Skip if query string contains "view=1" (humans returning from OG page via JS/meta-refresh)
+RewriteCond %{QUERY_STRING} !view=1
 RewriteRule ^analiza/([^/]+)/?$ /api/vision/og/analiza/$1 [L,R=302]
 
 # SPA fallback: serve index.html for all non-file paths
