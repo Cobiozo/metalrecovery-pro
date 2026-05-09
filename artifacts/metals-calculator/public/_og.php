@@ -1,8 +1,10 @@
 <?php
 /**
- * OG Proxy for shared analysis links
- * Fetches OG HTML from API server and serves it directly (avoids external redirect for bots).
- * Humans are redirected to the SPA via ?view=1 which bypasses this script.
+ * OG proxy for shared analysis links.
+ * Fetches OG HTML from API and serves it directly.
+ * Strips meta-refresh to prevent bots from making a 2nd request
+ * (LiteSpeed rate-limits facebookexternalhit after 1st request).
+ * JS redirect remains — browsers execute it, bots ignore it.
  */
 
 $shareId = preg_replace('/[^A-Za-z0-9_\-]/', '', $_GET['id'] ?? '');
@@ -12,26 +14,13 @@ if (!$shareId) {
     exit;
 }
 
-$ua = $_SERVER['HTTP_USER_AGENT'] ?? '';
-$isBot = (bool) preg_match(
-    '/(facebookexternalhit|Facebot|Twitterbot|WhatsApp|TelegramBot|LinkedInBot|Slackbot|Discordbot|SkypeUriPreview|vkShare|Googlebot|bingbot|ia_archiver)/i',
-    $ua
-);
-
-if (!$isBot) {
-    // Humans: redirect to SPA — .htaccess sees ?view=1 and skips this script
-    header('Location: /analiza/' . rawurlencode($shareId) . '?view=1', true, 302);
-    exit;
-}
-
-// Bot: fetch OG HTML from API and serve it directly from this domain
 $apiUrl = 'https://recovery-calculator-bawolekw9.replit.app/api/vision/og/analiza/' . rawurlencode($shareId);
 
 $ctx = stream_context_create([
     'http' => [
-        'timeout'        => 5,
-        'user_agent'     => 'MetalRecovery-OGProxy/1.0',
-        'ignore_errors'  => true,
+        'timeout'       => 6,
+        'user_agent'    => 'MetalRecovery-OGProxy/1.0',
+        'ignore_errors' => true,
     ],
     'ssl' => [
         'verify_peer'      => false,
@@ -42,9 +31,14 @@ $ctx = stream_context_create([
 $html = @file_get_contents($apiUrl, false, $ctx);
 
 if ($html !== false && strlen($html) > 100) {
-    // Remove the JS/meta-refresh redirect (bots should stay on this page)
-    $html = preg_replace('/<meta[^>]+http-equiv=["\']refresh["\'][^>]*>/i', '', $html);
-    $html = preg_replace('/<script[^>]*>window\.location\.replace[^<]+<\/script>/i', '', $html);
+    // Strip meta-refresh: bots (Facebook, WhatsApp etc.) would follow it and
+    // make a 2nd request to the same domain — triggering LiteSpeed rate limit.
+    // JS redirect remains in place — browsers execute it, bots ignore JS.
+    $html = preg_replace(
+        '/<meta\s[^>]*http-equiv=["\']refresh["\'][^>]*\/?>/i',
+        '',
+        $html
+    );
 
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: public, max-age=300');
@@ -52,12 +46,13 @@ if ($html !== false && strlen($html) > 100) {
     exit;
 }
 
-// Fallback: generic OG page if API unreachable
-$esc = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-$shareUrl  = 'https://metalrecovery.online/analiza/' . $shareId;
-$ogImage   = 'https://metalrecovery.online/og-preview-v2.jpg';
-$ogTitle   = 'Analiza AI — MetalRecovery Pro';
-$ogDesc    = 'Precyzyjne szacowanie odzysku złota, srebra, platyny i palladu z e-odpadów elektronicznych.';
+// Fallback — generic OG when API is unreachable
+$shareUrl = 'https://metalrecovery.online/analiza/' . $shareId;
+$spaUrl   = 'https://metalrecovery.online/analiza/' . $shareId . '?view=1';
+$ogImage  = 'https://metalrecovery.online/og-preview-v2.jpg';
+$ogTitle  = 'Analiza AI — MetalRecovery Pro';
+$ogDesc   = 'Precyzyjne szacowanie odzysku złota, srebra, platyny i palladu z e-odpadów elektronicznych.';
+$esc      = fn(string $s) => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 
 header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: public, max-age=60');
@@ -80,8 +75,9 @@ echo <<<HTML
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="{$esc($ogTitle)}"/>
 <meta name="twitter:image" content="{$esc($ogImage)}"/>
+<script>window.location.replace({$esc(json_encode($spaUrl))});</script>
 </head>
-<body><a href="{$esc($shareUrl)}">{$esc($ogTitle)}</a></body>
+<body><a href="{$esc($spaUrl)}">{$esc($ogTitle)}</a></body>
 </html>
 HTML;
 exit;
