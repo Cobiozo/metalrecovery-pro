@@ -782,9 +782,16 @@ function VisionResultCard({
                     </span>
                     <Badge
                       variant="outline"
-                      className={cn("text-xs shrink-0", confidenceColor(estimate.confidence))}
+                      className={cn(
+                        "text-xs shrink-0",
+                        estimate.value_g_per_kg === 0
+                          ? "border-muted/50 text-muted-foreground bg-muted/10"
+                          : confidenceColor(estimate.confidence)
+                      )}
                     >
-                      {confidenceLabel(estimate.confidence)}
+                      {estimate.value_g_per_kg === 0
+                        ? t("analysis.confidence.none")
+                        : confidenceLabel(estimate.confidence)}
                     </Badge>
                   </div>
                 );

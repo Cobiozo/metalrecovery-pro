@@ -515,7 +515,8 @@
     "confidence": {
       "high": "wysoka",
       "medium": "średnia",
-      "low": "niska"
+      "low": "niska",
+      "none": "brak"
     },
     "batterySepar": {
       "checkbox": "Separacja baterii",
