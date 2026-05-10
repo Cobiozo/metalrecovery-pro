@@ -1538,8 +1538,8 @@ export function PhotoAnalysisPage() {
                 type="button"
                 onClick={() => {
                   const shareUrl = shareId
-                    ? `https://metalrecovery.online/analiza/${shareId}`
-                    : "https://metalrecovery.online/analiza";
+                    ? `https://metalrecovery.online/?s=${shareId}`
+                    : "https://metalrecovery.online/";
                   const lines = result.items.map((item) => {
                     const au = item.metalContent.Au.value_g_per_kg.toFixed(1);
                     const ag = item.metalContent.Ag.value_g_per_kg.toFixed(1);

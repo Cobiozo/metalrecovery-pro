@@ -70,6 +70,17 @@ function LangSync() {
   return null;
 }
 
+function ShareRedirect() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get('s');
+    if (s) {
+      window.location.replace(`/analiza/${s}?view=1`);
+    }
+  }, []);
+  return null;
+}
+
 function App() {
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -87,6 +98,7 @@ function App() {
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthProvider>
             <LangSync />
+            <ShareRedirect />
             <Router />
           </AuthProvider>
         </WouterRouter>
