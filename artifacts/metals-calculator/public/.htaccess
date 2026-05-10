@@ -1,6 +1,10 @@
 Options -MultiViews
 RewriteEngine On
 
+# Force HTTPS — redirect all HTTP traffic to HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
 # When LiteSpeed blocks bots (403), serve index.html body instead of generic error page
 # This ensures Facebook/social bots see MetalRecovery Pro OG tags (same as metalrecovery.online/)
 ErrorDocument 403 /index.html
