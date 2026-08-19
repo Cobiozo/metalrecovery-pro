@@ -71,7 +71,7 @@ export function PurchaseCalculatorPage() {
     query: { queryKey: getGetChemicalProcessesQueryKey() },
   });
 
-  const allMaterials = [...(apiMaterials ?? []), ...customApiMats];
+  const allMaterials = [...(Array.isArray(apiMaterials) ? apiMaterials : []), ...customApiMats];
 
   const isCustomId = (id: string) => id.startsWith("custom_");
   const getCustomMat = (id: string) => customMats.find((m) => m.id === id) ?? null;
@@ -134,7 +134,7 @@ export function PurchaseCalculatorPage() {
       {mode === "single" ? (
         <SingleMode
           allMaterials={allMaterials}
-          processes={processes ?? []}
+          processes={Array.isArray(processes) ? processes : []}
           materialsLoading={materialsLoading}
           processesLoading={processesLoading}
           isCustomId={isCustomId}
@@ -144,7 +144,7 @@ export function PurchaseCalculatorPage() {
       ) : (
         <BatchMode
           allMaterials={allMaterials}
-          processes={processes ?? []}
+          processes={Array.isArray(processes) ? processes : []}
           materialsLoading={materialsLoading}
           processesLoading={processesLoading}
           isCustomId={isCustomId}

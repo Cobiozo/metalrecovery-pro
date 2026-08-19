@@ -245,7 +245,7 @@ export function CalculatorPage() {
     query: { queryKey: getGetElectronicMaterialsQueryKey() }
   });
   const { materials: customMats, asApiMaterials: customApiMats } = useCustomMaterials();
-  const materials = [...(apiMaterials ?? []), ...customApiMats];
+  const materials = [...(Array.isArray(apiMaterials) ? apiMaterials : []), ...customApiMats];
   const isCustomId = (id: string) => id.startsWith("custom_");
   const getCustomMat = (id: string) => customMats.find((m) => m.id === id) ?? null;
 
@@ -253,7 +253,8 @@ export function CalculatorPage() {
     query: { queryKey: getGetChemicalProcessesQueryKey() }
   });
 
-  const selectedProcess = processes?.find(p => p.id === selectedProcessId);
+  const processesList = Array.isArray(processes) ? processes : [];
+  const selectedProcess = processesList.find(p => p.id === selectedProcessId);
 
   useEffect(() => {
     try {
@@ -793,7 +794,7 @@ export function CalculatorPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {processesLoading ? (
                   [1, 2, 3].map(i => <Skeleton key={i} className="h-40 w-full rounded-xl" />)
-                ) : processes?.map(process => (
+                ) : processesList.map(process => (
                   <div
                     key={process.id}
                     className={`border-2 rounded-xl p-4 cursor-pointer transition-all flex flex-col ${
@@ -1085,7 +1086,8 @@ export function CalculatorPage() {
               <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 flex flex-wrap gap-x-6 gap-y-1 text-sm">
                 <span className="text-muted-foreground font-medium">{t("calculator.feed")}:</span>
                 {batchItems.filter(i => i.materialId).map((item, idx) => {
-                  const mat = materials?.find(m => m.id === item.materialId);
+                  const materialsArray = Array.isArray(materials) ? materials : [];
+const mat = materialsArray.find(m => m.id === item.materialId);
                   const unitLabel = (item.unitOverride ?? mat?.unit ?? 'kg') === 'piece' ? t("calculator.unitPiece") : 'kg';
                   return (
                     <span key={idx} className="font-semibold text-foreground inline-flex items-center gap-1 flex-wrap">
